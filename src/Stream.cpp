@@ -28,8 +28,8 @@
 //              interface for IPC.  It is the abstract base class for
 //              transport-specific classes such as Socket.
 //
-// Decisions  : This class is based on the MFC CFile class and must be
-//              used as the base class of all further transport classes
+// Decisions  : This class was originally based on the MFC CFile class and should
+//              be used as the base class of all further transport classes
 //              such as Socket.  The main reason why a transport
 //              class should inherit from Stream instead of from CFile
 //              is: Stream has extended the CFile class with such
@@ -37,10 +37,7 @@
 //              call mechanism, and an extendable state machine.
 //              And it is polymorphic, which CFile is lacking.
 //
-//
-// History    : A. Warner, 1996-05-01, Creation
-//              A. Warner, 2010-05-20, ported to linux sockets
-//
+//   Note : The linux version will be based on the iostream classes.
 
 //
 // INCLUDE FILES
@@ -63,10 +60,6 @@ using namespace sockstr;
 //
 
 //
-// DATA DEFINITIONS
-//
-
-//
 // FUNCTION DEFINITIONS
 //
 
@@ -74,7 +67,6 @@ using namespace sockstr;
 // CLASS MEMBER FUNCTION DEFINITIONS
 //
 
-// 
 // Function :
 //   Stream(void)
 //

@@ -20,6 +20,9 @@
 
 #ifndef _STREAM_H_INCLUDED_
 #define _STREAM_H_INCLUDED_
+
+#include <string>
+
 namespace sockstr
 {
 /*!
@@ -39,8 +42,6 @@ namespace sockstr
 //                      this stream
 //
 //   ----------------------------------------------------------------
-//
-// History    : A. Warner, 1996-05-01, Creation
 //
 
 //
@@ -70,10 +71,12 @@ enum STATUSCODE
 */
 typedef void (*Callback)(DWORD id, void* ptr);
 
+#ifdef linux
 /*!
   @typedef CFileException Definition for linux port
 */
 typedef int CFileException;
+#endif
 
 //
 // FORWARD CLASS DECLARATIONS
@@ -81,7 +84,6 @@ typedef int CFileException;
 class State;
 class IpcStruct;
 class IpcReplyStruct;
-
 
 /*!
   Stream base class.
@@ -118,6 +120,8 @@ public:
                                      CFileException * pError = 0) = 0;
 	//!  Read raw data from the stream (state-dependent).
     virtual UINT    read            (void* pBuf, UINT uCount) = 0;
+	//!  Read a string from the stream (state-dependent).
+    virtual UINT    read            (std::string& str, int delimiter='\n') = 0;
 	//!  Indicates if stream can be reopened after a close (state-dependent).
     virtual bool    reconnect       (void);
 	//!  Perform a remote procedure call over the stream (state-dependent).
@@ -134,6 +138,8 @@ public:
 	virtual void    setAsyncMode    (const bool bMode) = 0;
 	//!  Write raw data to the stream (state-dependent).
     virtual void    write           (const void* pBuf, UINT uCount) = 0;
+	//!  Write a string to the stream (state-dependent).
+    virtual void    write           (const std::string& str) = 0;
 	//!  Return a static, textual representation of the peer's address.
 	virtual operator char* (void) const = 0;
 

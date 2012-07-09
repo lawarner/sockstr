@@ -23,6 +23,7 @@
 //
 // INCLUDE FILES
 //
+#include <string>
 #include <sockstr/SocketAddr.h>
 #include <sockstr/Stream.h>
 
@@ -43,10 +44,6 @@ namespace sockstr
 //     m_bAsyncMode  Indicator if I/O is asynchronously performed
 //
 //   ----------------------------------------------------------------
-//
-// History    : A. Warner, 1996-05-01, Creation
-//              A. Warner, 2010-05-20, Ported to linux sockets
-//              A. Warner, 2012-07-07, Added posix thread support
 //
 
 //
@@ -134,6 +131,8 @@ public:
 								   CFileException* pError = 0);
 	//! Read from socket (state-dependent)
 	virtual UINT  read            (void* pBuf, UINT uCount);
+	//!  Read a string from the stream (state-dependent).
+    virtual UINT  read            (std::string& str, int delimiter='\n');
 	//! Send an IPC message over the socket (state-dependent)
 	virtual int   remoteProcedure (IpcStruct* pData, Callback pCallback = 0);
 	//! Read an IPC message or reply from socket (state-dependent)
@@ -147,6 +146,8 @@ public:
 					 			   int  nOptionLen,  int nLevel = SOL_SOCKET);
 	//! Write to socket (state-dependent)
 	virtual void  write           (const void* pBuf, UINT uCount);
+	//!  Write a string to the stream (state-dependent).
+    virtual void  write           (const std::string& str);
 
 	/** Returns a static, textual representation of an address
      *  (i.e., "host.acme.com:1074") */

@@ -1,0 +1,5 @@
+
+A. Warner, 2012-07-08  created version 1.0 on github
+A. Warner, 2012-07-07  Added posix thread support
+A. Warner, 2010-05-20  ported to linux sockets
+A. Warner, 1996-05-01  Creation

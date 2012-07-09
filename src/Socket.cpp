@@ -738,6 +738,26 @@ Socket::read(void* pBuf, UINT uCount)
 	return m_pState->read(this, pBuf, uCount);
 }
 
+UINT
+Socket::read(std::string& str, int delimiter)
+{
+    char buf[32];
+    int ret = 0;
+    int sz;
+
+    str.clear();
+    while ((sz = read(buf, sizeof(buf))) > 0)
+    {
+        ret += sz;
+        for (int i = 0; i < sz; i++)
+        {
+            str.append(1, buf[i]);
+            if (buf[i] == delimiter)
+                break;
+        }
+    }
+    return ret;
+}
 
 // Abstract : Executes the state-dependent reader thread
 //
@@ -825,6 +845,13 @@ void
 Socket::write(const void* pBuf, UINT uCount)
 {
 	m_pState->write(this, pBuf, uCount);
+}
+
+
+void
+Socket::write(const std::string& str)
+{
+    m_pState->write(this, str.c_str(), str.size());
 }
 
 
