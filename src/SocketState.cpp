@@ -18,7 +18,6 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-
 //
 // File       : SocketState.cpp
 //
@@ -48,21 +47,25 @@
 //              define member variables.  The static member function
 //              instance() is used when sharing is enabled.
 //
-// History    : A. Warner, 1996-05-01, Creation
-//
 
 //
 // INCLUDE FILES
 //
 #include "config.h"
-
 #include <cassert>
+#ifdef TARGET_LINUX
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#endif
+#ifdef TARGET_WINDOWS
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#endif
+
 #include <algorithm>
 
 #include <sockstr/Socket.h>
@@ -151,7 +154,9 @@ SocketState::abort(Socket* pSocket)
 	// Not interested in return value, just always try to abort blocking I/O
 	if (pSocket->m_hFile)
 	{
-		//TODO  ::WSACancelBlockingCall();
+#ifdef TARGET_WINDOWS
+		::WSACancelBlockingCall();
+#endif
 	}
 }
 
@@ -172,7 +177,11 @@ void
 SocketState::close(Socket* pSocket)
 {
 	// Not interested in return value, just always try to close socket
+#ifdef TARGET_WINDOWS
+	::closesocket(pSocket->m_hFile);
+#else
 	::close(pSocket->m_hFile);
+#endif
 	changeState(pSocket, SSClosed::instance());
 }
 
@@ -1086,17 +1095,24 @@ SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount)
 		// Asynchronous mode -- if data is available on socket then read
 		// it.  Otherwise, set up a reader thread to wait for data.
 		DWORD dwBytes;
-		if (ioctl(pSocket->m_hFile, FIONREAD, &dwBytes) == SOCKET_ERROR)
-		{
-			// EINPROGRESS means a blocking call is still active.  Maybe
-			// in the future take action on this status?
-			return 0;
-		}
+	    if (IOCTLSOCK(pSocket->m_hFile, FIONREAD, &dwBytes) == SOCKET_ERROR)
+        {
+#ifdef TARGET_WINDOWS
+                WSAGetLastError();
+#endif
+                // WSAEINPROGRESS means a blocking call is still active.  Maybe
+                // in the future take action on this status?
+                return 0;
+        }
 
 		// avoid blocking the main thread
 		if (dwBytes /*&& ! WSAIsBlocking()*/)	// This much (dwBytes) can be
 		{										// read without blocking
+#ifdef TARGET_WINDOWS
+			iResult = readSocket(pSocket, pBuf, min((UINT)dwBytes, uCount));
+#else
 			iResult = readSocket(pSocket, pBuf, std::min((UINT)dwBytes, uCount));
+#endif
 			if (iResult == 0 || iResult == SOCKET_ERROR)
 				return 0;
 		}
@@ -1114,9 +1130,21 @@ SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount)
             VERIFY(st==0);
 #else
 #ifdef WIN32
+#ifdef USE_MFC
 			VERIFY(AfxBeginThread((AFX_THREADPROC) Socket::readerThread,
 								  createIOParams(pSocket, pBuf, uCount,
 								  pSocket->m_pDefCallback)));
+#else
+			DWORD thread_id;
+			VERIFY(CreateThread( 
+            NULL,                   // default security attributes
+            0,                      // use default stack size  
+			Socket::readerThread,   // thread function name
+            createIOParams(pSocket, pBuf, uCount,
+						   pSocket->m_pDefCallback),          // argument to thread function 
+            0,                      // use default creation flags 
+            &thread_id));   // returns the thread identifier 
+#endif
 #else
 			// multi-threaded mode not implemented for this platform
 			VERIFY(0);
@@ -1296,9 +1324,21 @@ SSConnected::write(Socket* pSocket, const void* pBuf, UINT uCount)
         VERIFY(st==0);
 #else
 #ifdef WIN32
+#ifdef USE_MFC
 		VERIFY(AfxBeginThread((AFX_THREADPROC) Socket::writerThread,
 							  createIOParams(pSocket, pBuf, uCount,
 							  pSocket->m_pDefCallback)));
+#else
+			DWORD thread_id;
+			VERIFY(CreateThread( 
+            NULL,                   // default security attributes
+            0,                      // use default stack size  
+			Socket::writerThread,   // thread function name
+            createIOParams(pSocket, pBuf, uCount,
+						   pSocket->m_pDefCallback),          // argument to thread function 
+            0,                      // use default creation flags 
+            &thread_id));   // returns the thread identifier 
+#endif
 #else
         // multi-threaded not implemented for this platform
 		VERIFY(0);

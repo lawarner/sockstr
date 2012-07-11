@@ -3,4 +3,11 @@
 *~
 *.a
 
+*.sdf
+*.suo
+
 /doc/html
+
+Debug/
+ipch/
+Release/

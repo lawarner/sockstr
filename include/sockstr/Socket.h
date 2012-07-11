@@ -23,6 +23,9 @@
 //
 // INCLUDE FILES
 //
+#ifndef linux
+#include <WinSock2.h>
+#endif
 #include <string>
 #include <sockstr/SocketAddr.h>
 #include <sockstr/Stream.h>
@@ -165,14 +168,21 @@ public:
 protected:
 #ifdef linux
 	//!   The read worker thread's routine.
-	static void* readerThread       (void* pIOP);
+	static void* readerThread      (void* pIOP);
 	//!   The write worker thread's routine.
-	static void* writerThread       (void* pIOP);
+	static void* writerThread      (void* pIOP);
 #else
+#ifdef USE_MFC
 	//!   The read worker thread's routine.
 	static UINT readerThread       (IOPARAMS* pIOP);
 	//!   The write worker thread's routine.
 	static UINT writerThread       (IOPARAMS* pIOP);
+#else
+	//!   The read worker thread's routine.
+	static DWORD WINAPI readerThread(LPVOID _pIOP);
+	//!   The write worker thread's routine.
+	static DWORD WINAPI writerThread(LPVOID _pIOP);
+#endif
 #endif
 
 protected:

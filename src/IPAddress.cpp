@@ -29,22 +29,25 @@
 //              are resolved to a 4 byte network address in internal
 //              format.
 //
-// Decisions  : This class is consistently used by the rest of the IPC
+// Usage      : This class is consistently used by the rest of the IPC
 //              library whenever a TCP/IP address is needed.  It is doubtful
 //              if an application would ever need to directly use this
 //              class.
-//
-// History    : A. Warner, 1996-05-01, Creation
 //
 
 //
 // INCLUDE FILES
 //
 #include "config.h"
+#ifdef TARGET_WINDOWS
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#else
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#endif
 
 #include <cassert>
 #include <cstdio>
@@ -70,7 +73,9 @@ using namespace sockstr;
 // DATA DEFINITIONS
 //
 // Initialize static member variables
-
+#ifdef WIN32
+unsigned int IPAddress::m_uInstances = 0;
+#endif
 //
 // CLASS MEMBER FUNCTION DEFINITIONS
 //
@@ -127,9 +132,19 @@ IPAddress::IPAddress(const char* lpszName)
 
 //	struct hostent* pHostEntry = ::gethostbyname(lpszName);
 //	if (pHostEntry == 0)
-    struct addrinfo aiHints = {
+    int                 ai_flags;       // AI_PASSIVE, AI_CANONNAME, AI_NUMERICHOST
+    int                 ai_family;      // PF_xxx
+    int                 ai_socktype;    // SOCK_xxx
+    int                 ai_protocol;    // 0 or IPPROTO_xxx for IPv4 and IPv6
+    size_t              ai_addrlen;     // Length of ai_addr
+    char *              ai_canonname;   // Canonical name for nodename
+    __field_bcount(ai_addrlen) struct sockaddr *   ai_addr;        // Binary address
+    struct addrinfo *   ai_next;        // Next structure in linked list
+
+	struct addrinfo aiHints = {
         AI_CANONNAME,
         PF_INET,
+		SOCK_STREAM,
         0,
     };
     struct addrinfo* pAddrInfo = 0;
@@ -138,8 +153,12 @@ IPAddress::IPAddress(const char* lpszName)
 
     if (pAddrInfo->ai_addr->sa_family == AF_INET)
     {
-        m_dwAddress = (in_addr_t)((sockaddr_in *)pAddrInfo->ai_addr)->sin_addr.s_addr;
-    }
+#ifdef TARGET_LINUX
+		m_dwAddress = (in_addr_t)((sockaddr_in *)pAddrInfo->ai_addr)->sin_addr.s_addr;
+#else
+		m_dwAddress = ((sockaddr_in *)pAddrInfo->ai_addr)->sin_addr.s_addr;
+#endif
+	}
     ::freeaddrinfo(pAddrInfo);
 }
 
@@ -167,7 +186,14 @@ IPAddress::IPAddress(const IPAddress& rInAddr)
 //
 IPAddress::~IPAddress(void)
 {
-
+#ifdef WIN32
+	VERIFY(m_uInstances > 0);
+	// Close the winsock.dll, if no more sockets exist
+	if (--m_uInstances == 0)
+	{
+		WSACleanup();
+	}
+#endif
 }
 
 
@@ -192,7 +218,24 @@ IPAddress::~IPAddress(void)
 void
 IPAddress::initialize(void)
 {
+#ifdef WIN32
+    // Must initialize Windows Sockets library once before using it.
+    if (m_uInstances++ == 0)
+    {
+        WSADATA wsaData;
+        // Initialize winsock.dll
+        VERIFY(WSAStartup(MAKEWORD(2,2), &wsaData) == 0);
 
+        // Confirm that the Windows Sockets DLL supports 2.2
+        if (LOBYTE(wsaData.wVersion) != 2 ||
+                HIBYTE(wsaData.wVersion) != 2)
+        {
+                // Wrong version of winsock -- cannot be used
+                WSACleanup();
+                VERIFY(0);
+        }
+    }
+#endif
 }
 
 

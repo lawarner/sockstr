@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C++ Express 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sockstr", "sockstr.vcxproj", "{79253186-C19B-4AB8-9EA8-198BA45A1245}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "examples", "..\examples\examples.vcxproj", "{1F6CD718-186C-451F-A6DB-B336EFD574E4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{79253186-C19B-4AB8-9EA8-198BA45A1245}.Debug|Win32.ActiveCfg = Debug|Win32
+		{79253186-C19B-4AB8-9EA8-198BA45A1245}.Debug|Win32.Build.0 = Debug|Win32
+		{79253186-C19B-4AB8-9EA8-198BA45A1245}.Release|Win32.ActiveCfg = Release|Win32
+		{79253186-C19B-4AB8-9EA8-198BA45A1245}.Release|Win32.Build.0 = Release|Win32
+		{1F6CD718-186C-451F-A6DB-B336EFD574E4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1F6CD718-186C-451F-A6DB-B336EFD574E4}.Debug|Win32.Build.0 = Debug|Win32
+		{1F6CD718-186C-451F-A6DB-B336EFD574E4}.Release|Win32.ActiveCfg = Release|Win32
+		{1F6CD718-186C-451F-A6DB-B336EFD574E4}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

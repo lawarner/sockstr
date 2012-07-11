@@ -52,7 +52,7 @@ namespace sockstr
 //
 // FORWARD CLASS DECLARATIONS
 //
-class IOPARAMS;
+struct IOPARAMS;
 class IPAddress;
 class Socket;
 class SocketAddr;

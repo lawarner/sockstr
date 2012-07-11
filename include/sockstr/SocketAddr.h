@@ -63,9 +63,14 @@
 //
 // INCLUDE FILES
 //
+#ifdef linux
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#else
+//#include <WinSock2.h>
+//#include <WS2tcpip.h>
+#endif
 
 #include <sockstr/IPAddress.h>
 
@@ -111,7 +116,7 @@ public:
 	WORD portNumber(void) const;
 
 	operator sockaddr* (void) const;
-	operator LPCSTR    (void) const;
+	operator char*     (void) const;
 
 private:
 	// Disable copy constructor and assignment operator

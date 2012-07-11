@@ -18,7 +18,6 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-
 //
 // File       : Socket.cpp
 //
@@ -36,8 +35,6 @@
 //              references to Stream objects within its class to
 //              provide new functionality.
 //
-// History    : A. Warner, 1996-05-01, Creation
-//
 
 //
 // INCLUDE FILES
@@ -49,12 +46,18 @@
 #include <cstring>
 #include <string>
 
+#ifdef linux
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#else
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#endif
 #include <sockstr/IPC.h>
+#include <sockstr/Socket.h>
 #include <sockstr/SocketState.h>
 
 using namespace sockstr;
@@ -663,12 +666,16 @@ Socket::open(const char* lpszFileName, UINT uOpenFlags, CFileException* pError)
 bool
 Socket::open(SocketAddr& rSockAddr, UINT uOpenFlags, CFileException* pError)
 {
+#ifdef TARGET_WINDOWS
+	if (rSockAddr.m_pProtocol != 0 && _stricmp(rSockAddr.m_pProtocol, "udp") == 0)
+#else
 	if (rSockAddr.m_pProtocol != 0 && strcasecmp(rSockAddr.m_pProtocol, "udp") == 0)
+#endif
 		m_nProtocol = SOCK_DGRAM;
 	else
 		m_nProtocol = SOCK_STREAM;
 
-	if ((in_addr_t) rSockAddr.netAddress() == INADDR_NONE && m_nProtocol == SOCK_STREAM)
+	if (rSockAddr.netAddress() == INADDR_NONE && m_nProtocol == SOCK_STREAM)
 	{
 		m_Status = SC_FAILED;
 		return false;
@@ -780,13 +787,19 @@ void* Socket::readerThread(void* _pIOP)
 {
     IOPARAMS* pIOP = (IOPARAMS*) _pIOP;
 #else
+#ifdef USE_MFC
 UINT Socket::readerThread(IOPARAMS* pIOP)
 {
+#else
+DWORD WINAPI Socket::readerThread(LPVOID _pIOP)
+{
+	IOPARAMS* pIOP = (IOPARAMS*) _pIOP;
+#endif
 #endif
 #ifdef _DEBUG
 	if (m_pLastBuffer == pIOP->m_pBuf)
 	{
-		TRACE("Buffer in use for overlapped I/O\n");
+//		TRACE("Buffer in use for overlapped I/O\n");
 		VERIFY(0);
 	}
 	m_pLastBuffer = pIOP->m_pBuf;
@@ -800,7 +813,11 @@ UINT Socket::readerThread(IOPARAMS* pIOP)
 	m_pLastBuffer = 0;
 #endif
 	delete pIOP;
+#ifdef linux
 	return (void *) dwReturn;
+#else
+	return dwReturn;
+#endif
 }
 
 
@@ -873,13 +890,19 @@ void* Socket::writerThread(void* _pIOP)
 {
     IOPARAMS* pIOP = (IOPARAMS*) _pIOP;
 #else
+#ifdef USE_MFC
 UINT Socket::writerThread(IOPARAMS* pIOP)
 {
+#else
+DWORD WINAPI Socket::writerThread(LPVOID _pIOP)
+{
+	IOPARAMS* pIOP = (IOPARAMS*) _pIOP;
+#endif
 #endif
 #ifdef _DEBUG
 	if (m_pLastBuffer == pIOP->m_pBuf)
 	{
-		TRACE("Buffer in use for overlapped I/O\n");
+//		TRACE("Buffer in use for overlapped I/O\n");
 		VERIFY(0);
 	}
 	m_pLastBuffer = pIOP->m_pBuf;
@@ -893,7 +916,11 @@ UINT Socket::writerThread(IOPARAMS* pIOP)
 #endif
 
 	delete pIOP;
+#ifdef linux
 	return (void *) dwReturn;
+#else
+	return dwReturn;
+#endif
 }
 
 

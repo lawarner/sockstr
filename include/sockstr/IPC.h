@@ -53,23 +53,16 @@
 //     m_lReturn;	 Return value from remote procedure
 //
 //   ----------------------------------------------------------------
-//   Construction
 //
-//     IpcStruct Constructs a IpcStruct object
-//
-//   ----------------------------------------------------------------
-//
-// History    : A. Warner, 1996-05-02, Creation
-//
-
 
 //
 // INCLUDE FILES
 //
 #include "config.h"
-
+#if 0
 #include <sockstr/Stream.h>
 #include <sockstr/Socket.h>
+#endif
 
 namespace sockstr
 {

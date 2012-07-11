@@ -24,6 +24,7 @@
 #ifndef _SSTYPES_H_INCLUDED_
 #define _SSTYPES_H_INCLUDED_
 
+#ifdef TARGET_LINUX
 typedef int WORD;
 typedef int DWORD;
 typedef void * LPVOID;
@@ -33,5 +34,22 @@ typedef unsigned int UINT;
 #define SOCKET int
 static const int INVALID_SOCKET = -1;
 static const int SOCKET_ERROR = -1;
+
+#define IOCTLSOCK ::ioctl
+#endif
+
+#ifdef TARGET_WINDOWS
+#define _X86_
+#include <WinDef.h>
+#include <WinSock2.h>
+
+#define IOCTLSOCK ::ioctlsocket
+#endif
+// #ifdef linux
+/*!
+  @typedef CFileException Definition for linux port
+*/
+typedef int CFileException;
+// #endif
 
 #endif

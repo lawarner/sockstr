@@ -6,7 +6,10 @@
 #define _CONFIG_H_INCLUDED_
 
 #ifdef linux
+#define TARGET_LINUX
 #define USE_PTHREADS 1
+#else
+#define TARGET_WINDOWS
 #endif
 
 #include <sys/types.h>

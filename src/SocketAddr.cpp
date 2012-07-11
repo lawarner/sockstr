@@ -50,10 +50,9 @@
 #include <cstdlib>
 #include <cstring>
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#ifdef linux
 #include <netdb.h>
+#endif
 
 #include <sockstr/SocketAddr.h>
 
@@ -157,7 +156,11 @@ SocketAddr::SocketAddr(const char * lpszHost, const char * lpszService,
 	sin_addr.s_addr = m_pPeerAddr->netAddress();
 
 	if (pService &&
+#ifdef TARGET_WINDOWS
+		_stricmp(pService->s_proto, pProtocol == 0 ? "tcp" : pProtocol) == 0)
+#else
 		strcasecmp(pService->s_proto, pProtocol == 0 ? "tcp" : pProtocol) == 0)
+#endif
 	{
 		sin_port = pService->s_port;
 	}

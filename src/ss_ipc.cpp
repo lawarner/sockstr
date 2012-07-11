@@ -23,7 +23,6 @@
 
 #include "config.h"
 #include <sockstr/IPC.h>
-#include <sockstr/SocketState.h>
 
 using namespace sockstr;
 

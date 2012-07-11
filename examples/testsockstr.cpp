@@ -22,6 +22,9 @@
 //
 //  Unit test program for socket library routines
 //
+#ifdef WIN32
+#include <WS2tcpip.h>
+#endif
 
 #include <iostream>
 #include <cerrno>
@@ -34,8 +37,13 @@
 using namespace sockstr;
 
 
-int main(int argc, const char *argv[])
+int main(int argc, char *argv[])
 {
+#if 0	// for debugging in vs2010
+	std::string hostname = "www.godaddy.com";
+    std::string filename = "index.html";
+	bool isSummary = false;
+#else
     if (argc < 3)
     {
         std::cerr << "Error: Usage:  testsocklib hostname filename [summary]" << std::endl;
@@ -46,10 +54,11 @@ int main(int argc, const char *argv[])
     bool isSummary = (argc > 3);
 
     std::string hostname = argv[1];
+    std::string filename = argv[2];
+#endif
 	std::string hostport = hostname + ":80";
     std::cout << "Get address of host " << hostport << std::endl;
 
-    std::string filename = argv[2];
 
     IPAddress ipaddr(hostname.c_str());
     printf("Netaddress is %x, string value is %s\n",
@@ -69,7 +78,7 @@ int main(int argc, const char *argv[])
 #endif
 	http_get += "\r\n";
 
-    sock.write(http_get.c_str(), http_get.size());
+    sock.write(http_get);
 
     char buf[1024] = "";
     int inLen;
@@ -91,3 +100,20 @@ int main(int argc, const char *argv[])
 
     return(0);
 }
+
+
+#ifdef WIN32
+#include "stdafx.h"
+int _tmain(int argc, _TCHAR* targv[])
+{
+	char **argv = new char* [argc];
+	for (int i = 0; i < argc; i++)
+	{
+		int sz = _tcslen(targv[i]) + 1;
+		argv[i] = new char [sz];
+		wcstombs(argv[i], targv[i], sz);
+	}
+
+	return main(argc, argv);
+}
+#endif

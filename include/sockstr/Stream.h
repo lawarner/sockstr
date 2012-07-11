@@ -71,13 +71,6 @@ enum STATUSCODE
 */
 typedef void (*Callback)(DWORD id, void* ptr);
 
-#ifdef linux
-/*!
-  @typedef CFileException Definition for linux port
-*/
-typedef int CFileException;
-#endif
-
 //
 // FORWARD CLASS DECLARATIONS
 //

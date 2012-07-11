@@ -85,6 +85,9 @@ private:
 	UINT m_dwAddress;
 	// Peer host name cache
 	char m_szHostName[108];
+#ifdef WIN32
+	static unsigned int m_uInstances;
+#endif
 };
 
 }
