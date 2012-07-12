@@ -22,6 +22,19 @@ in a future version.
 ## Building
 Simply type 'make'.
 
+How to Build on Windows
+=======================
+
+## Dependencies
+
+I tried to keep the dependencies to a minimum, so for Windows you only need
+Visual Studio 2010 C++ Express.
+
+## Building
+
+In Visual Studio, open the solution in sockstr/vs2010/sockstr.sln.  By default this will build 
+the sockstr.lib library and a simple test program in the examples/ directory.
+
 # Copyright Information
 
-The sockstr library is provided with the LGPL.
+The sockstr library is provided under the LGPL version 2.1 or later.

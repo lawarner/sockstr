@@ -132,20 +132,16 @@ IPAddress::IPAddress(const char* lpszName)
 
 //	struct hostent* pHostEntry = ::gethostbyname(lpszName);
 //	if (pHostEntry == 0)
-    int                 ai_flags;       // AI_PASSIVE, AI_CANONNAME, AI_NUMERICHOST
-    int                 ai_family;      // PF_xxx
-    int                 ai_socktype;    // SOCK_xxx
-    int                 ai_protocol;    // 0 or IPPROTO_xxx for IPv4 and IPv6
-    size_t              ai_addrlen;     // Length of ai_addr
-    char *              ai_canonname;   // Canonical name for nodename
-    __field_bcount(ai_addrlen) struct sockaddr *   ai_addr;        // Binary address
-    struct addrinfo *   ai_next;        // Next structure in linked list
 
 	struct addrinfo aiHints = {
-        AI_CANONNAME,
-        PF_INET,
-		SOCK_STREAM,
-        0,
+        AI_CANONNAME,	// ai_flags
+        PF_INET,		// ai_family
+		SOCK_STREAM,	// ai_socktype
+        0,				
+		// ai_protocol
+        // ai_addrlen
+        // ai_canonname (char*)
+		// ai_next
     };
     struct addrinfo* pAddrInfo = 0;
     if (::getaddrinfo(lpszName, 0, &aiHints, &pAddrInfo) || !pAddrInfo)

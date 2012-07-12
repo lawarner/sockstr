@@ -26,6 +26,7 @@
 #include <cerrno>
 #include <iostream>
 #include <pthread.h>
+#include <sockstr/sstypes.h>
 #include <sockstr/Socket.h>
 using namespace sockstr;
 using namespace std;

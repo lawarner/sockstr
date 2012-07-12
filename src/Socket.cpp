@@ -768,7 +768,7 @@ Socket::read(std::string& str, int delimiter)
 
 // Abstract : Executes the state-dependent reader thread
 //
-// Returns  : UINT
+// Returns  : THRTYPE
 // Params   :
 //   pThis                     Pointer to the socket object
 //
@@ -782,20 +782,9 @@ Socket::read(std::string& str, int delimiter)
 //            It is only called by the SocketState friend class, or 
 //            one of its sub-classes.
 //
-#ifdef linux
-void* Socket::readerThread(void* _pIOP)
-{
-    IOPARAMS* pIOP = (IOPARAMS*) _pIOP;
-#else
-#ifdef USE_MFC
-UINT Socket::readerThread(IOPARAMS* pIOP)
-{
-#else
-DWORD WINAPI Socket::readerThread(LPVOID _pIOP)
+THRTYPE WINAPI Socket::readerThread(LPVOID _pIOP)
 {
 	IOPARAMS* pIOP = (IOPARAMS*) _pIOP;
-#endif
-#endif
 #ifdef _DEBUG
 	if (m_pLastBuffer == pIOP->m_pBuf)
 	{
@@ -813,11 +802,8 @@ DWORD WINAPI Socket::readerThread(LPVOID _pIOP)
 	m_pLastBuffer = 0;
 #endif
 	delete pIOP;
-#ifdef linux
-	return (void *) dwReturn;
-#else
-	return dwReturn;
-#endif
+
+	return reinterpret_cast<THRTYPE>(dwReturn);
 }
 
 
@@ -874,7 +860,7 @@ Socket::write(const std::string& str)
 
 // Abstract : Executes the state-dependent writer thread
 //
-// Returns  : UINT
+// Returns  : THRTYPE
 // Params   :
 //   pThis                     Pointer to the socket object
 //
@@ -885,20 +871,9 @@ Socket::write(const std::string& str)
 //            It is only called by the SocketState friend class, or 
 //            one of its sub-classes.
 //
-#ifdef linux
-void* Socket::writerThread(void* _pIOP)
-{
-    IOPARAMS* pIOP = (IOPARAMS*) _pIOP;
-#else
-#ifdef USE_MFC
-UINT Socket::writerThread(IOPARAMS* pIOP)
-{
-#else
-DWORD WINAPI Socket::writerThread(LPVOID _pIOP)
+THRTYPE WINAPI Socket::writerThread(LPVOID _pIOP)
 {
 	IOPARAMS* pIOP = (IOPARAMS*) _pIOP;
-#endif
-#endif
 #ifdef _DEBUG
 	if (m_pLastBuffer == pIOP->m_pBuf)
 	{
@@ -916,11 +891,8 @@ DWORD WINAPI Socket::writerThread(LPVOID _pIOP)
 #endif
 
 	delete pIOP;
-#ifdef linux
-	return (void *) dwReturn;
-#else
-	return dwReturn;
-#endif
+
+	return reinterpret_cast<THRTYPE>(dwReturn);
 }
 
 

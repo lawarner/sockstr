@@ -56,6 +56,18 @@ namespace sockstr
 #define DllExport
 #endif
 
+// Define a type for the return value of threads since this is system dependent.
+#ifdef TARGET_WINDOWS
+# ifdef USE_MFC
+#  define THRTYPE UINT
+# else
+#  define THRTYPE DWORD
+# endif
+#else
+# define THRTYPE LPVOID
+# define WINAPI
+#endif
+
 //
 // TYPE DEFINITIONS
 //
@@ -166,24 +178,10 @@ public:
     static const int modeReadWrite;
 
 protected:
-#ifdef linux
 	//!   The read worker thread's routine.
-	static void* readerThread      (void* pIOP);
+	static THRTYPE WINAPI readerThread(LPVOID _pIOP);
 	//!   The write worker thread's routine.
-	static void* writerThread      (void* pIOP);
-#else
-#ifdef USE_MFC
-	//!   The read worker thread's routine.
-	static UINT readerThread       (IOPARAMS* pIOP);
-	//!   The write worker thread's routine.
-	static UINT writerThread       (IOPARAMS* pIOP);
-#else
-	//!   The read worker thread's routine.
-	static DWORD WINAPI readerThread(LPVOID _pIOP);
-	//!   The write worker thread's routine.
-	static DWORD WINAPI writerThread(LPVOID _pIOP);
-#endif
-#endif
+	static THRTYPE WINAPI writerThread(LPVOID _pIOP);
 
 protected:
 	IPAddress   m_IpAddr;
