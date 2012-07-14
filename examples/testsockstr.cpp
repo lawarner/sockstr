@@ -40,8 +40,8 @@ using namespace sockstr;
 int main(int argc, char *argv[])
 {
 #if 0	// for debugging in vs2010
-	std::string hostname = "www.godaddy.com";
-    std::string filename = "index.html";
+	std::string hostname = "stackoverflow.com";
+    std::string filename = "/index.html";
 	bool isSummary = false;
 #else
     if (argc < 3)
@@ -55,6 +55,8 @@ int main(int argc, char *argv[])
 
     std::string hostname = argv[1];
     std::string filename = argv[2];
+    if (filename[0] != '/')
+        filename.insert(0, 1, '/');
 #endif
 	std::string hostport = hostname + ":80";
     std::cout << "Get address of host " << hostport << std::endl;
@@ -74,7 +76,8 @@ int main(int argc, char *argv[])
 
     std::string http_get = "GET " + filename;
 #if 1							// Add HTTP headers
-	http_get += " HTTP/1.1\r\nHost: " + hostname + "\r\n";
+	http_get += "HTTP/1.1\r\nHost: " + hostname + "\r\n";
+    http_get += "Accept: */*\r\n";
 #endif
 	http_get += "\r\n";
 
