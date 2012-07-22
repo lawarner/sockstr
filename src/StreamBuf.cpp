@@ -54,14 +54,16 @@ StreamBuf::StreamBuf()
     : stream(0)
     , unputbuf(EOF)
 {
-
+//    setg((char *)inbuff, (char *)inbuff, inbuff+sizeof(inbuff));
+    setp(outbuff, outbuff+sizeof(outbuff));
 }
 
 StreamBuf::StreamBuf(Stream* strm)
     : stream(strm)
     , unputbuf(EOF)
 {
-
+//    setg((char *)inbuff, (char *)inbuff, inbuff+sizeof(inbuff));
+    setp(outbuff, outbuff+sizeof(outbuff));
 }
 
 
@@ -77,15 +79,43 @@ int StreamBuf::overflow(int ch)
 {
     char chr = (char) ch;
     if ((ch!=EOF) && stream)
+    {
+        if (this->pbase() < this->pptr())
+        {
+            *this->pptr() = chr;
+            this->pbump(1);
+        }
+
+        stream->write(pbase(), pptr() - pbase());
+        if (stream->queryStatus() != SC_OK)
+            return EOF;
+
+        setp(outbuff, outbuff+sizeof(outbuff));
+
+    }
+    else if (sizeof(outbuff) > 1)
+    {
+        setp(outbuff, outbuff+sizeof(outbuff));
+
+        *this->pptr() = chr;
+        this->pbump(1);
+    }
+    else
+    {	// unbuffered
         stream->write(&chr, 1);
+    }
 
     return ch;
 }
 
 int StreamBuf::pbackfail(int ch)
 {
-    if (unputbuf == EOF)
-        unputbuf = ch;
+    char chr = (char) ch;
+    if (ch != EOF && this->pbase() < this->pptr())
+    {
+        *this->pptr() = chr;
+        this->pbump(1);
+    }
     else
         return EOF;
 

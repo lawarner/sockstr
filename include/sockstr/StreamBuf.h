@@ -60,6 +60,9 @@ protected:
 private:
     Stream* stream;
     int unputbuf;
+
+    char inbuff[256];
+    char outbuff[256];
 };
 
 }

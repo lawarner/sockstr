@@ -40,9 +40,8 @@ void* server_process(void* args)
 {
     void* ret = (void*) 2;
     Params* params = (Params*) args;
-    cout << "Server process started." << endl;
+    cout << "Server connecting to port " << params->port << endl;
 
-    cout << "Server try to connect to port " << params->port << endl;
     Socket sock;
     SocketAddr saddr(0, params->port);
     if (!sock.open(saddr, Socket::modeReadWrite))
@@ -55,6 +54,7 @@ void* server_process(void* args)
     if (clientSock)
     {
         string strbuf;
+
 //        clientSock->read(strbuf);
         *clientSock >> strbuf;
         while (clientSock->queryStatus() == SC_OK)
