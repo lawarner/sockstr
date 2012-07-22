@@ -89,20 +89,24 @@ using namespace sockstr;
 //            are protected (instead of public).
 //
 Stream::Stream(void)
-:	m_hFile       (0)
-,   m_Status      (SC_OK)
-,	m_pDefCallback(0)
+    :	std::iostream (&strbuf)
+    ,	m_hFile       (0)
+    ,   m_Status      (SC_OK)
+    ,	m_pDefCallback(0)
+    ,	strbuf(this)
 {
-
+    clear();
 }
 
 
 Stream::Stream(const UINT uFile)
-:	m_hFile       (uFile)
-,	m_Status      (SC_OK)
-,	m_pDefCallback(0)
+    :	std::iostream (&strbuf)
+    ,	m_hFile       (uFile)
+	,	m_Status      (SC_OK)
+    ,	m_pDefCallback(0)
+    ,	strbuf(this)
 {
-
+    clear();
 }
 
 

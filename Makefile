@@ -51,3 +51,6 @@ clean:
 		make -C $$dir clean; \
 	done
 
+.PHONY: depends
+depends:
+	make -C src depends

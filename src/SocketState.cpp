@@ -1088,7 +1088,10 @@ SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount)
 		// Synchronous mode -- do a blocking read on socket
 		iResult = readSocket(pSocket, pBuf, uCount);
 		if (iResult == 0 || iResult == SOCKET_ERROR)
+        {
+            pSocket->m_Status = SC_NODATA;
 			return 0;
+        }
 	}
 	else
 	{
@@ -1102,6 +1105,7 @@ SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount)
 #endif
                 // WSAEINPROGRESS means a blocking call is still active.  Maybe
                 // in the future take action on this status?
+                pSocket->m_Status = SC_NODATA;
                 return 0;
         }
 
@@ -1114,12 +1118,16 @@ SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount)
 			iResult = readSocket(pSocket, pBuf, std::min((UINT)dwBytes, uCount));
 #endif
 			if (iResult == 0 || iResult == SOCKET_ERROR)
+            {
+                pSocket->m_Status = SC_NODATA;
 				return 0;
+            }
 		}
 		else
 		{
 			if (pSocket->m_pDefCallback == 0)
 			{
+                pSocket->m_Status = SC_NODATA;
 				return 0;
 			}
 #if USE_PTHREADS
@@ -1152,6 +1160,9 @@ SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount)
 #endif
 		}
 	}
+
+    if (iResult >= 0)
+        pSocket->m_Status = SC_OK;
 
 	return iResult;
 }

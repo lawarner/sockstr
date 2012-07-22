@@ -52,14 +52,20 @@ void* server_process(void* args)
     }
 
     Stream* clientSock = sock.listen();
-    if (clientSock && clientSock->queryStatus() == SC_OK)
+    if (clientSock)
     {
         string strbuf;
-        clientSock->read(strbuf);
-        cout << "Response: " << strbuf << endl;
-    }
+//        clientSock->read(strbuf);
+        *clientSock >> strbuf;
+        while (clientSock->queryStatus() == SC_OK)
+        {
+             cout << "Response: " << strbuf << endl;
+            *clientSock >> strbuf;
+        }
 
-    if (clientSock) delete clientSock;
+        clientSock->close();
+        delete clientSock;
+    }
 
     sock.close();
     return 0;
@@ -80,8 +86,9 @@ void* client_process(void* args)
         return ret;
     }
 
-    string str("Sending a test string.\n");
-    sock.write(str);
+    string str("Sending a test string.");
+    sock << str << endl;
+
     sock.close();
 
     return 0;

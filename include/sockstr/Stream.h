@@ -21,7 +21,9 @@
 #ifndef _STREAM_H_INCLUDED_
 #define _STREAM_H_INCLUDED_
 
+#include <iostream>
 #include <string>
+#include <sockstr/StreamBuf.h>
 
 namespace sockstr
 {
@@ -32,17 +34,6 @@ namespace sockstr
 	  transport-specific classes such as Socket.
 */
 
-//
-// Members    :
-//   Data
-//
-//     m_pState         Pointer to the current state of the stream
-//     m_Status         Current status of the stream
-//     m_pDefCallback   Address of the user's default callback routine for
-//                      this stream
-//
-//   ----------------------------------------------------------------
-//
 
 //
 // MACRO DEFINITIONS
@@ -84,7 +75,7 @@ class IpcReplyStruct;
       interface for IPC.  It is the abstract base class for
 	  transport-specific classes such as Socket.
 */
-class DllExport Stream
+class DllExport Stream : public std::iostream
 {
 public:
 	virtual ~Stream(void);
@@ -148,10 +139,14 @@ private:
 protected:
     SOCKET m_hFile;
 
+	//! Pointer to the current state of the stream
     State*     m_pState;
+	//! Current status of the stream
     STATUSCODE m_Status;
+	//! Address of the user's default callback routine for this stream
 	Callback    m_pDefCallback;
 
+    StreamBuf strbuf;
 };
 
 }
