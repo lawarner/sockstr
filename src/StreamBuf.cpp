@@ -52,17 +52,15 @@ using namespace sockstr;
 
 StreamBuf::StreamBuf()
     : stream(0)
-    , unputbuf(EOF)
 {
-//    setg((char *)inbuff, (char *)inbuff, inbuff+sizeof(inbuff));
+    setg(inbuff, inbuff+sizeof(inbuff), inbuff+sizeof(inbuff));
     setp(outbuff, outbuff+sizeof(outbuff));
 }
 
 StreamBuf::StreamBuf(Stream* strm)
     : stream(strm)
-    , unputbuf(EOF)
 {
-//    setg((char *)inbuff, (char *)inbuff, inbuff+sizeof(inbuff));
+    setg(inbuff, inbuff+sizeof(inbuff), inbuff+sizeof(inbuff));
     setp(outbuff, outbuff+sizeof(outbuff));
 }
 
@@ -120,21 +118,18 @@ int StreamBuf::overflow(int ch)
     return ch;
 }
 
+
 int StreamBuf::pbackfail(int ch)
 {
     char chr = (char) ch;
-#if 0
-    if (ch != EOF && pbase() < pptr())
-    {
-        *pptr() = chr;
-        pbump(1);
-    }
-    else
+    if (eback() == gptr())
         return EOF;
-#else
-    if (unputbuf == EOF)
-        unputbuf = chr;
-#endif
+
+    gbump(-1);
+    if (ch != EOF)
+    {
+        *gptr() = chr;
+    }
 
     return ch;
 }
@@ -160,7 +155,11 @@ int StreamBuf::sync()
 
 int StreamBuf::uflow()
 {
-    return readChar();
+    char chr = underflow();
+    if (gptr() < egptr())
+        gbump(1);
+
+    return chr;
 }
 
 int StreamBuf::underflow()
@@ -168,25 +167,13 @@ int StreamBuf::underflow()
     char chr = EOF;
     if (stream)
     {
-        chr = readChar();
-        pbackfail(chr);
+        int sz = stream->read(inbuff, sizeof(inbuff));
+        if (sz < 1)
+            return EOF;
+        setg(inbuff, inbuff, inbuff + sz);
+
+        chr = *gptr();
     }
     return chr;
 }
 
-
-int StreamBuf::readChar()
-{
-    char chr = EOF;
-    if (stream)
-    {
-        if (unputbuf != EOF)
-        {
-            chr = unputbuf;
-            unputbuf = EOF;
-        }
-        else
-            stream->read(&chr, 1);
-    }
-    return chr;
-}

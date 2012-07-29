@@ -56,11 +56,8 @@ protected:
     virtual int underflow();
     virtual int sync();
 
-    virtual int readChar();
-
 private:
     Stream* stream;
-    int unputbuf;
 
     char inbuff[256];
     char outbuff[256];
