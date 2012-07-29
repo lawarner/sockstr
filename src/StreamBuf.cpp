@@ -66,6 +66,11 @@ StreamBuf::StreamBuf(Stream* strm)
     setp(outbuff, outbuff+sizeof(outbuff));
 }
 
+StreamBuf::~StreamBuf()
+{
+
+}
+
 
 StreamBuf* StreamBuf::open(Stream* strm)
 {
@@ -73,25 +78,36 @@ StreamBuf* StreamBuf::open(Stream* strm)
     return this;
 }
 
-// virtual protected memers overridden from Standard C++ Library std::streambuf
+// virtual protected members overridden from Standard C++ Library std::streambuf
 
 int StreamBuf::overflow(int ch)
 {
     char chr = (char) ch;
-    if ((ch!=EOF) && stream)
+    if (stream)
     {
-        if (this->pbase() < this->pptr())
+        if (sizeof(outbuff) < 2)
         {
-            *this->pptr() = chr;
-            this->pbump(1);
+            if (ch != EOF)
+            {	// unbuffered
+                stream->write(&chr, 1);
+            }
+            return ch;
         }
 
-        stream->write(pbase(), pptr() - pbase());
-        if (stream->queryStatus() != SC_OK)
-            return EOF;
+        if (ch != EOF && pptr() < epptr())
+        {
+            *pptr() = chr;
+            pbump(1);
+        }
 
-        setp(outbuff, outbuff+sizeof(outbuff));
+        if (pbase() < pptr())
+        {
+            stream->write(pbase(), pptr() - pbase());
+            if (stream->queryStatus() != SC_OK)
+                return EOF;
 
+            setp(outbuff, outbuff+sizeof(outbuff));
+        }
     }
     else if (sizeof(outbuff) > 1)
     {
@@ -100,10 +116,6 @@ int StreamBuf::overflow(int ch)
         *this->pptr() = chr;
         this->pbump(1);
     }
-    else
-    {	// unbuffered
-        stream->write(&chr, 1);
-    }
 
     return ch;
 }
@@ -111,16 +123,40 @@ int StreamBuf::overflow(int ch)
 int StreamBuf::pbackfail(int ch)
 {
     char chr = (char) ch;
-    if (ch != EOF && this->pbase() < this->pptr())
+#if 0
+    if (ch != EOF && pbase() < pptr())
     {
-        *this->pptr() = chr;
-        this->pbump(1);
+        *pptr() = chr;
+        pbump(1);
     }
     else
         return EOF;
+#else
+    if (unputbuf == EOF)
+        unputbuf = chr;
+#endif
 
     return ch;
 }
+
+int StreamBuf::sync()
+{
+    if (pptr() == pbase())
+        return EOF;
+
+    if (stream)
+    {
+        stream->write(pbase(), pptr() - pbase());
+        if (stream->queryStatus() != SC_OK)
+            return EOF;
+
+        setp(outbuff, outbuff+sizeof(outbuff));
+        return 0;
+    }
+
+    return EOF;
+}
+
 
 int StreamBuf::uflow()
 {

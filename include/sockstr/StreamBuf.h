@@ -45,6 +45,7 @@ class StreamBuf : public std::streambuf
 public:
     StreamBuf();
     StreamBuf(Stream* strm);
+    virtual ~StreamBuf();
 
     StreamBuf* open(Stream* strm);
 
@@ -53,7 +54,7 @@ protected:
     virtual int pbackfail(int ch = EOF);
     virtual int uflow();
     virtual int underflow();
-//    virtual int sync();
+    virtual int sync();
 
     virtual int readChar();
 
