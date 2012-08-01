@@ -30,7 +30,7 @@ LDFLAGS = -pthread $(LIBSOCKLIB)
 
 #COMPILE = $(CC) $(CFLAGS) -c
 
-OBJS := simplest.o fbread.o fb2read.o testsockstr.o
+OBJS := simplest.o filecopy fbread.o fb2read.o testsockstr.o
 
 SRCS := $(OBJS:.o=.cpp)
 
@@ -38,7 +38,7 @@ INCS =
 
 LIBSOCKLIB = $(TOP)/src/libsockstr.a
 
-PROGRAMS = simplest fbread fb2read testsockstr
+PROGRAMS = simplest filecopy fbread fb2read testsockstr
 
 
 .cpp.o: ; $(CC) $(CCFLAGS) -c $<
@@ -47,6 +47,8 @@ PROGRAMS = simplest fbread fb2read testsockstr
 all: $(PROGRAMS)
 
 simplest: simplest.o $(LIBSOCKLIB)
+
+filecopy: filecopy.o $(LIBSOCKLIB)
 
 fbread: fbread.o $(LIBSOCKLIB)
 

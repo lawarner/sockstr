@@ -665,9 +665,15 @@ SSOpenedServer::open(Socket* pSocket,
 
 	if (pSocket->m_nProtocol == SOCK_STREAM)
 	{
-		bSockOpt = true;
+#ifdef TARGET_WINDOWS
+		bool bSockOpt = true;
 		::setsockopt(pSocket->m_hFile, SOL_SOCKET, SO_KEEPALIVE,
 					 (char *)&bSockOpt, sizeof(bool));
+#else
+        int soopt = 1;
+		::setsockopt(pSocket->m_hFile, SOL_SOCKET, SO_KEEPALIVE,
+					 &soopt, sizeof(soopt));
+#endif
 	}
 
 	if (::bind(pSocket->m_hFile, (sockaddr *)rSockAddr, sizeof(sockaddr)) == SOCKET_ERROR)
@@ -824,9 +830,17 @@ SSOpenedClient::open(Socket* pSocket,
 			== SOCKET_ERROR)
 			return false;
 
+//        std::cout << "2 SSOpenedClient::open errno=" << errno << std::endl;
+#ifdef TARGET_WINDOWS
 		bool bSockOpt = true;
 		::setsockopt(pSocket->m_hFile, SOL_SOCKET, SO_KEEPALIVE,
 					 (char *)&bSockOpt, sizeof(bool));
+#else
+        int soopt = 1;
+		::setsockopt(pSocket->m_hFile, SOL_SOCKET, SO_KEEPALIVE,
+					 &soopt, sizeof(soopt));
+#endif
+//        std::cout << "3 SSOpenedClient::open errno=" << errno << std::endl;
 	}
 	else
 	{

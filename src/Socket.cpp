@@ -677,6 +677,7 @@ Socket::open(SocketAddr& rSockAddr, UINT uOpenFlags, CFileException* pError)
 
 	if (rSockAddr.netAddress() == INADDR_NONE && m_nProtocol == SOCK_STREAM)
 	{
+//        std::cout << "3 Socket::open errno=" << errno << std::endl;
 		m_Status = SC_FAILED;
 		return false;
 	}
@@ -688,9 +689,11 @@ Socket::open(SocketAddr& rSockAddr, UINT uOpenFlags, CFileException* pError)
 	{
 		m_pState = SSOpenedClient::instance();
 	}
+//    std::cout << "4 Socket::open errno=" << errno << std::endl;
 
 	if (! m_pState->open(this, rSockAddr, uOpenFlags, pError))
 	{
+//        std::cout << "5 Socket::open errno=" << errno << std::endl;
 		m_Status = SC_FAILED;
 		return false;
 	}
@@ -705,6 +708,7 @@ Socket::open(SocketAddr& rSockAddr, UINT uOpenFlags, CFileException* pError)
 	// go ahead and get it in case the LPCSTR operator is called.
 	socklen_t iSizeAddr = sizeof(sockaddr);
 	::getsockname(m_hFile, (sockaddr *) &m_PeerAddr, &iSizeAddr);
+//    std::cout << "6 Socket::open errno=" << errno << std::endl;
 
 	if (m_nProtocol == SOCK_DGRAM)
 	{
@@ -753,7 +757,7 @@ Socket::read(std::string& str, int delimiter)
     int sz;
 
     str.clear();
-    while ((sz = read(buf, sizeof(buf))) > 0)
+    while ((sz = read(buf, 1)) > 0)
     {
         ret += sz;
         for (int i = 0; i < sz; i++)

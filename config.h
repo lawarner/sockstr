@@ -16,6 +16,7 @@
 #include <sockstr/sstypes.h>
 
 #define VERIFY assert
+//#include <cerrno>
 
 #if USE_PTHREADS
 #include <pthread.h>
