@@ -92,19 +92,19 @@ int StreamBuf::overflow(int ch)
             return ch;
         }
 
-        if (ch != EOF && pptr() < epptr())
-        {
-            *pptr() = chr;
-            pbump(1);
-        }
-
-        if (pbase() < pptr())
+        if (pptr() == epptr())
         {
             stream->write(pbase(), pptr() - pbase());
             if (stream->queryStatus() != SC_OK)
                 return EOF;
 
             setp(outbuff, outbuff+sizeof(outbuff));
+        }
+
+        if (ch != EOF)
+        {
+            *pptr() = chr;
+            pbump(1);
         }
     }
     else if (sizeof(outbuff) > 1)

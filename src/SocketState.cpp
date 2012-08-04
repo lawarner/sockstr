@@ -176,6 +176,9 @@ SocketState::abort(Socket* pSocket)
 void
 SocketState::close(Socket* pSocket)
 {
+    // Flush any characters remaining in the streambuf
+    pSocket->strbuf.pubsync();
+
 	// Not interested in return value, just always try to close socket
 #ifdef TARGET_WINDOWS
 	::closesocket(pSocket->m_hFile);

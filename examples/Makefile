@@ -30,7 +30,7 @@ LDFLAGS = -pthread $(LIBSOCKLIB)
 
 #COMPILE = $(CC) $(CFLAGS) -c
 
-OBJS := simplest.o filecopy fbread.o fb2read.o testsockstr.o
+OBJS := simplest.o filecopy.o fbread.o fb2read.o testsockstr.o
 
 SRCS := $(OBJS:.o=.cpp)
 

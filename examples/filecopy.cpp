@@ -61,8 +61,8 @@ void* server_process(void* args)
         string strbuf;
 
 #if 1
-        clientSock->read(strbuf);
-        cout << "Response: " << strbuf << endl;
+        clientSock->read(strbuf, EOF);
+//        cout << "Response: " << strbuf << endl;
 #else
         *clientSock >> strbuf;
         while (clientSock->queryStatus() == SC_OK)
@@ -74,6 +74,15 @@ void* server_process(void* args)
 
         clientSock->close();
         delete clientSock;
+
+        ifstream ifile(fileName.c_str());
+        if (ifile.is_open())
+        {
+            cout << "Output file already exists.  Not overwriting." << endl;
+            return ret;
+        }
+        ofstream ofile(fileName.c_str());
+        ofile << strbuf;
     }
 
     sock.close();
@@ -110,7 +119,7 @@ void* client_process(void* args)
 
 //    cout << "File contents:\n" << contents << endl;
 
-    sock << contents << endl;
+    sock << contents;
 
     sock.close();
 

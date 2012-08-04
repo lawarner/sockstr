@@ -764,7 +764,7 @@ Socket::read(std::string& str, int delimiter)
         {
             str.append(1, buf[i]);
             if (buf[i] == delimiter)
-                break;
+                return ret;
         }
     }
     return ret;
