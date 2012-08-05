@@ -79,9 +79,10 @@ int main(int argc, char *argv[])
 	http_get += "HTTP/1.1\r\nHost: " + hostname + "\r\n";
     http_get += "Accept: */*\r\n";
 #endif
-	http_get += "\r\n";
 
-    sock.write(http_get);
+//	http_get += "\r\n";
+//	sock.write(http_get);
+	sock << http_get << std::endl;
 
     char buf[1024] = "";
     int inLen;

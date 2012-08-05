@@ -807,7 +807,11 @@ THRTYPE WINAPI Socket::readerThread(LPVOID _pIOP)
 #endif
 	delete pIOP;
 
+#ifdef THRTYPE_NOCAST
+	return dwReturn;
+#else
 	return reinterpret_cast<THRTYPE>(dwReturn);
+#endif
 }
 
 
@@ -896,7 +900,11 @@ THRTYPE WINAPI Socket::writerThread(LPVOID _pIOP)
 
 	delete pIOP;
 
+#ifdef THRTYPE_NOCAST
+	return dwReturn;
+#else
 	return reinterpret_cast<THRTYPE>(dwReturn);
+#endif
 }
 
 

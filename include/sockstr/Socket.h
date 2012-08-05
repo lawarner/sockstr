@@ -62,6 +62,7 @@ namespace sockstr
 #  define THRTYPE UINT
 # else
 #  define THRTYPE DWORD
+#  define THRTYPE_NOCAST
 # endif
 #else
 # define THRTYPE LPVOID

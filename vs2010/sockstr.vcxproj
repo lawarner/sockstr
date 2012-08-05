@@ -79,6 +79,7 @@
     <ClCompile Include="..\src\SocketState.cpp" />
     <ClCompile Include="..\src\ss_ipc.cpp" />
     <ClCompile Include="..\src\Stream.cpp" />
+    <ClCompile Include="..\src\StreamBuf.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\config.h" />
@@ -89,6 +90,7 @@
     <ClInclude Include="..\include\sockstr\SocketState.h" />
     <ClInclude Include="..\include\sockstr\sstypes.h" />
     <ClInclude Include="..\include\sockstr\Stream.h" />
+    <ClInclude Include="..\include\sockstr\StreamBuf.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

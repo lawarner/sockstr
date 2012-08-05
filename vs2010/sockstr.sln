@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sockstr", "sockstr.vcxproj", "{79253186-C19B-4AB8-9EA8-198BA45A1245}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "examples", "..\examples\examples.vcxproj", "{1F6CD718-186C-451F-A6DB-B336EFD574E4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{79253186-C19B-4AB8-9EA8-198BA45A1245} = {79253186-C19B-4AB8-9EA8-198BA45A1245}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
