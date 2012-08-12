@@ -28,6 +28,7 @@
 #include <fstream>
 #include <iostream>
 #include <pthread.h>
+#include <unistd.h>
 #include <sockstr/sstypes.h>
 #include <sockstr/Socket.h>
 using namespace sockstr;
@@ -36,8 +37,10 @@ using namespace std;
 struct Params
 {
     int port;
+    bool binary;
     string fileName;
 };
+
 
 void* server_process(void* args)
 {
@@ -58,23 +61,6 @@ void* server_process(void* args)
     Stream* clientSock = sock.listen();
     if (clientSock)
     {
-        string strbuf;
-
-#if 1
-        clientSock->read(strbuf, EOF);
-//        cout << "Response: " << strbuf << endl;
-#else
-        *clientSock >> strbuf;
-        while (clientSock->queryStatus() == SC_OK)
-        {
-             cout << "Response: " << strbuf << endl;
-            *clientSock >> strbuf;
-        }
-#endif
-
-        clientSock->close();
-        delete clientSock;
-
         ifstream ifile(fileName.c_str());
         if (ifile.is_open())
         {
@@ -82,7 +68,26 @@ void* server_process(void* args)
             return ret;
         }
         ofstream ofile(fileName.c_str());
-        ofile << strbuf;
+
+        if (params->binary)
+        {
+            char buf[256];
+            int sz = clientSock->read(buf, sizeof(buf));
+            while (clientSock->queryStatus() == SC_OK)
+            {
+                ofile.write(buf, sz);
+                sz = clientSock->read(buf, sizeof(buf));
+            }
+        }
+        else
+        {
+            string strbuf;
+            clientSock->read(strbuf, EOF);
+            ofile << strbuf;
+        }
+
+        clientSock->close();
+        delete clientSock;
     }
 
     sock.close();
@@ -127,14 +132,34 @@ void* client_process(void* args)
 }
 
 
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
 {
-    Params params = { 4321, "" };
-    if (argc > 1)
-        params.fileName = argv[1];
+    Params params = {
+        4321,
+        false,
+        ""
+    };
+
+    int opt;
+    while ((opt = getopt(argc, argv, "b")) != -1)
+    {
+        switch (opt)
+        {
+        case 'b':
+            cout << "Using block copy" << endl;
+            params.binary = true;
+            break;
+        default:
+            cout << "Usage:  filecopy [ -b ] <filename>" << endl;
+            return 1;
+        }
+    }
+
+    if (optind < argc)
+        params.fileName = argv[optind];
     else
     {
-        cout << "Usage:  filecopy <filename>" << endl;
+        cout << "Usage:  filecopy [ -b ] <filename>" << endl;
         return 1;
     }
 
