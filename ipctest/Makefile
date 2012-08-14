@@ -20,37 +20,46 @@
 
 # Simple makefile for the sockstr class library
 
+TOP = ..
+INCDIR = $(TOP)/include
 
-BACKUPFILE = ~/Downloads/srcrepo/sockstr-src-`date +%Y%j`.tar.bz2
+CC = g++
+#CFLAGS = -Wall -O2 -I..
+CCFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
+LDFLAGS = -pthread $(LIBSOCKLIB)
 
-LIBSOCKSTR = libsockstr.a
+#COMPILE = $(CC) $(CFLAGS) -c
 
-SUBDIRS = src examples ipctest
+OBJS := ipctest.o Field.o FieldType.o Message.o Parser.o
+
+SRCS := $(OBJS:.o=.cpp)
+
+INCS = Command.h Field.h FieldType.h Message.h Parser.h
 
 
-all: subdirs
+LIBSOCKLIB = $(TOP)/src/libsockstr.a
 
-.PHONY: doc
-doc:
-	make -C doc
+PROGRAMS = ipctest
 
-# Backup the whole source dir.
-#  Probably want to do "make clean" beforehand, but not required.
-backup:
-	tar cvaf $(BACKUPFILE) --exclude='.git/*' -C .. sockstr
 
-subdirs:
-	for dir in $(SUBDIRS); do \
-		make -C $$dir; \
-	done
+.cpp.o: ; $(CC) $(CCFLAGS) -c $<
+
+
+all: $(PROGRAMS)
+
+ipctest: $(OBJS) $(LIBSOCKLIB)
+
 
 
 .PHONY: clean
 clean:
-	for dir in $(SUBDIRS); do \
-		make -C $$dir clean; \
-	done
+	rm -f $(OBJS) $(PROGRAMS) .makedepends
+	touch -r .mkdep-timestamp .makedepends
 
 .PHONY: depends
-depends:
-	make -C src depends
+depends: $(SRCS) $(INCS)
+	$(CC) -I. -MM $(SRCS) > .makedepends
+	touch .mkdep-timestamp
+
+.makedepends:
+include .makedepends

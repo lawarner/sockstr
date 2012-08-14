@@ -7,6 +7,14 @@ The sockstr library provides a C++ wrapper around streaming with sockets.
 A number of I/O modes are supported and a Stream such as asynchronous, 
 polling, etc.  These can be changed at any time for an open Stream.
 
+Sample code
+===========
+    $ #include <sockstr/Socket.h>
+    $ 
+    $ sockstr::Socket sock("localhost:8080", sockstr::Socket::modeReadWrite);
+    $ if (sock.queryStatus() == sockstr::SC_OK)
+    $     sock << "Hello, world!" << std::endl;
+
 How to Build on Linux
 =====================
 

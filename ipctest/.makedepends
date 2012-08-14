@@ -1,0 +1,5 @@
+ipctest.o: ipctest.cpp Parser.h Message.h
+Field.o: Field.cpp Field.h FieldType.h
+FieldType.o: FieldType.cpp FieldType.h
+Message.o: Message.cpp Message.h
+Parser.o: Parser.cpp Field.h FieldType.h Message.h Parser.h
