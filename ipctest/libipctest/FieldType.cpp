@@ -18,46 +18,27 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-#ifndef _Command_H_INCLUDED_
-#define _Command_H_INCLUDED_
-//
+// FieldType.cpp
 //
 
-//
-// INCLUDE FILES
-//
+#include "FieldType.h"
+using namespace ipctest;
 
 
-namespace ipctest
+FieldTypeInt FieldType::gFieldTypeInt;
+FieldTypeInt16 FieldType::gFieldTypeInt16;
+FieldTypeChar FieldType::gFieldTypeChar;
+FieldTypeUndefined FieldType::gFieldTypeUndefined;
+
+
+FieldType& FieldType::fromString(const std::string& ftStr)
 {
-
-//
-// MACRO DEFINITIONS
-//
-#ifndef DllExport
-#define DllExport
-#endif
-
-//
-// FORWARD CLASS DECLARATIONS
-//
-
-//
-// TYPE DEFINITIONS
-//
-
-//
-// CLASS DEFINITIONS
-//
-class Command
-{
-public:
-
-private:
-    Command(const Command&);	// disable copy constructor
-    Command& operator=(const Command& rSource);	// disable assignment operator
-};
-
-}  // namespace ipctest
-
-#endif
+    if (ftStr == "int")
+        return gFieldTypeInt;
+    else if (ftStr == "int16")
+        return gFieldTypeInt16;
+    else if (ftStr == "char")
+        return gFieldTypeChar;
+    else
+        return gFieldTypeUndefined;
+}

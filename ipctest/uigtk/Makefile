@@ -20,34 +20,33 @@
 
 # Simple makefile for the sockstr class library
 
-TOP = ..
+TOP = ../..
 INCDIR = $(TOP)/include
+LIBIPCDIR = ../libipctest
+LIBIPCTEST = $(LIBIPCDIR)/libipctest.a
+LIBSOCKLIB = $(TOP)/src/libsockstr.a
 
-SUBDIRS = libipctest uitext uigtk
+SUBDIRS = 
 
 CC = g++
 #CFLAGS = -Wall -O2 -I..
-CCFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
-LDFLAGS = -pthread $(LIBSOCKLIB)
+CPPFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
+LDFLAGS = -pthread
+LDLIBS = $(LIBIPCTEST) $(LIBSOCKLIB)
 
-#COMPILE = $(CC) $(CFLAGS) -c
-
-OBJS := 
+OBJS := ipctest-gtk.o
 
 SRCS := $(OBJS:.o=.cpp)
 
 INCS = 
 
 
-LIBSOCKLIB = $(TOP)/src/libsockstr.a
-
-PROGRAMS = 
-
-
-.cpp.o: ; $(CC) $(CCFLAGS) -c $<
+PROGRAMS = ipctest-gtk
 
 
 all: $(PROGRAMS) subdirs
+
+ipctest: $(OBJS) $(LIBIPCTEST) $(LIBSOCKLIB)
 
 
 .PHONY: subdirs
@@ -59,7 +58,16 @@ subdirs:
 
 .PHONY: clean
 clean:
+	rm -f $(OBJS) $(PROGRAMS) .makedepends
+	touch -r .mkdep-timestamp .makedepends
 	for dir in $(SUBDIRS); do \
 		make -C $$dir clean; \
 	done
 
+.PHONY: depends
+depends: $(SRCS) $(INCS)
+	$(CC) -I. $(CPPFLAGS) -MM $(SRCS) > .makedepends
+	touch .mkdep-timestamp
+
+.makedepends:
+include .makedepends

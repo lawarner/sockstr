@@ -18,24 +18,15 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-// FieldType.cpp
+// ipctest-gtk.cpp
 //
+// This is a testing tool used to create and execute various collections
+// of tests.  The underlying IPC mechanism uses the sockstr library.
 
-#include "FieldType.h"
-using namespace ipctest;
+#include <iostream>
 
-
-FieldTypeInt FieldType::gFieldTypeInt;
-FieldTypeChar FieldType::gFieldTypeChar;
-FieldTypeUndefined FieldType::gFieldTypeUndefined;
-
-
-FieldType& FieldType::fromString(const std::string& ftStr)
+int main(int argc, const char* argv[])
 {
-    if (ftStr == "int")
-        return gFieldTypeInt;
-    else if (ftStr == "char")
-        return gFieldTypeChar;
-    else
-        return gFieldTypeUndefined;
+    std::cout << "Program has run." << std::endl;
+    return 0;
 }

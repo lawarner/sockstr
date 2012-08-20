@@ -43,6 +43,7 @@ namespace ipctest
 // FORWARD CLASS DECLARATIONS
 //
 class FieldTypeInt;
+class FieldTypeInt16;
 class FieldTypeChar;
 class FieldTypeUndefined;
 
@@ -77,6 +78,7 @@ protected:
 
 private:
     static FieldTypeInt gFieldTypeInt;
+    static FieldTypeInt16 gFieldTypeInt16;
     static FieldTypeChar gFieldTypeChar;
     static FieldTypeUndefined gFieldTypeUndefined;
 };
@@ -85,6 +87,12 @@ class FieldTypeInt : public FieldType
 {
 public:
 FieldTypeInt() : FieldType(Int, 4) { }
+};
+
+class FieldTypeInt16 : public FieldType
+{
+public:
+FieldTypeInt16() : FieldType(Int16, 2) { }
 };
 
 class FieldTypeChar : public FieldType
