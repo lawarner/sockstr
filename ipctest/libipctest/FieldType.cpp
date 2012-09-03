@@ -27,7 +27,10 @@ using namespace ipctest;
 
 FieldTypeInt FieldType::gFieldTypeInt;
 FieldTypeInt16 FieldType::gFieldTypeInt16;
-FieldTypeChar FieldType::gFieldTypeChar;
+FieldTypeInt32 FieldType::gFieldTypeInt32;
+FieldTypeInt64 FieldType::gFieldTypeInt64;
+FieldTypeChar  FieldType::gFieldTypeChar;
+FieldTypeStruct FieldType::gFieldTypeStruct;
 FieldTypeUndefined FieldType::gFieldTypeUndefined;
 
 
@@ -37,8 +40,55 @@ FieldType& FieldType::fromString(const std::string& ftStr)
         return gFieldTypeInt;
     else if (ftStr == "int16")
         return gFieldTypeInt16;
+    else if (ftStr == "int32")
+        return gFieldTypeInt32;
+    else if (ftStr == "int64")
+        return gFieldTypeInt64;
     else if (ftStr == "char")
         return gFieldTypeChar;
-    else
-        return gFieldTypeUndefined;
+    else if (ftStr == "struct")
+        return gFieldTypeStruct;
+
+    //TODO: check for extensions
+    return gFieldTypeUndefined;
 }
+
+
+std::string FieldType::toString(const FieldType& fType)
+{
+    const char* ret = "?err";
+
+#define STRNAME(NAME) case NAME: ret = #NAME; break
+
+    switch (fType.ident())
+    {
+        STRNAME(Undefined);
+        STRNAME(Int16);
+        STRNAME(Int32);
+        STRNAME(Int64);
+        STRNAME(Char);
+        STRNAME(Struct);
+#if 0
+    case Undefined:
+        ret = "Undefined";
+        break;
+    case Int16:
+        ret = "Int16";
+        break;
+    case Int32:    // note: Int == Int32
+        ret = "Undefined";
+        break;
+    case Int64:
+        ret = "Undefined";
+        break;
+    case Char:
+        ret = "Undefined";
+        break;
+#endif
+    default:
+        break;
+    }
+
+    return ret;
+}
+

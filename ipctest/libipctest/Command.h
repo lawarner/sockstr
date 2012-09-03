@@ -30,6 +30,19 @@
 #include <vector>
 
 
+//
+// FORWARD CLASS DECLARATIONS
+//
+namespace sockstr
+{
+    class Socket;
+}
+namespace ipctest
+{
+    class Command;
+}
+
+
 namespace ipctest
 {
 
@@ -41,16 +54,10 @@ namespace ipctest
 #endif
 
 //
-// FORWARD CLASS DECLARATIONS
-//
-class Command;
-
-//
 // TYPE DEFINITIONS
 //
 typedef std::vector<Command *> CommandList;
 typedef CommandList::iterator CommandIterator;
-
 
 //
 // CLASS DEFINITIONS
@@ -92,14 +99,42 @@ protected:
 
 // some of the basic commands are defined here:
 
-/** This command does nothing. */
-class CommandNoop : public Command
+/** Comment command. */
+class CommandComment : public Command
 {
 public:
-    CommandNoop()
-        : Command("Noop") { }
+	CommandComment(const std::string& comment)
+        : Command("Comment")
+    	, comment_(comment)  { }
 
     virtual CommandIterator& execute(CommandIterator& cmds) { return cmds; }
+
+private:
+    std::string comment_;
+};
+
+/** Connect command. */
+class CommandConnect : public Command
+{
+public:
+    CommandConnect(const std::string& url, int port);
+
+    virtual CommandIterator& execute(CommandIterator& cmds);
+
+    sockstr::Socket* getSocket() const;
+
+private:
+    std::string url_;
+    int port_;
+};
+
+/** Connect command. */
+class CommandDisconnect : public Command
+{
+public:
+    CommandDisconnect(sockstr::Socket* sock);
+
+    virtual CommandIterator& execute(CommandIterator& cmds);
 };
 
 /** This command is a container that holds a sequence of
@@ -117,6 +152,36 @@ public:
 private:
     std::string functionName_;
     CommandList commands_;
+};
+
+/** This command does nothing. */
+class CommandNoop : public Command
+{
+public:
+    CommandNoop()
+        : Command("Noop") { }
+
+    virtual CommandIterator& execute(CommandIterator& cmds) { return cmds; }
+};
+
+/** Receive command. */
+class CommandReceive : public Command
+{
+public:
+    CommandReceive();
+
+    virtual CommandIterator& execute(CommandIterator& cmds);
+
+};
+
+/** Send command. */
+class CommandSend : public Command
+{
+public:
+    CommandSend();
+
+    virtual CommandIterator& execute(CommandIterator& cmds);
+
 };
 
 }  // namespace ipctest

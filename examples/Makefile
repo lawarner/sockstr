@@ -60,8 +60,7 @@ testsockstr: testsockstr.o $(LIBSOCKLIB)
 
 .PHONY: clean
 clean:
-	rm -f $(OBJS) $(PROGRAMS) .makedepends
-	touch -r .mkdep-timestamp .makedepends
+	rm -f $(OBJS) $(PROGRAMS)
 
 .PHONY: depends
 depends: $(SRCS) $(INCS)

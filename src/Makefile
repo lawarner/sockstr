@@ -50,8 +50,7 @@ $(LIBSOCKSTR): $(OBJS)
 
 .PHONY: clean
 clean:
-	rm -f $(OBJS) $(LIBSOCKSTR) .makedepends
-	touch -r .mkdep-timestamp .makedepends
+	rm -f $(OBJS) $(LIBSOCKSTR)
 
 .PHONY: depends
 depends: $(SRCS) $(INCS)

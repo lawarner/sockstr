@@ -24,9 +24,36 @@
 // of tests.  The underlying IPC mechanism uses the sockstr library.
 
 #include <iostream>
+#include <gtkmm.h>
 
-int main(int argc, const char* argv[])
+#include "MainWindow.h"
+
+
+
+int main(int argc, char* argv[])
 {
-    std::cout << "Program has run." << std::endl;
-    return 0;
+    std::cout << "Program ipctest-gtk start." << std::endl;
+
+    Glib::RefPtr<Gtk::Application> app
+        = Gtk::Application::create(argc, argv, "sockstr.ipctest.gtk");
+
+    if (argc < 2)
+    {
+        std::cerr << "Usage: ipctest-gtk <ipcdef_filename>" << std::endl;
+        return 1;
+    }
+    std::string defFilename = argv[1];
+
+    Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_file("ipctest-gtk.glade");
+
+    ipctest::uigtk::MainWindow* mainWindow;
+    builder->get_widget_derived("IpcTestMainWindow", mainWindow);
+    if (mainWindow)
+    {
+        mainWindow->setup(defFilename);
+        return app->run(*mainWindow);
+    }
+
+    std::cerr << "Could not initialize main Gtk window" << std::endl;
+    return 2;
 }

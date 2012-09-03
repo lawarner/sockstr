@@ -49,6 +49,11 @@ void Message::addField(Field* field)
     totalSize_ += field->size() * field->elements();
 }
 
+const FieldsArray& Message::getFields() const
+{
+    return fields_;
+}
+
 const std::string& Message::getName() const
 {
     return name_;

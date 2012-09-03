@@ -25,7 +25,7 @@ using namespace ipctest;
 using namespace std;
 
 
-Field::Field(const string& name, FieldType ft, int elements)
+Field::Field(const string& name, const FieldType& ft, int elements)
     : name_(name)
     , type_(ft)
     , size_(ft.size())
@@ -38,6 +38,19 @@ Field::~Field()
 {
 
 }
+
+Field* Field::create(const std::string& name, const std::string& ftype, int occurs)
+{
+    Field* field = 0;
+    FieldType& refFt = FieldType::fromString(ftype);
+    if (refFt.ident() != FieldType::Undefined)
+    {
+        field = new Field(name, refFt, occurs);
+    }
+
+    return field;
+}
+
 
 int Field::elements() const
 {

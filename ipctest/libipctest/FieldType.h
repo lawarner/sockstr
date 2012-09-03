@@ -44,7 +44,10 @@ namespace ipctest
 //
 class FieldTypeInt;
 class FieldTypeInt16;
+class FieldTypeInt32;
+class FieldTypeInt64;
 class FieldTypeChar;
+class FieldTypeStruct;
 class FieldTypeUndefined;
 
 //
@@ -57,29 +60,36 @@ class FieldTypeUndefined;
 class FieldType
 {
 public:
-    enum FieldEnum
+    enum FieldIdent
     {
         Undefined,
         Int16,
         Int32,
         Int = Int32,
-        Char
+        Int64,
+        Char,
+        Struct
     };
 
-	FieldType(FieldEnum ft, int sz) : ftype_(ft), size_(sz) { }
+	FieldType(FieldIdent ft, int sz) : ftype_(ft), size_(sz) { }
 
     static FieldType& fromString(const std::string& ftStr);
-
+    static std::string toString(const FieldType& fType);
+    
+    FieldIdent ident() const { return ftype_; }
     int size() const { return size_; }
 
 protected:
-    FieldEnum ftype_;
+    FieldIdent ftype_;
     int size_;
 
 private:
     static FieldTypeInt gFieldTypeInt;
     static FieldTypeInt16 gFieldTypeInt16;
+    static FieldTypeInt32 gFieldTypeInt32;
+    static FieldTypeInt64 gFieldTypeInt64;
     static FieldTypeChar gFieldTypeChar;
+    static FieldTypeStruct gFieldTypeStruct;
     static FieldTypeUndefined gFieldTypeUndefined;
 };
 
@@ -95,10 +105,28 @@ public:
 FieldTypeInt16() : FieldType(Int16, 2) { }
 };
 
+class FieldTypeInt32 : public FieldType
+{
+public:
+FieldTypeInt32() : FieldType(Int32, 4) { }
+};
+
+class FieldTypeInt64 : public FieldType
+{
+public:
+FieldTypeInt64() : FieldType(Int64, 8) { }
+};
+
 class FieldTypeChar : public FieldType
 {
 public:
 FieldTypeChar() : FieldType(Char, 1) { }
+};
+
+class FieldTypeStruct : public FieldType
+{
+public:
+FieldTypeStruct() : FieldType(Struct, 0) { }
 };
 
 class FieldTypeUndefined : public FieldType

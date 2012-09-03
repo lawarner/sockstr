@@ -110,7 +110,8 @@ Message* Parser::createMessage(const std::string& msgName, PairIter& inStr)
                 }
                 
             }
-            Field* field = new Field(fieldName, FieldType::fromString(tokens[0]), occurs);
+//            Field* field = new Field(fieldName, FieldType::fromString(tokens[0]), occurs);
+            Field* field = Field::create(fieldName, tokens[0], occurs);
             msg->addField(field);
         }
     }

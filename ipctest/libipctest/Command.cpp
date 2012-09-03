@@ -20,10 +20,57 @@
 
 // Command.cpp
 //
+#include <sockstr/sstypes.h>
+#include <sockstr/Socket.h>
+
 #include "Command.h"
 using namespace ipctest;
 
 
+// Connect
+CommandConnect::CommandConnect(const std::string& url, int port)
+    : url_(url)
+    , port_(port)
+{
+
+}
+
+
+CommandIterator& CommandConnect::execute(CommandIterator& cmds)
+{
+    sockstr::Socket* sock = new sockstr::Socket(url_.c_str(), port_);
+    if (sock->queryStatus() == sockstr::SC_OK)
+        data_ = sock;
+
+    return cmds;
+}
+
+sockstr::Socket* CommandConnect::getSocket() const
+{
+    return (sockstr::Socket*) data_;
+}
+
+
+//  Disconnect
+CommandDisconnect::CommandDisconnect(sockstr::Socket* sock)
+    : Command("Disconnect", sock)
+{
+
+}
+
+CommandIterator& CommandDisconnect::execute(CommandIterator& cmds)
+{
+    if (data_)
+    {
+        sockstr::Socket* sock = (sockstr::Socket *) data_;
+        sock->close();
+    }
+
+    return cmds;
+}
+
+
+//  Function
 CommandFunction::CommandFunction(const std::string& funcName, void* data, int delay)
     : Command("Function", data, delay)
     , functionName_(funcName)

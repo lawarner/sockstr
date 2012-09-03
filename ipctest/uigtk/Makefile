@@ -26,15 +26,18 @@ LIBIPCDIR = ../libipctest
 LIBIPCTEST = $(LIBIPCDIR)/libipctest.a
 LIBSOCKLIB = $(TOP)/src/libsockstr.a
 
+GTKINC = `pkg-config --cflags gtkmm-3.0`
+GTKLIB = `pkg-config --libs gtkmm-3.0`
+
 SUBDIRS = 
 
 CC = g++
 #CFLAGS = -Wall -O2 -I..
-CPPFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
+CPPFLAGS = -Wall -g -O0 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR) -I$(LIBIPCDIR) -I$(GTKINC)
 LDFLAGS = -pthread
-LDLIBS = $(LIBIPCTEST) $(LIBSOCKLIB)
+LDLIBS = $(LIBIPCTEST) $(LIBSOCKLIB) $(GTKLIB)
 
-OBJS := ipctest-gtk.o
+OBJS := ipctest-gtk.o MainWindow.o
 
 SRCS := $(OBJS:.o=.cpp)
 
@@ -46,7 +49,7 @@ PROGRAMS = ipctest-gtk
 
 all: $(PROGRAMS) subdirs
 
-ipctest: $(OBJS) $(LIBIPCTEST) $(LIBSOCKLIB)
+ipctest-gtk: $(OBJS) $(LIBIPCTEST) $(LIBSOCKLIB)
 
 
 .PHONY: subdirs

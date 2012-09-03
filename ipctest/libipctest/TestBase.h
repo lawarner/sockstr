@@ -18,16 +18,26 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-#ifndef _FIELD_H_INCLUDED_
-#define _FIELD_H_INCLUDED_
+#ifndef _TESTBASE_H_INCLUDED_
+#define _TESTBASE_H_INCLUDED_
 //
 //
 
 //
 // INCLUDE FILES
 //
-#include <string>
-#include "FieldType.h"
+#include <vector>
+#include "Command.h"
+#include "Message.h"
+
+
+//
+// FORWARD CLASS DECLARATIONS
+//
+namespace sockstr
+{
+    class Socket;
+}
 
 
 namespace ipctest
@@ -41,43 +51,41 @@ namespace ipctest
 #endif
 
 //
-// FORWARD CLASS DECLARATIONS
-//
-//class FieldValue;
-
-//
 // TYPE DEFINITIONS
 //
-typedef int FieldValue;
 
 //
 // CLASS DEFINITIONS
 //
-class Field
+class TestBase
 {
 public:
-    Field(const std::string& name, const FieldType& ft, int elements);
-    virtual ~Field();
+    TestBase();
+    ~TestBase();
 
-    static Field* create(const std::string& name, const std::string& ftype, int occurs = 1);
+    bool isConnected() const { return isConnected_; }
+    void setConnected(bool connected) { isConnected_ = connected; }
+    sockstr::Socket* getSocket() { return socket_; }
+    void setSocket(sockstr::Socket* sock) { socket_ = sock; }
 
-    int elements() const;
-    const FieldValue& get() const;
-    FieldValue& getRef() const;
-    std::string name() const { return name_; }
-    void set(const FieldValue fv);
-    int size() const;
-
-private:
-    std::string name_;
-    FieldType type_;
-    int size_;
-    int elements_;
-    FieldValue* value_;
+    bool readIpcDefs(const std::string& fileName);
+    const std::vector<std::string>& builtinCommandNames() const { return builtinCommands_; }
+    const MessageList& messageList() const { return messageList_; }
 
 private:
-    Field(const Field&);	// disable copy constructor
-    Field& operator=(const Field& rSource);	// disable assignment operator
+    void init();
+
+private:
+    Command* currentMain_;
+    CommandList commandList_;
+    MessageList messageList_;
+    std::vector<std::string> builtinCommands_;
+    bool isConnected_;
+    sockstr::Socket* socket_;
+
+private:
+    TestBase(const TestBase&);	// disable copy constructor
+    TestBase& operator=(const TestBase& rSource);	// disable assignment operator
 };
 
 }  // namespace ipctest

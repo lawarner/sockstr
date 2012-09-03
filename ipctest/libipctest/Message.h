@@ -60,6 +60,7 @@ public:
     virtual ~Message();
 
     void addField(Field* field);
+    const FieldsArray& getFields() const;
     const std::string& getName() const;
     const int getOrdinal() const;
     const int getSize() const;

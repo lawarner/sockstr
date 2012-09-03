@@ -1,0 +1,6 @@
+Command.o: Command.cpp Command.h
+Field.o: Field.cpp Field.h FieldType.h
+FieldType.o: FieldType.cpp FieldType.h
+Message.o: Message.cpp Field.h FieldType.h Message.h
+Parser.o: Parser.cpp Field.h FieldType.h Message.h Parser.h
+TestBase.o: TestBase.cpp Parser.h Message.h TestBase.h Command.h

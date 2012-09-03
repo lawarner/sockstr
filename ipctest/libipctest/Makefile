@@ -33,11 +33,11 @@ LDFLAGS = -pthread $(LIBSOCKLIB)
 
 #COMPILE = $(CC) $(CFLAGS) -c
 
-OBJS := Command.o Field.o FieldType.o Message.o Parser.o
+OBJS := Command.o Field.o FieldType.o Message.o Parser.o TestBase.o
 
 SRCS := $(OBJS:.o=.cpp)
 
-INCS = Command.h Field.h FieldType.h Message.h Parser.h
+INCS = Command.h Field.h FieldType.h Message.h Parser.h TestBase.h
 
 LIBIPCTEST = libipctest.a
 
@@ -64,8 +64,7 @@ subdirs:
 
 .PHONY: clean
 clean:
-	rm -f $(OBJS) $(LIBIPCTEST) .makedepends
-	touch -r .mkdep-timestamp .makedepends
+	rm -f $(OBJS) $(LIBIPCTEST)
 	for dir in $(SUBDIRS); do \
 		make -C $$dir clean; \
 	done
