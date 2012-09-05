@@ -20,10 +20,10 @@
 
 // Command.cpp
 //
-#include <sockstr/sstypes.h>
 #include <sockstr/Socket.h>
 
 #include "Command.h"
+#include "RunContext.h"
 using namespace ipctest;
 
 
@@ -36,13 +36,15 @@ CommandConnect::CommandConnect(const std::string& url)
 }
 
 
-CommandIterator& CommandConnect::execute(CommandIterator& cmds)
+bool CommandConnect::execute(RunContext& context)
 {
     sockstr::Socket* sock = new sockstr::Socket(url_.c_str(), sockstr::Socket::modeReadWrite);
-    if (sock->queryStatus() == sockstr::SC_OK)
-        data_ = sock;
+    if (sock->queryStatus() != sockstr::SC_OK)
+        return false;
 
-    return cmds;
+    data_ = sock;
+    context.setSocket(sock);
+    return true;
 }
 
 sockstr::Socket* CommandConnect::getSocket() const
@@ -52,21 +54,21 @@ sockstr::Socket* CommandConnect::getSocket() const
 
 
 //  Disconnect
-CommandDisconnect::CommandDisconnect(sockstr::Socket* sock)
-    : Command("Disconnect", sock)
+CommandDisconnect::CommandDisconnect()
+    : Command("Disconnect", 0)
 {
 
 }
 
-CommandIterator& CommandDisconnect::execute(CommandIterator& cmds)
+bool CommandDisconnect::execute(RunContext& context)
 {
-    if (data_)
-    {
-        sockstr::Socket* sock = (sockstr::Socket *) data_;
-        sock->close();
-    }
+    sockstr::Socket* sock = context.getSocket();
+    if (!sock)
+        return false;
 
-    return cmds;
+    sock->close();
+
+    return true;
 }
 
 
@@ -83,11 +85,12 @@ void CommandFunction::addCommand(Command* cmd)
     commands_.push_back(cmd);
 }
 
-CommandIterator& CommandFunction::execute(CommandIterator& cmds)
+bool CommandFunction::execute(RunContext& context)
 {
     CommandIterator it = commands_.begin();
     for ( ; it != commands_.end(); ++it)
-        (*it)->execute(cmds);
+        if (!(*it)->execute(context))
+            return false;       // stop on first error
 
-    return cmds;
+    return true;
 }

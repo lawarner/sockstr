@@ -27,6 +27,7 @@
 #include "MainWindow.h"
 #include "Field.h"
 #include "Parser.h"
+#include "RunContext.h"
 #include "TestBase.h"
 
 
@@ -36,6 +37,7 @@ using namespace ipctest::uigtk;
 MainWindow::MainWindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& builder)
     : Gtk::Window(cobject)
     , builder_(builder)
+    , context_(*new ipctest::RunContext)
     , testBase_(new ipctest::TestBase)
 {
     initDialog();
@@ -130,6 +132,7 @@ bool MainWindow::setup(const std::string& defFilename)
 void MainWindow::onConnect()
 {
     ipctest::CommandIterator it;
+
     if (!testBase_->isConnected())
     {
         Gtk::Entry* connUrl;
@@ -141,14 +144,14 @@ void MainWindow::onConnect()
         std::cout << "Connect to url: " << url << "." << std::endl;
 
         //TODO: if url == ":" only, connect a server socket
-        ipctest::CommandConnect conn(url);
-        conn.execute(it);
-        testBase_->setSocket(conn.getSocket());
+        ipctest::CommandConnect connect(url);
+        if (connect.execute(context_))
+            testBase_->setSocket(context_.getSocket());
     }
     else
     {
-        ipctest::CommandDisconnect disconn(testBase_->getSocket());
-        disconn.execute(it);
+        ipctest::CommandDisconnect disconn;
+        disconn.execute(context_);
     }
 }
 

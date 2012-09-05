@@ -40,6 +40,7 @@ namespace sockstr
 namespace ipctest
 {
     class Command;
+    class RunContext;
 }
 
 
@@ -66,18 +67,16 @@ class Command
 {
 public:
    /** Run the command in a manner specific to the sub-class.
-     * @param eHist An enumeration list of history commands.  The first
-     * element of the list is the current command. <p>
+     * @param context The run context which contains an iterator through
+     * a set of commands.  The first element of the list is the current command. <p>
      * The caller will simply step through the enumeration
      * list, oblivious to any changes that the command may
-     * have made to the enumeration list.
-     * @return The enumeration list is returned.  For normal commands,
-     * this will be the unaltered list that was passed in
-     * as a method parameter.  Complex commands such as
-     * If and Loop will return modified copies of the
-     * enumeration list in order to modify execution.
+     * have made to the iterator. <p>
+     * Complex commands such as If and Loop will modify the iterator
+     *  within the run context in order to modify execution.
+     * @return true if command succeeded.
      */
-    virtual CommandIterator& execute(CommandIterator& cmds) = 0;
+    virtual bool execute(RunContext& context) = 0;
 
 
 protected:
@@ -107,7 +106,7 @@ public:
         : Command("Comment")
     	, comment_(comment)  { }
 
-    virtual CommandIterator& execute(CommandIterator& cmds) { return cmds; }
+    virtual bool execute(RunContext& context)  { return true; }
 
 private:
     std::string comment_;
@@ -119,7 +118,7 @@ class CommandConnect : public Command
 public:
     CommandConnect(const std::string& url);
 
-    virtual CommandIterator& execute(CommandIterator& cmds);
+    virtual bool execute(RunContext& context);
 
     sockstr::Socket* getSocket() const;
 
@@ -131,9 +130,9 @@ private:
 class CommandDisconnect : public Command
 {
 public:
-    CommandDisconnect(sockstr::Socket* sock);
+    CommandDisconnect();
 
-    virtual CommandIterator& execute(CommandIterator& cmds);
+    virtual bool execute(RunContext& context);
 };
 
 /** This command is a container that holds a sequence of
@@ -146,7 +145,7 @@ public:
     CommandFunction(const std::string& funcName, void* data = 0, int delay = 0);
     void addCommand(Command* cmd);
 
-    virtual CommandIterator& execute(CommandIterator& cmds);
+    virtual bool execute(RunContext& context);
 
 private:
     std::string functionName_;
@@ -160,7 +159,7 @@ public:
     CommandNoop()
         : Command("Noop") { }
 
-    virtual CommandIterator& execute(CommandIterator& cmds) { return cmds; }
+    virtual bool execute(RunContext& context)  { return true; }
 };
 
 /** Receive command. */
@@ -169,7 +168,7 @@ class CommandReceive : public Command
 public:
     CommandReceive();
 
-    virtual CommandIterator& execute(CommandIterator& cmds);
+    virtual bool execute(RunContext& context);
 
 };
 
@@ -179,7 +178,7 @@ class CommandSend : public Command
 public:
     CommandSend();
 
-    virtual CommandIterator& execute(CommandIterator& cmds);
+    virtual bool execute(RunContext& context);
 
 };
 

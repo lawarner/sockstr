@@ -33,6 +33,7 @@ namespace ipctest
 {
 
 // FORWARD CLASS DECLARATIONS
+class RunContext;
 class TestBase;
 
 
@@ -151,7 +152,8 @@ private:
     Gtk::TreeView* historyView_;
     Glib::RefPtr<Gtk::ListStore> historyList_;
 
-    ipctest::TestBase* testBase_;
+    ipctest::RunContext& context_;
+    ipctest::TestBase*  testBase_;
 };
 
 }  // namespace uigtk

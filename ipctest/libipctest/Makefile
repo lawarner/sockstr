@@ -33,11 +33,13 @@ LDFLAGS = -pthread $(LIBSOCKLIB)
 
 #COMPILE = $(CC) $(CFLAGS) -c
 
-OBJS := Command.o Field.o FieldType.o Message.o Parser.o TestBase.o
+OBJS := Command.o Field.o FieldType.o Message.o Parser.o \
+	RunContext.o TestBase.o
 
 SRCS := $(OBJS:.o=.cpp)
 
-INCS = Command.h Field.h FieldType.h Message.h Parser.h TestBase.h
+INCS = Command.h Field.h FieldType.h Message.h Parser.h \
+	RunContext.h TestBase.h
 
 LIBIPCTEST = libipctest.a
 
@@ -46,7 +48,7 @@ LIBSOCKLIB = $(TOP)/src/libsockstr.a
 PROGRAMS = 
 
 
-.cpp.o: ; $(CC) $(CCFLAGS) -c $<
+# .cpp.o: ; $(CC) $(CCFLAGS) -c $<
 
 
 all: $(LIBIPCTEST)
