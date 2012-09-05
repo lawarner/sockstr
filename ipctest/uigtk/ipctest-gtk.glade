@@ -9,8 +9,8 @@
   </object>
   <object class="GtkWindow" id="IpcTestMainWindow">
     <property name="can_focus">False</property>
-    <property name="default_width">700</property>
-    <property name="default_height">500</property>
+    <property name="default_width">800</property>
+    <property name="default_height">580</property>
     <child>
       <object class="GtkBox" id="box1">
         <property name="visible">True</property>
@@ -351,7 +351,7 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="orientation">vertical</property>
-            <property name="position">400</property>
+            <property name="position">380</property>
             <child>
               <object class="GtkPaned" id="paned2">
                 <property name="visible">True</property>
@@ -370,6 +370,9 @@
                         <property name="tooltip_text" translatable="yes">List of messages.</property>
                         <property name="model">message_list</property>
                         <property name="search_column">1</property>
+                        <child internal-child="selection">
+                          <object class="GtkTreeSelection" id="treeview-selection1"/>
+                        </child>
                       </object>
                     </child>
                   </object>
@@ -421,6 +424,9 @@
                     <property name="model">history_list</property>
                     <property name="headers_visible">False</property>
                     <property name="headers_clickable">False</property>
+                    <child internal-child="selection">
+                      <object class="GtkTreeSelection" id="treeview-selection3"/>
+                    </child>
                   </object>
                 </child>
               </object>

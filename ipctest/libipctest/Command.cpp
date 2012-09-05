@@ -28,9 +28,9 @@ using namespace ipctest;
 
 
 // Connect
-CommandConnect::CommandConnect(const std::string& url, int port)
-    : url_(url)
-    , port_(port)
+CommandConnect::CommandConnect(const std::string& url)
+    : Command("Connect")
+    , url_(url)
 {
 
 }
@@ -38,7 +38,7 @@ CommandConnect::CommandConnect(const std::string& url, int port)
 
 CommandIterator& CommandConnect::execute(CommandIterator& cmds)
 {
-    sockstr::Socket* sock = new sockstr::Socket(url_.c_str(), port_);
+    sockstr::Socket* sock = new sockstr::Socket(url_.c_str(), sockstr::Socket::modeReadWrite);
     if (sock->queryStatus() == sockstr::SC_OK)
         data_ = sock;
 

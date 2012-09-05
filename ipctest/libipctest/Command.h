@@ -117,7 +117,7 @@ private:
 class CommandConnect : public Command
 {
 public:
-    CommandConnect(const std::string& url, int port);
+    CommandConnect(const std::string& url);
 
     virtual CommandIterator& execute(CommandIterator& cmds);
 
@@ -125,7 +125,6 @@ public:
 
 private:
     std::string url_;
-    int port_;
 };
 
 /** Connect command. */

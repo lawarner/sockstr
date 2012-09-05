@@ -100,8 +100,7 @@ public:
 	virtual Stream*
 				    listen          (const int nBacklog = 4) = 0;
 	//!  Open a stream (state-dependent).
-    virtual bool    open            (const char* lpszFileName, UINT uOpenFlags,
-                                     CFileException * pError = 0) = 0;
+    virtual bool    open            (const char* lpszFileName, UINT uOpenFlags) = 0;
 	//!  Read raw data from the stream (state-dependent).
     virtual UINT    read            (void* pBuf, UINT uCount) = 0;
 	//!  Read a string from the stream (state-dependent).

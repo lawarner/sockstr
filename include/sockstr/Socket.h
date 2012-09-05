@@ -23,12 +23,14 @@
 //
 // INCLUDE FILES
 //
-#ifndef linux
+#include <sockstr/sstypes.h>
+#ifdef TARGET_WINDOWS
 #include <WinSock2.h>
 #endif
 #include <string>
 #include <sockstr/SocketAddr.h>
 #include <sockstr/Stream.h>
+
 
 namespace sockstr
 {
@@ -43,7 +45,7 @@ namespace sockstr
 //   Data
 //
 //     m_PeerName    Saved socket address of our peer (other end of connection)
-//     m_uOpenFlags  I/O modes of how the socket is opened (see CFile)
+//     m_uOpenFlags  I/O modes of how the socket is opened
 //     m_bAsyncMode  Indicator if I/O is asynchronously performed
 //
 //   ----------------------------------------------------------------
@@ -140,10 +142,8 @@ public:
 	virtual Stream *
 				  listen          (const int nBacklog = 4);
 	//! Open a client or server socket (state-dependent)
-	virtual bool  open            (const char* lpszFileName, UINT uOpenFlags,
-								   CFileException* pError = 0);
-	virtual bool  open			  (SocketAddr& rSockAddr, UINT uOpenFlags,
-								   CFileException* pError = 0);
+	virtual bool  open            (const char* lpszFileName, UINT uOpenFlags);
+	virtual bool  open			  (SocketAddr& rSockAddr, UINT uOpenFlags);
 	//! Read from socket (state-dependent)
 	virtual UINT  read            (void* pBuf, UINT uCount);
 	//!  Read a string from the stream (state-dependent).

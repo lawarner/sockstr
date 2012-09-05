@@ -47,6 +47,8 @@ all: $(LIBSOCKSTR)
 $(LIBSOCKSTR): $(OBJS)
 	$(AR) rsv $@ $(OBJS)
 
+$(IDIR2)/sstypes.h: $(IDIR2)/sstypes-linux.h
+	cp $(IDIR2)/sstypes-linux.h $(IDIR2)/sstypes.h
 
 .PHONY: clean
 clean:

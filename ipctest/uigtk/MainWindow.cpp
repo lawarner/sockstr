@@ -137,13 +137,11 @@ void MainWindow::onConnect()
         builder_->get_widget("connectionUrl",  connUrl);
         builder_->get_widget("connectionPort", connPort);
         std::string url = connUrl->get_text();
-        int port;
-        std::istringstream strport(connPort->get_text());
-        strport >> port;
-        std::cout << "Connect to url: " << url << ", port " << port << "." << std::endl;
+        url += ":" + connPort->get_text();
+        std::cout << "Connect to url: " << url << "." << std::endl;
 
         //TODO: if url == ":" only, connect a server socket
-        ipctest::CommandConnect conn(url, port);
+        ipctest::CommandConnect conn(url);
         conn.execute(it);
         testBase_->setSocket(conn.getSocket());
     }

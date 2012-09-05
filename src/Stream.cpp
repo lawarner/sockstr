@@ -36,7 +36,7 @@
 //              call mechanism, and an extendable state machine.
 //              And it is polymorphic, which CFile is lacking.
 //
-//   Note : The linux version will be based on the iostream classes.
+//   Note : The newer versions are based on the std::iostream class.
 
 //
 // INCLUDE FILES

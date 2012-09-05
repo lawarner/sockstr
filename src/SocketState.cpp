@@ -294,7 +294,6 @@ SocketState::listen(Socket* /*pSocket*/, const int /*nBacklog*/)
 //   pSocket                   Pointer to socket object
 //   rSockAddr                 Reference to a socket address to open
 //   uOpenFlags                Flags indicating how the socket should be opened
-//   pError                    Optional pointer to CFileException object
 //
 // Pre      : This routine expects a well-formed SocketAddr.
 // Post     : Upon successful completion of this routine, either a server
@@ -313,9 +312,8 @@ SocketState::listen(Socket* /*pSocket*/, const int /*nBacklog*/)
 //
 bool
 SocketState::open(Socket* /*pSocket*/,
-					  SocketAddr& /*rSockAddr*/,
-					  UINT /*uOpenFlags*/,
-					  CFileException* /*pError*/)
+                  SocketAddr& /*rSockAddr*/,
+                  UINT /*uOpenFlags*/)
 {
 	VERIFY(0);	// We should never execute this base class virtual function
 	return false;
@@ -626,7 +624,6 @@ SSOpenedServer::getSockOpt(Socket* pSocket,
 //   pSocket                   Pointer to socket object
 //   rSockAddr                 Reference to a socket address to open
 //   uOpenFlags                Flags indicating how the socket should be opened
-//   pError                    Optional pointer to CFileException object
 //
 // Pre      : This routine expects a well-formed SocketAddr.
 // Post     : The open flags given as parameter are saved in member variables.
@@ -644,8 +641,7 @@ SSOpenedServer::getSockOpt(Socket* pSocket,
 bool
 SSOpenedServer::open(Socket* pSocket,
                      SocketAddr& rSockAddr,
-                     UINT  uOpenFlags,
-                     CFileException* /*pError*/)
+                     UINT  uOpenFlags)
 {
 	// Assume failure
 	changeState(pSocket, SSClosed::instance());
@@ -797,7 +793,6 @@ SSOpenedClient::getSockOpt(Socket* pSocket,
 //   pSocket                   Pointer to socket object
 //   rSockAddr                 Reference to a socket address to open
 //   uOpenFlags                Flags indicating how the socket should be opened
-//   pError                    Optional pointer to CFileException object
 //
 // Pre      : This routine expects a well-formed SocketAddr.
 // Post     : The open flags given as parameter are saved in member variables.
@@ -809,9 +804,8 @@ SSOpenedClient::getSockOpt(Socket* pSocket,
 //
 bool
 SSOpenedClient::open(Socket* pSocket,
-						 SocketAddr& rSockAddr,
-						 UINT  uOpenFlags,
-						 CFileException* /*pError*/)
+                     SocketAddr& rSockAddr,
+                     UINT  uOpenFlags)
 {
 	// Assume failure
 	changeState(pSocket, SSClosed::instance());

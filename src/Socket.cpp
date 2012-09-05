@@ -102,7 +102,7 @@ const int Socket::modeReadWrite    = 16;
 // Returns  : -
 // Params   :
 //   lpszFileName              Fully qualified host name and port
-//   uOpenFlags                CFile::modeXXX open mode flags
+//   uOpenFlags                open mode flags
 //   rSockAddr                 An already resolved address
 //
 // Pre      :
@@ -572,7 +572,6 @@ Socket::listen(const int nBacklog)
 //   lpszFileName              Name of socket to open (in URL format)
 //   rSockAddr                 Reference to a socket address to open
 //   uOpenFlags                Flags indicating how the socket should be opened
-//   pError                    Optional pointer to CFileException object
 //
 // Pre      : The first form of Open expects the lpszFileName parameter to
 //            contain a valid URL name representing the socket to open.
@@ -602,7 +601,7 @@ Socket::listen(const int nBacklog)
 // Remarks  :
 //
 bool
-Socket::open(const char* lpszFileName, UINT uOpenFlags, CFileException* pError)
+Socket::open(const char* lpszFileName, UINT uOpenFlags)
 {
 	WORD wPort = 0;
 	size_t nColon;
@@ -653,18 +652,18 @@ Socket::open(const char* lpszFileName, UINT uOpenFlags, CFileException* pError)
 	if (wPort == 0 && nColon != std::string::npos)
 	{
 		SocketAddr SockAddr(Host.c_str(), Name.substr(nColon + 1).c_str());
-        return open(SockAddr, uOpenFlags, pError);
+        return open(SockAddr, uOpenFlags);
 	}
 	else
 	{
 		SocketAddr SockAddr(Host.c_str(), wPort);
-        return open(SockAddr, uOpenFlags, pError);
+        return open(SockAddr, uOpenFlags);
 	}
 }
 
 
 bool
-Socket::open(SocketAddr& rSockAddr, UINT uOpenFlags, CFileException* pError)
+Socket::open(SocketAddr& rSockAddr, UINT uOpenFlags)
 {
 #ifdef TARGET_WINDOWS
 	if (rSockAddr.m_pProtocol != 0 && _stricmp(rSockAddr.m_pProtocol, "udp") == 0)
@@ -691,7 +690,7 @@ Socket::open(SocketAddr& rSockAddr, UINT uOpenFlags, CFileException* pError)
 	}
 //    std::cout << "4 Socket::open errno=" << errno << std::endl;
 
-	if (! m_pState->open(this, rSockAddr, uOpenFlags, pError))
+	if (! m_pState->open(this, rSockAddr, uOpenFlags))
 	{
 //        std::cout << "5 Socket::open errno=" << errno << std::endl;
 		m_Status = SC_FAILED;
