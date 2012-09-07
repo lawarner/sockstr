@@ -78,6 +78,7 @@ public:
      */
     virtual bool execute(RunContext& context) = 0;
 
+    virtual std::string toString() { return commandName_; }
 
 protected:
     Command(void) { };
@@ -107,6 +108,7 @@ public:
     	, comment_(comment)  { }
 
     virtual bool execute(RunContext& context)  { return true; }
+    virtual std::string toString() { return commandName_ + ": " + comment_; }
 
 private:
     std::string comment_;

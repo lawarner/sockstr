@@ -66,7 +66,7 @@ bool Parser::stringToMessageList(const string& str, MessageList& ml)
                 Message* msg = createMessage(strMsg, in);
                 if (msg)
                     ml.push_back(msg);
-                cout << endl;
+//                cout << endl;
             }
         }
     }
@@ -76,7 +76,7 @@ bool Parser::stringToMessageList(const string& str, MessageList& ml)
 
 Message* Parser::createMessage(const std::string& msgName, PairIter& inStr)
 {
-    cout << " -- Begin msg=" << msgName << endl;
+//    cout << " -- Begin msg=" << msgName << endl;
 
     Message* msg = new Message(msgName);
     PairIter out;
@@ -101,16 +101,16 @@ Message* Parser::createMessage(const std::string& msgName, PairIter& inStr)
                 {
                     fieldName = toks[0];
                     istringstream(toks[1]) >> occurs;
-                    cout << fieldName << " occurs " << occurs << endl;
+//                    cout << fieldName << " occurs " << occurs << endl;
 
                 }
                 else
                 {
-                    cout << "Expecting 2 toks, got " << toks.size() << endl;
+                    cerr << "Field " << fieldName
+                         << ": Expecting 2 toks, got " << toks.size() << endl;
                 }
                 
             }
-//            Field* field = new Field(fieldName, FieldType::fromString(tokens[0]), occurs);
             Field* field = Field::create(fieldName, tokens[0], occurs);
             msg->addField(field);
         }
@@ -145,14 +145,14 @@ void Parser::splitTokens(const std::string& str, vector<std::string>& strVec,
     size_t curr = str.find_first_not_of(seps, 0);
     size_t next = 0;
 
-    cout << " Tokens: [ ";
+//    cout << " Tokens: [ ";
     while (curr != str.npos)
     {
         next = str.find_first_of(seps, curr);
         if (next == str.npos)
             break;
         string strTok(str, curr, next - curr);
-        cout << strTok << ", ";
+//        cout << strTok << ", ";
         strVec.push_back(strTok);
         curr = str.find_first_not_of(seps, next);
     }
@@ -160,10 +160,10 @@ void Parser::splitTokens(const std::string& str, vector<std::string>& strVec,
     if (curr != str.npos)
     {
         string strTok(str, curr);
-        cout << strTok << " ";
+//        cout << strTok << " ";
         strVec.push_back(strTok);
     }
-    cout << "]" << endl;
+//    cout << "]" << endl;
 }
 
 void Parser::trimSpace(PairIter& pi) const
@@ -171,7 +171,7 @@ void Parser::trimSpace(PairIter& pi) const
     size_t comment = pi.get().find("//");
     if (comment != string::npos)
     {
-        cout << "Found comment at " << comment << endl;
+//        cout << "Found comment at " << comment << endl;
         pi.set(pi.begin(), pi.begin() + comment);
     }
 

@@ -78,6 +78,7 @@ public:
     
     FieldIdent ident() const { return ftype_; }
     int size() const { return size_; }
+    std::string toString() const { return toString(*this); }
 
 protected:
     FieldIdent ftype_;

@@ -37,7 +37,7 @@ CPPFLAGS = -Wall -g -O0 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR) -I$(LIBIPCDIR) -I$
 LDFLAGS = -pthread
 LDLIBS = $(LIBIPCTEST) $(LIBSOCKLIB) $(GTKLIB)
 
-OBJS := ipctest-gtk.o MainWindow.o
+OBJS := ipctest-gtk.o MainWindow.o HistoryList.o
 
 SRCS := $(OBJS:.o=.cpp)
 

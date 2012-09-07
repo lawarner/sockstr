@@ -33,6 +33,8 @@ namespace ipctest
 {
 
 // FORWARD CLASS DECLARATIONS
+class Command;
+class Field;
 class RunContext;
 class TestBase;
 
@@ -47,12 +49,11 @@ namespace uigtk
 #endif
 
 //
-// FORWARD CLASS DECLARATIONS
-//
-
-//
 // TYPE DEFINITIONS
 //
+
+// FORWARD CLASS DECLARATIONS
+class HistoryList;
 
 //
 // CLASS DEFINITIONS
@@ -66,20 +67,6 @@ public:
     }
 
     Gtk::TreeModelColumn<Glib::ustring> colName_;
-};
-
-class HistoryColumns : public Gtk::TreeModel::ColumnRecord
-{
-public:
-    HistoryColumns()
-    {
-        add(colText_);
-        add(colCommand_);
-    }
-
-    Gtk::TreeModelColumn<Glib::ustring> colText_;
-    Gtk::TreeModelColumn<gpointer> colCommand_;
-
 };
 
 
@@ -104,12 +91,12 @@ public:
     MessageTableListColumns()
     {
         add(colFieldName_);
-        add(colFieldType_);
+        add(colField_);
         add(colFieldValue_);
     }
 
     Gtk::TreeModelColumn<Glib::ustring> colFieldName_;
-    Gtk::TreeModelColumn<gpointer> colFieldType_;
+    Gtk::TreeModelColumn<ipctest::Field*> colField_;
     Gtk::TreeModelColumn<Glib::ustring> colFieldValue_;
 };
 
@@ -122,6 +109,7 @@ public:
     MainWindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& builder);
     virtual ~MainWindow();
 
+    void log(ipctest::Command* cmd);
     bool setup(const std::string& defFilename);
 
 private:
@@ -131,14 +119,16 @@ private:
 private:
     bool initDialog();
 
-    void onConnect();	// signal handlers
+	// signal handlers
+    void onCellDataFieldType(Gtk::CellRenderer* renderer,
+                             const Gtk::TreeModel::iterator& iter);
+    void onConnect();
     void onExecute();
     void onMessageActivated(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
     void onMessageSelection();
 
     Glib::RefPtr<Gtk::Builder> builder_;
     CommandColumns commandColumns_;
-    HistoryColumns histColumns_;
     MessageListColumns mlColumns_;
     MessageTableListColumns mtlColumns_;
 
@@ -149,9 +139,11 @@ private:
     Glib::RefPtr<Gtk::ListStore> messageList_;
     Gtk::TreeView* messageTableView_;
     Glib::RefPtr<Gtk::ListStore> messageTableList_;
-    Gtk::TreeView* historyView_;
-    Glib::RefPtr<Gtk::ListStore> historyList_;
 
+    Gtk::CellRendererText fieldTypeRenderer_;
+    Gtk::TreeView::Column fieldTypeColumn_;
+
+    HistoryList* historyList_;
     ipctest::RunContext& context_;
     ipctest::TestBase*  testBase_;
 };

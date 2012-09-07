@@ -26,6 +26,7 @@
 
 #include "MainWindow.h"
 #include "Field.h"
+#include "HistoryList.h"
 #include "Parser.h"
 #include "RunContext.h"
 #include "TestBase.h"
@@ -65,12 +66,11 @@ bool MainWindow::initDialog()
         row[commandColumns_.colName_] = (*it);
     }
 
-    historyList_ = Glib::RefPtr<Gtk::ListStore>::
+    Glib::RefPtr<Gtk::ListStore> histList = Glib::RefPtr<Gtk::ListStore>::
         cast_dynamic(builder_->get_object("history_list"));
-
-    row = *(historyList_->append());
-    row[histColumns_.colText_] = "Comment Command";
-    row[histColumns_.colCommand_] = 0;
+    Gtk::TreeView* histView;
+    builder_->get_widget("history_view", histView);
+    historyList_ = new HistoryList(histList, histView);
 
     messageList_ = Glib::RefPtr<Gtk::ListStore>::
         cast_dynamic(builder_->get_object("message_list"));
@@ -82,17 +82,19 @@ bool MainWindow::initDialog()
 
     builder_->get_widget("message", messageName_);
 
-    builder_->get_widget("history_view", historyView_);
-    historyView_->append_column("Command", histColumns_.colText_);
-
     builder_->get_widget("messagelist_view", messageListView_);
     messageListView_->append_column("Ordinal", mlColumns_.colOrdinal_);
     messageListView_->append_column("Message", mlColumns_.colName_);
 
     builder_->get_widget("messagetable_view", messageTableView_);
-    messageTableView_->append_column("Field Name", mtlColumns_.colFieldName_);
-    messageTableView_->append_column_editable("Value", mtlColumns_.colFieldValue_);
+    fieldTypeColumn_.set_title("Type");
+    fieldTypeColumn_.pack_start(fieldTypeRenderer_);
+    fieldTypeColumn_.set_cell_data_func(fieldTypeRenderer_,
+                                        sigc::mem_fun(*this, &MainWindow::onCellDataFieldType));
 
+    messageTableView_->append_column("Field Name", mtlColumns_.colFieldName_);
+    messageTableView_->append_column(fieldTypeColumn_);
+    messageTableView_->append_column_editable("Value", mtlColumns_.colFieldValue_);
 
     // Connect signal handlers
     Gtk::Button* button;
@@ -105,9 +107,17 @@ bool MainWindow::initDialog()
     Glib::RefPtr<Gtk::TreeSelection> selection = messageListView_->get_selection();
     selection->signal_changed().connect(sigc::mem_fun(*this, &MainWindow::onMessageSelection));
 
+    log(new CommandComment("initDialog complete."));
+
     return true;
 }
 
+
+void MainWindow::log(ipctest::Command* cmd)
+{
+    std::cout << "LOG: " << cmd->toString() << std::endl;
+    historyList_->add(cmd);
+}
 
 bool MainWindow::setup(const std::string& defFilename)
 {
@@ -126,6 +136,26 @@ bool MainWindow::setup(const std::string& defFilename)
     }
 
     return true;
+}
+
+
+void MainWindow::onCellDataFieldType(Gtk::CellRenderer* renderer,
+                                     const Gtk::TreeModel::iterator& iter)
+{
+    if (iter)
+    {
+        Glib::ustring val = "";
+        Gtk::TreeModel::Row row = *iter;
+        ipctest::Field* fld = row[mtlColumns_.colField_];
+        if (fld)
+        {
+            val = fld->type().toString();
+            if (fld->elements() > 1)
+                val += Glib::ustring::compose("[%1]", fld->elements());
+        }
+
+        fieldTypeRenderer_.property_text() = val;
+    }
 }
 
 
@@ -176,8 +206,6 @@ void MainWindow::onMessageSelection()
     void * ptr = row[mlColumns_.colMessage_];
     Message* msg = (Message *) ptr;
     messageTableList_->clear();
-//    row = *(messageTableList_->append());
-//    row[mtlColumns_.colFieldName_] = "Fields...";
 
     FieldsArray fields = msg->getFields();
     FieldsIterator fi;
@@ -186,5 +214,6 @@ void MainWindow::onMessageSelection()
         Field* fld = *fi;
         row = *(messageTableList_->append());
         row[mtlColumns_.colFieldName_] = fld->name();
+        row[mtlColumns_.colField_] = fld;
     }
 }

@@ -18,21 +18,26 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-#ifndef _FIELD_H_INCLUDED_
-#define _FIELD_H_INCLUDED_
+#ifndef _HISTORYLIST_H_INCLUDED_
+#define _HISTORYLIST_H_INCLUDED_
 //
 //
 
 //
 // INCLUDE FILES
 //
-#include <string>
-#include "FieldType.h"
+#include <gtkmm.h>
 
 
 namespace ipctest
 {
 
+// FORWARD CLASS DECLARATIONS
+class Command;
+
+
+namespace uigtk
+{
 //
 // MACRO DEFINITIONS
 //
@@ -41,47 +46,53 @@ namespace ipctest
 #endif
 
 //
-// FORWARD CLASS DECLARATIONS
-//
-//class FieldValue;
-
-//
 // TYPE DEFINITIONS
 //
-typedef int FieldValue;
 
 //
 // CLASS DEFINITIONS
 //
-class Field
+class HistoryColumns : public Gtk::TreeModel::ColumnRecord
 {
 public:
-    Field(const std::string& name, const FieldType& ft, int elements);
-    virtual ~Field();
+    HistoryColumns()
+    {
+        add(colText_);
+        add(colCommand_);
+    }
 
-    static Field* create(const std::string& name, const std::string& ftype, int occurs = 1);
-
-    int elements() const;
-    const FieldValue& get() const;
-    FieldValue& getRef() const;
-    std::string name() const { return name_; }
-    void set(const FieldValue fv);
-    int size() const;
-    FieldType type() const { return type_; }
-    const FieldType* typePointer() const { return &type_; }
-
-private:
-    std::string name_;
-    FieldType type_;
-    int size_;
-    int elements_;
-    FieldValue* value_;
-
-private:
-    Field(const Field&);	// disable copy constructor
-    Field& operator=(const Field& rSource);	// disable assignment operator
+    Gtk::TreeModelColumn<Glib::ustring> colText_;
+    Gtk::TreeModelColumn<gpointer> colCommand_;
 };
 
+
+//
+class HistoryList
+{
+public:
+    HistoryList(Glib::RefPtr<Gtk::ListStore> histList, Gtk::TreeView* histView);
+    virtual ~HistoryList();
+
+    void add(const std::string& str);
+    void add(ipctest::Command* cmd);
+    void clear();
+
+private:
+    HistoryList(const HistoryList&);	// disable copy constructor
+    HistoryList& operator=(const HistoryList& rSource);	// disable assignment operator
+
+private:
+    void setup();
+
+private:
+    HistoryColumns histColumns_;
+
+    Glib::RefPtr<Gtk::ListStore> historyList_;
+    Gtk::TreeView* historyView_;
+
+};
+
+}  // namespace uigtk
 }  // namespace ipctest
 
 #endif
