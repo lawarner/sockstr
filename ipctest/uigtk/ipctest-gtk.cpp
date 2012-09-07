@@ -34,9 +34,12 @@ int main(int argc, char* argv[])
 {
     std::cout << "Program ipctest-gtk start." << std::endl;
 
+#if GTK_VERSION_GE(3,4)
     Glib::RefPtr<Gtk::Application> app
         = Gtk::Application::create(argc, argv, "sockstr.ipctest.gtk");
-
+#else
+    Gtk::Main kit(argc, argv);
+#endif
     if (argc < 2)
     {
         std::cerr << "Usage: ipctest-gtk <ipcdef_filename>" << std::endl;
@@ -51,7 +54,12 @@ int main(int argc, char* argv[])
     if (mainWindow)
     {
         mainWindow->setup(defFilename);
+#if GTK_VERSION_GE(3,4)
         return app->run(*mainWindow);
+#else
+	kit.run(*mainWindow);
+	return 0;
+#endif
     }
 
     std::cerr << "Could not initialize main Gtk window" << std::endl;
