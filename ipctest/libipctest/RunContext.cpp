@@ -53,3 +53,21 @@ void RunContext::setSocket(sockstr::Socket* sock)
     sock_ = sock;
 }
 
+std::string RunContext::getValue(const std::string& key)
+{
+    std::map<std::string, std::string>::iterator it;
+    std::string val;
+
+    it = env_.find(key);
+    if (it != env_.end())
+	val = it->second;
+
+    return val;
+}
+
+void RunContext::setValue(const std::string& key, const std::string& value)
+{
+    env_[key] = value;
+}
+
+

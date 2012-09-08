@@ -61,8 +61,7 @@ subdirs:
 
 .PHONY: clean
 clean:
-	rm -f $(OBJS) $(PROGRAMS) .makedepends
-	touch -r .mkdep-timestamp .makedepends
+	rm -f $(OBJS) $(PROGRAMS)
 	for dir in $(SUBDIRS); do \
 		make -C $$dir clean; \
 	done

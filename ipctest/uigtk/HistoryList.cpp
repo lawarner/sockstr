@@ -41,15 +41,13 @@ HistoryList::~HistoryList()
 
 void HistoryList::add(const std::string& str)
 {
-    Gtk::TreeModel::Row row;
-
-    row = *(historyList_->append());
-    row[histColumns_.colText_] = str;
-    row[histColumns_.colCommand_] = 0;
+    add(new CommandComment(str));
 }
 
 void HistoryList::add(ipctest::Command* cmd)
 {
+    commands_.push_back(cmd);
+
     Gtk::TreeModel::Row row;
 
     row = *(historyList_->append());
@@ -60,6 +58,7 @@ void HistoryList::add(ipctest::Command* cmd)
 
 void HistoryList::clear()
 {
+    commands_.clear();
     historyList_->clear();
 }
 

@@ -39,7 +39,6 @@ namespace sockstr
 }
 namespace ipctest
 {
-    class Command;
     class RunContext;
 }
 
@@ -55,14 +54,9 @@ namespace ipctest
 #endif
 
 //
-// TYPE DEFINITIONS
-//
-typedef std::vector<Command *> CommandList;
-typedef CommandList::iterator CommandIterator;
-
-//
 // CLASS DEFINITIONS
 //
+// template<typename DATATYPE>
 class Command
 {
 public:
@@ -95,6 +89,14 @@ protected:
     int delay_;		// delay before executing (for realtime playback)
 
 };
+
+
+//
+// TYPE DEFINITIONS
+//
+// typedef BasicCommand<void *> Command;
+typedef std::vector<Command *> CommandList;
+typedef CommandList::iterator CommandIterator;
 
 
 // some of the basic commands are defined here:

@@ -34,6 +34,7 @@ namespace ipctest
 
 // FORWARD CLASS DECLARATIONS
 class Command;
+typedef std::vector<Command *> CommandList;
 
 
 namespace uigtk
@@ -90,6 +91,9 @@ private:
     Glib::RefPtr<Gtk::ListStore> historyList_;
     Gtk::TreeView* historyView_;
 
+    // The list of commands is stored in a std::list.  For many GUI toolkits (GTK included)
+    // the list will also be stored inside the widget internally.
+    CommandList commands_;
 };
 
 }  // namespace uigtk

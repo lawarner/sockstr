@@ -26,6 +26,7 @@
 //
 // INCLUDE FILES
 //
+#include <map>
 #include <string>
 #include <vector>
 
@@ -71,10 +72,13 @@ public:
     void setCommandIterator(const CommandIterator& cmdIter);
     sockstr::Socket* getSocket() const;
     void setSocket(sockstr::Socket* sock);
+    std::string getValue(const std::string& key);
+    void setValue(const std::string& key, const std::string& value);
 
 private:
     CommandIterator iter_;
     sockstr::Socket* sock_;
+    std::map<std::string, std::string> env_;
 
 private:
     RunContext(const RunContext&);	// disable copy constructor
