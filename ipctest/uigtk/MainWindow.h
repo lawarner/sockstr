@@ -102,7 +102,6 @@ public:
 
 
 
-
 class MainWindow : public Gtk::Window
 {
 public:
@@ -110,6 +109,7 @@ public:
     virtual ~MainWindow();
 
     void log(ipctest::Command* cmd);
+    void setCommand(const std::string& cmdName);
     bool setup(const std::string& defFilename);
 
 private:
@@ -142,6 +142,14 @@ private:
 
     Gtk::CellRendererText fieldTypeRenderer_;
     Gtk::TreeView::Column fieldTypeColumn_;
+
+    Gtk::Statusbar*  statusBar_;
+//    Glib::RefPtr<Gtk::StatusIcon> statusIcon_;
+//    Gtk::StatusIcon* statusIcon_;
+    Gtk::Image* statusIcon_;
+    Gtk::Button* connectButton_;
+    Glib::RefPtr<Gdk::Pixbuf> pixConnected_;
+    Glib::RefPtr<Gdk::Pixbuf> pixDisconnected_;
 
     HistoryList* historyList_;
     ipctest::RunContext& context_;

@@ -21,14 +21,20 @@
 // HistoryList.cpp
 //
 
+#include <iostream>
+
 #include "Command.h"
 #include "HistoryList.h"
+#include "MainWindow.h"
+
 
 using namespace ipctest::uigtk;
 
 
-HistoryList::HistoryList(Glib::RefPtr<Gtk::ListStore> histList, Gtk::TreeView* histView)
-    : historyList_(histList)
+HistoryList::HistoryList(MainWindow* mainWind,
+                         Glib::RefPtr<Gtk::ListStore> histList, Gtk::TreeView* histView)
+    : mainWindow_(mainWind)
+    , historyList_(histList)
     , historyView_(histView)
 {
     setup();
@@ -68,5 +74,26 @@ void HistoryList::setup()
     historyView_->append_column("Command", histColumns_.colText_);
 
     // Connect signal handlers
+    historyView_->signal_row_activated()
+        .connect(sigc::mem_fun(*this, &HistoryList::onHistoryActivated));
+    Glib::RefPtr<Gtk::TreeSelection> selection = historyView_->get_selection();
+    selection->signal_changed().connect(sigc::mem_fun(*this, &HistoryList::onHistorySelection));
+}
 
+
+// Signal handlers :
+void HistoryList::onHistoryActivated(const Gtk::TreeModel::Path& path,
+                                    Gtk::TreeViewColumn* column)
+{
+    std::cout << "History selected" << std::endl;
+}
+
+void HistoryList::onHistorySelection()
+{
+    std::cout << "History selection changed" << std::endl;
+    Glib::RefPtr<Gtk::TreeSelection> selection = historyView_->get_selection();
+    Gtk::TreeModel::Row row = *(selection->get_selected());
+    ipctest::Command* cmd = row[histColumns_.colCommand_];
+    if (cmd)
+        mainWindow_->setCommand(cmd->getName());
 }

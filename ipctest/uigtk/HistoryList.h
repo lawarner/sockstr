@@ -50,6 +50,9 @@ namespace uigtk
 // TYPE DEFINITIONS
 //
 
+// FORWARD CLASS DECLARATIONS
+class MainWindow;
+
 //
 // CLASS DEFINITIONS
 //
@@ -63,7 +66,7 @@ public:
     }
 
     Gtk::TreeModelColumn<Glib::ustring> colText_;
-    Gtk::TreeModelColumn<gpointer> colCommand_;
+    Gtk::TreeModelColumn<ipctest::Command*> colCommand_;
 };
 
 
@@ -71,7 +74,8 @@ public:
 class HistoryList
 {
 public:
-    HistoryList(Glib::RefPtr<Gtk::ListStore> histList, Gtk::TreeView* histView);
+    HistoryList(MainWindow* mainWind, Glib::RefPtr<Gtk::ListStore> histList,
+                Gtk::TreeView* histView);
     virtual ~HistoryList();
 
     void add(const std::string& str);
@@ -85,11 +89,17 @@ private:
 private:
     void setup();
 
-private:
-    HistoryColumns histColumns_;
+    // Signal handlers
+    void onHistoryActivated(const Gtk::TreeModel::Path& path,
+                            Gtk::TreeViewColumn* column);
+    void onHistorySelection();
 
+private:
+    MainWindow* mainWindow_;
     Glib::RefPtr<Gtk::ListStore> historyList_;
     Gtk::TreeView* historyView_;
+
+    HistoryColumns histColumns_;
 
     // The list of commands is stored in a std::list.  For many GUI toolkits (GTK included)
     // the list will also be stored inside the widget internally.

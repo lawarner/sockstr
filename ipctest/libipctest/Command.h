@@ -72,6 +72,7 @@ public:
      */
     virtual bool execute(RunContext& context) = 0;
 
+    std::string getName() { return commandName_; }
     virtual std::string toString() { return commandName_; }
 
 protected:

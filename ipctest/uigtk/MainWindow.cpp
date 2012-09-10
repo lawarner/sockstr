@@ -70,7 +70,7 @@ bool MainWindow::initDialog()
         cast_dynamic(builder_->get_object("history_list"));
     Gtk::TreeView* histView;
     builder_->get_widget("history_view", histView);
-    historyList_ = new HistoryList(histList, histView);
+    historyList_ = new HistoryList(this, histList, histView);
 
     messageList_ = Glib::RefPtr<Gtk::ListStore>::
         cast_dynamic(builder_->get_object("message_list"));
@@ -96,10 +96,19 @@ bool MainWindow::initDialog()
     messageTableView_->append_column(fieldTypeColumn_);
     messageTableView_->append_column_editable("Value", mtlColumns_.colFieldValue_);
 
+    builder_->get_widget("status_bar", statusBar_);
+    pixConnected_ = Gdk::Pixbuf::create_from_file("images/connected.png");
+    pixDisconnected_ = Gdk::Pixbuf::create_from_file("images/disconnected.png");
+//    statusIcon_ = Gtk::StatusIcon::create(pixDisconnected_).operator->();
+    statusIcon_ = new Gtk::Image(pixDisconnected_);
+    statusIcon_->show();
+    statusBar_->pack_end(*statusIcon_, false, false);
+    statusBar_->push("Ready (Offline)");
+
     // Connect signal handlers
+    builder_->get_widget("connect_button", connectButton_);
+    connectButton_->signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onConnect));
     Gtk::Button* button;
-    builder_->get_widget("connect_button", button);
-    button->signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onConnect));
     builder_->get_widget("execute_button", button);
     button->signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onExecute));
     messageListView_->signal_row_activated()
@@ -117,6 +126,22 @@ void MainWindow::log(ipctest::Command* cmd)
 {
     std::cout << "LOG: " << cmd->toString() << std::endl;
     historyList_->add(cmd);
+}
+
+void MainWindow::setCommand(const std::string& cmdName)
+{
+    Glib::RefPtr<Gtk::TreeModel> cmdModel = commands_->get_model();
+    Gtk::TreeModel::iterator iter = cmdModel->children().begin();
+    for ( ; iter != cmdModel->children().end(); ++iter)
+    {
+        Gtk::TreeModel::Row row = *iter;
+        Glib::ustring cmd = row[commandColumns_.colName_];
+        if (cmd.raw() == cmdName)
+        {
+            commands_->set_active(iter);
+            break;
+        }
+    }
 }
 
 bool MainWindow::setup(const std::string& defFilename)
@@ -176,18 +201,33 @@ void MainWindow::onConnect()
         //TODO: if url == ":" only, connect a server socket
         ipctest::CommandConnect connect(url);
         if (connect.execute(context_))
+        {
             testBase_->setSocket(context_.getSocket());
+            connectButton_->set_label("Disconnect");
+            statusBar_->push("Connected");
+            statusIcon_->set(pixConnected_);
+        }
     }
     else
     {
         ipctest::CommandDisconnect disconn;
         disconn.execute(context_);
+        connectButton_->set_label("Connect");
+        statusBar_->pop();
+        statusIcon_->set(pixDisconnected_);
     }
 }
 
+
 void MainWindow::onExecute()
 {
-    std::cout << "Execute." << std::endl;
+    const Gtk::TreeModel::iterator iter = commands_->get_active();
+    if (iter)
+    {
+        Gtk::TreeModel::Row row = *iter;
+        Glib::ustring cmd = row[commandColumns_.colName_];
+        std::cout << "Execute " << cmd << std::endl;
+    }
 }
 
 void MainWindow::onMessageActivated(const Gtk::TreeModel::Path& path,
