@@ -33,13 +33,13 @@ LDFLAGS = -pthread $(LIBSOCKLIB)
 
 #COMPILE = $(CC) $(CFLAGS) -c
 
-OBJS := Command.o Field.o FieldType.o Message.o Parser.o \
-	RunContext.o TestBase.o
+OBJS := BuiltinCommands.o Field.o FieldType.o Message.o \
+	Parser.o RunContext.o TestBase.o
 
 SRCS := $(OBJS:.o=.cpp)
 
-INCS = Command.h Field.h FieldType.h Message.h Parser.h \
-	RunContext.h TestBase.h
+INCS = BuiltinCommands.h Command.h Field.h FieldType.h Message.h \
+	Parser.h RunContext.h TestBase.h
 
 LIBIPCTEST = libipctest.a
 

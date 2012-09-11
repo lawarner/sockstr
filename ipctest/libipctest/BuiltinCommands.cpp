@@ -18,11 +18,11 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-// Command.cpp
+// BuiltinCommands.cpp
 //
 #include <sockstr/Socket.h>
 
-#include "Command.h"
+#include "BuiltinCommands.h"
 #include "RunContext.h"
 using namespace ipctest;
 
@@ -55,7 +55,7 @@ sockstr::Socket* CommandConnect::getSocket() const
 
 //  Disconnect
 CommandDisconnect::CommandDisconnect()
-    : Command("Disconnect", 0)
+    : Command("Disconnect")
 {
 
 }
@@ -74,7 +74,7 @@ bool CommandDisconnect::execute(RunContext& context)
 
 //  Function
 CommandFunction::CommandFunction(const std::string& funcName, void* data, int delay)
-    : Command("Function", data, delay)
+    : Command("Function", "", data, delay)
     , functionName_(funcName)
 {
 
@@ -93,4 +93,29 @@ bool CommandFunction::execute(RunContext& context)
             return false;       // stop on first error
 
     return true;
+}
+
+
+CommandReceive::CommandReceive(const std::string& msgName)
+    : Command("Receive", msgName, 0)
+{
+
+}
+
+
+bool CommandReceive::execute(RunContext& context)
+{
+    return false;
+}
+
+
+CommandSend::CommandSend(const std::string& msgName, void* msgData)
+    : Command("Send", msgName, msgData)
+{
+
+}
+
+bool CommandSend::execute(RunContext& context)
+{
+    return false;
 }

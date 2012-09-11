@@ -27,6 +27,7 @@
 #include "MainWindow.h"
 #include "Field.h"
 #include "HistoryList.h"
+#include "BuiltinCommands.h"
 #include "Parser.h"
 #include "RunContext.h"
 #include "TestBase.h"
@@ -77,6 +78,12 @@ bool MainWindow::initDialog()
     messageTableList_ = Glib::RefPtr<Gtk::ListStore>::
         cast_dynamic(builder_->get_object("messagetable_list"));
 
+    Gtk::Entry* conn;
+    builder_->get_widget("connectionUrl",  conn);
+    conn->set_text("localhost");
+    builder_->get_widget("connectionPort", conn);
+    conn->set_text("4321");
+
     builder_->get_widget("commands", commands_);
     commands_->pack_start(commandColumns_.colName_);
 
@@ -102,7 +109,7 @@ bool MainWindow::initDialog()
 //    statusIcon_ = Gtk::StatusIcon::create(pixDisconnected_).operator->();
     statusIcon_ = new Gtk::Image(pixDisconnected_);
     statusIcon_->show();
-    statusBar_->pack_end(*statusIcon_, false, false);
+    statusBar_->pack_end(*statusIcon_, Gtk::PACK_SHRINK);
     statusBar_->push("Ready (Offline)");
 
     // Connect signal handlers
@@ -199,20 +206,24 @@ void MainWindow::onConnect()
         std::cout << "Connect to url: " << url << "." << std::endl;
 
         //TODO: if url == ":" only, connect a server socket
-        ipctest::CommandConnect connect(url);
-        if (connect.execute(context_))
+        ipctest::CommandConnect* connect = new ipctest::CommandConnect(url);
+        if (connect->execute(context_))
         {
             testBase_->setSocket(context_.getSocket());
+            testBase_->setConnected(true);
             connectButton_->set_label("Disconnect");
+            log(connect);
             statusBar_->push("Connected");
             statusIcon_->set(pixConnected_);
         }
     }
     else
     {
-        ipctest::CommandDisconnect disconn;
-        disconn.execute(context_);
+        ipctest::CommandDisconnect* disconn = new ipctest::CommandDisconnect;
+        disconn->execute(context_);
+        testBase_->setConnected(false);
         connectButton_->set_label("Connect");
+        log(disconn);
         statusBar_->pop();
         statusIcon_->set(pixDisconnected_);
     }
@@ -225,8 +236,10 @@ void MainWindow::onExecute()
     if (iter)
     {
         Gtk::TreeModel::Row row = *iter;
-        Glib::ustring cmd = row[commandColumns_.colName_];
-        std::cout << "Execute " << cmd << std::endl;
+        Glib::ustring cmdName = row[commandColumns_.colName_];
+        std::cout << "Execute " << cmdName << std::endl;
+        Command* cmd = testBase_->createCommand(cmdName, 0);
+        log(cmd);
     }
 }
 

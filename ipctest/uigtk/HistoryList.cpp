@@ -23,7 +23,7 @@
 
 #include <iostream>
 
-#include "Command.h"
+#include "BuiltinCommands.h"
 #include "HistoryList.h"
 #include "MainWindow.h"
 
@@ -59,6 +59,10 @@ void HistoryList::add(ipctest::Command* cmd)
     row = *(historyList_->append());
     row[histColumns_.colText_] = cmd->toString();
     row[histColumns_.colCommand_] = cmd;
+
+    Gtk::TreeModel::iterator iter = historyList_->children().end();
+    --iter;
+    historyView_->scroll_to_row(Gtk::TreePath(iter));
 }
 
 

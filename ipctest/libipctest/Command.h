@@ -33,10 +33,6 @@
 //
 // FORWARD CLASS DECLARATIONS
 //
-namespace sockstr
-{
-    class Socket;
-}
 namespace ipctest
 {
     class RunContext;
@@ -73,12 +69,19 @@ public:
     virtual bool execute(RunContext& context) = 0;
 
     std::string getName() { return commandName_; }
+    std::string getMessageName() { return messageName_; }
     virtual std::string toString() { return commandName_; }
 
 protected:
     Command(void) { };
-    Command(const std::string& cname, void* data = 0, int delay = 0)
-        : commandName_(cname), data_(data), delay_(delay) {  }
+    Command(const std::string& cname, 
+            const std::string& msgname = std::string(),
+            void* data = 0, int delay = 0)
+        : commandName_(cname), messageName_(msgname), data_(data), delay_(delay) {  }
+
+    void* getData() const { return data_; }
+    int getDelay() const { return delay_; }
+    void setDelay(int delay) { delay_ = delay; }
 
 private:
     Command(const Command&);	// disable copy constructor
@@ -86,6 +89,7 @@ private:
 
 protected:
     std::string commandName_;	// Name of command
+    std::string messageName_;	// Name of message
     void* data_;	// any message related to command
     int delay_;		// delay before executing (for realtime playback)
 
@@ -99,93 +103,6 @@ protected:
 typedef std::vector<Command *> CommandList;
 typedef CommandList::iterator CommandIterator;
 
-
-// some of the basic commands are defined here:
-
-/** Comment command. */
-class CommandComment : public Command
-{
-public:
-	CommandComment(const std::string& comment)
-        : Command("Comment")
-    	, comment_(comment)  { }
-
-    virtual bool execute(RunContext& context)  { return true; }
-    virtual std::string toString() { return commandName_ + ": " + comment_; }
-
-private:
-    std::string comment_;
-};
-
-/** Connect command. */
-class CommandConnect : public Command
-{
-public:
-    CommandConnect(const std::string& url);
-
-    virtual bool execute(RunContext& context);
-
-    sockstr::Socket* getSocket() const;
-
-private:
-    std::string url_;
-};
-
-/** Connect command. */
-class CommandDisconnect : public Command
-{
-public:
-    CommandDisconnect();
-
-    virtual bool execute(RunContext& context);
-};
-
-/** This command is a container that holds a sequence of
- *  commands.  It is useful for executing (or running) a 
- *  sequence of commands, as in a test case.
- */
-class CommandFunction : public Command
-{
-public:
-    CommandFunction(const std::string& funcName, void* data = 0, int delay = 0);
-    void addCommand(Command* cmd);
-
-    virtual bool execute(RunContext& context);
-
-private:
-    std::string functionName_;
-    CommandList commands_;
-};
-
-/** This command does nothing. */
-class CommandNoop : public Command
-{
-public:
-    CommandNoop()
-        : Command("Noop") { }
-
-    virtual bool execute(RunContext& context)  { return true; }
-};
-
-/** Receive command. */
-class CommandReceive : public Command
-{
-public:
-    CommandReceive();
-
-    virtual bool execute(RunContext& context);
-
-};
-
-/** Send command. */
-class CommandSend : public Command
-{
-public:
-    CommandSend();
-
-    virtual bool execute(RunContext& context);
-
-};
 
 }  // namespace ipctest
 

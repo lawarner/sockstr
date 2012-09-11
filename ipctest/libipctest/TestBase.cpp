@@ -23,6 +23,7 @@
 
 #include <fstream>
 #include <iostream>
+#include "BuiltinCommands.h"
 #include "Parser.h"
 #include "TestBase.h"
 using namespace ipctest;
@@ -51,6 +52,30 @@ void TestBase::init()
     builtinCommands_.push_back("Noop");
     builtinCommands_.push_back("Receive");
     builtinCommands_.push_back("Send");
+}
+
+
+Command* TestBase::createCommand(const std::string& cmdName, 
+                                 const std::string& msgName, void* msgData)
+{
+    Command* cmd = 0;
+
+    if (cmdName == "Comment")
+        cmd = new CommandComment(msgName);
+    else if (cmdName == "Connect")
+        cmd = new CommandConnect(msgName);
+    else if (cmdName == "Disconnect")
+        cmd = new CommandDisconnect;
+    else if (cmdName == "Function")
+        cmd = new CommandFunction(msgName, msgData);
+    else if (cmdName == "Noop")
+        cmd = new CommandNoop;
+    else if (cmdName == "Receive")
+        cmd = new CommandReceive(msgName);
+    else if (cmdName == "Send")
+        cmd = new CommandSend(msgName, msgData);
+
+    return cmd;
 }
 
 
