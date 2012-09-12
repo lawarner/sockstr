@@ -30,6 +30,7 @@ using namespace ipctest;
 // Connect
 CommandConnect::CommandConnect(const std::string& url)
     : Command("Connect")
+    , params_(new Params)
     , url_(url)
 {
 
