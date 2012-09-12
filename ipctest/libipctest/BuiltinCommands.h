@@ -62,14 +62,18 @@ class CommandComment : public Command
 {
 public:
 	CommandComment(const std::string& comment)
-        : Command("Comment")
-    	, comment_(comment)  { }
+        : Command("Comment", new Params)
+    {
+        params_->set("comment", comment);
+    }
 
     virtual bool execute(RunContext& context)  { return true; }
-    virtual std::string toString() { return commandName_ + ": " + comment_; }
-
-private:
-    std::string comment_;
+    virtual std::string toString() 
+    {
+        std::string str;
+        params_->get("comment", str);
+        return commandName_ + ": " + str; 
+    }
 };
 
 /** Connect command. */

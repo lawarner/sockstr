@@ -84,6 +84,13 @@ bool MainWindow::initDialog()
     builder_->get_widget("connectionPort", conn);
     conn->set_text("4321");
 
+    Gtk::Label* endLabel;
+    Gtk::Label* inLabel = new Gtk::Label("New Label");
+    inLabel->show();
+    builder_->get_widget("input_grid", inputGrid_);
+    builder_->get_widget("endlabel", endLabel);
+    inputGrid_->attach_next_to(*inLabel, *endLabel, Gtk::POS_BOTTOM, 1, 1);
+
     builder_->get_widget("commands", commands_);
     commands_->pack_start(commandColumns_.colName_);
 
@@ -238,7 +245,7 @@ void MainWindow::onExecute()
         Gtk::TreeModel::Row row = *iter;
         Glib::ustring cmdName = row[commandColumns_.colName_];
         std::cout << "Execute " << cmdName << std::endl;
-        Command* cmd = testBase_->createCommand(cmdName, 0);
+        Command* cmd = testBase_->createCommand(cmdName);
         log(cmd);
     }
 }

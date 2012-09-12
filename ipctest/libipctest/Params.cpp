@@ -18,56 +18,60 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-// RunContext.cpp
+// Params.cpp
 //
-#include <sockstr/Socket.h>
+#include <stdlib.h>
+#include <sstream>
 
-#include "RunContext.h"
+#include "Params.h"
 using namespace ipctest;
 
 
-RunContext::RunContext()
-    : sock_(0)
+Params::Params()
 {
 
 }
 
-
-CommandIterator RunContext::getCommandIterator() const
+Params::~Params()
 {
-    return iter_;
+    env_.clear();
 }
 
-void RunContext::setCommandIterator(const CommandIterator& cmdIter)
-{
-    iter_ = cmdIter;
-}
 
-sockstr::Socket* RunContext::getSocket() const
-{
-    return sock_;
-}
-
-void RunContext::setSocket(sockstr::Socket* sock)
-{
-    sock_ = sock;
-}
-
-Params& RunContext::getParams()
-{
-    return params_;
-}
-
-std::string RunContext::getValue(const std::string& key)
+bool Params::get(const std::string& name, int& value)
 {
     std::string str;
-    params_.get(key, str);
-    return str;
+    if (!get(name, str))
+        return false;
+
+    value = atoi(str.c_str());
+    return true;
 }
 
-void RunContext::setValue(const std::string& key, const std::string& value)
+
+bool Params::get(const std::string& name, std::string& value)
 {
-    params_.set(key, value);
+    std::map<std::string, std::string>::iterator it;
+
+    it = env_.find(name);
+    if (it == env_.end())
+        return false;
+
+	value = it->second;
+    return true;
+}
+
+bool Params::set(const std::string& name, int value)
+{
+    std::stringstream ss;
+    ss << value;
+    return set(name, ss.str());
+}
+
+bool Params::set(const std::string& name, const std::string& value)
+{
+    env_[name] = value;
+    return true;
 }
 
 

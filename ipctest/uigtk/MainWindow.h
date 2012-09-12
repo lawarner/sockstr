@@ -132,6 +132,7 @@ private:
     MessageListColumns mlColumns_;
     MessageTableListColumns mtlColumns_;
 
+    Gtk::Grid* inputGrid_;
     Gtk::ComboBox* commands_;
     Glib::RefPtr<Gtk::ListStore> commandList_;
     Gtk::Entry* messageName_;

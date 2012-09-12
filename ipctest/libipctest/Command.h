@@ -29,6 +29,7 @@
 #include <string>
 #include <vector>
 
+#include "Params.h"
 
 //
 // FORWARD CLASS DECLARATIONS
@@ -69,25 +70,38 @@ public:
     virtual bool execute(RunContext& context) = 0;
 
     std::string getName() { return commandName_; }
-    std::string getMessageName() { return messageName_; }
+    std::string getParam(const std::string& name)
+    {
+        std::string val;
+        if (params_)
+            params_->get(name, val);
+        return val;
+    }
     virtual std::string toString() { return commandName_; }
 
 protected:
-    Command(void) { };
+	Command(Params* params = 0) : params_(params) { }
     Command(const std::string& cname, 
             const std::string& msgname = std::string(),
             void* data = 0, int delay = 0)
         : commandName_(cname), messageName_(msgname), data_(data), delay_(delay) {  }
+    Command(const std::string& cname, 
+            Params* params,
+            void* data = 0, int delay = 0)
+        : params_(params), commandName_(cname), data_(data), delay_(delay) {  }
 
     void* getData() const { return data_; }
     int getDelay() const { return delay_; }
     void setDelay(int delay) { delay_ = delay; }
+    Params* getParams() { return params_; }
+    void setParams(Params* params) { params_ = params; }
 
 private:
     Command(const Command&);	// disable copy constructor
     Command& operator=(const Command& rSource);	// disable assignment operator
 
 protected:
+    Params* params_;
     std::string commandName_;	// Name of command
     std::string messageName_;	// Name of message
     void* data_;	// any message related to command

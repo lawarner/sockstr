@@ -18,19 +18,17 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-#ifndef _RUNCONTEXT_H_INCLUDED_
-#define _RUNCONTEXT_H_INCLUDED_
+#ifndef _PARAMS_H_INCLUDED_
+#define _PARAMS_H_INCLUDED_
 //
 //
 
 //
 // INCLUDE FILES
 //
+#include <map>
 #include <string>
-
-#include "Command.h"
-#include "Params.h"
-
+#include <vector>
 
 //
 // FORWARD CLASS DECLARATIONS
@@ -38,10 +36,6 @@
 namespace sockstr
 {
     class Socket;
-}
-namespace ipctest
-{
-    class RunContext;
 }
 
 
@@ -62,27 +56,23 @@ namespace ipctest
 //
 // CLASS DEFINITIONS
 //
-class RunContext
+class Params
 {
 public:
-    RunContext();
+    Params();
+    ~Params();
 
-    CommandIterator getCommandIterator() const;
-    void setCommandIterator(const CommandIterator& cmdIter);
-    sockstr::Socket* getSocket() const;
-    void setSocket(sockstr::Socket* sock);
-    Params& getParams();
-    std::string getValue(const std::string& key);
-    void setValue(const std::string& key, const std::string& value);
+    bool get(const std::string& name, int& value);
+    bool get(const std::string& name, std::string& value);
+    bool set(const std::string& name, int value);
+    bool set(const std::string& name, const std::string& value);
 
 private:
-    CommandIterator iter_;
-    sockstr::Socket* sock_;
-    Params params_;
+    std::map<std::string, std::string> env_;
 
 private:
-    RunContext(const RunContext&);	// disable copy constructor
-    RunContext& operator=(const RunContext& rSource);	// disable assignment operator
+    Params(const Params&);	// disable copy constructor
+    Params& operator=(const Params& rSource);	// disable assignment operator
 };
 
 

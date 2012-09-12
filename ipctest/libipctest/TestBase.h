@@ -64,7 +64,7 @@ public:
     ~TestBase();
 
     Command* createCommand(const std::string& cmdName, 
-                           const std::string& msgName, void* msgData = 0);
+                           const std::string& msgName = std::string(), void* msgData = 0);
     bool isConnected() const { return isConnected_; }
     void setConnected(bool connected) { isConnected_ = connected; }
     sockstr::Socket* getSocket() { return socket_; }

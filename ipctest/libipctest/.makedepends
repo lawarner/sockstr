@@ -1,7 +1,10 @@
-Command.o: Command.cpp Command.h
+BuiltinCommands.o: BuiltinCommands.cpp BuiltinCommands.h Command.h \
+ Params.h RunContext.h
 Field.o: Field.cpp Field.h FieldType.h
 FieldType.o: FieldType.cpp FieldType.h
 Message.o: Message.cpp Field.h FieldType.h Message.h
+Params.o: Params.cpp Params.h
 Parser.o: Parser.cpp Field.h FieldType.h Message.h Parser.h
-RunContext.o: RunContext.cpp RunContext.h Command.h
-TestBase.o: TestBase.cpp Parser.h Message.h TestBase.h Command.h
+RunContext.o: RunContext.cpp RunContext.h Command.h Params.h
+TestBase.o: TestBase.cpp BuiltinCommands.h Command.h Params.h Parser.h \
+ Message.h TestBase.h
