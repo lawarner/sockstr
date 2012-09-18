@@ -63,3 +63,9 @@ clean:
 		make -C $$dir clean; \
 	done
 
+
+.PHONY: depends
+depends:
+	for dir in $(SUBDIRS); do \
+		make -C $$dir depends; \
+	done

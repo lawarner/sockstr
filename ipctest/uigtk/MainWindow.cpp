@@ -84,12 +84,7 @@ bool MainWindow::initDialog()
     builder_->get_widget("connectionPort", conn);
     conn->set_text("4321");
 
-    Gtk::Label* endLabel;
-    Gtk::Label* inLabel = new Gtk::Label("New Label");
-    inLabel->show();
     builder_->get_widget("input_grid", inputGrid_);
-    builder_->get_widget("endlabel", endLabel);
-    inputGrid_->attach_next_to(*inLabel, *endLabel, Gtk::POS_BOTTOM, 1, 1);
 
     builder_->get_widget("commands", commands_);
     commands_->pack_start(commandColumns_.colName_);
@@ -125,10 +120,14 @@ bool MainWindow::initDialog()
     Gtk::Button* button;
     builder_->get_widget("execute_button", button);
     button->signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onExecute));
+
     messageListView_->signal_row_activated()
         .connect(sigc::mem_fun(*this, &MainWindow::onMessageActivated));
     Glib::RefPtr<Gtk::TreeSelection> selection = messageListView_->get_selection();
     selection->signal_changed().connect(sigc::mem_fun(*this, &MainWindow::onMessageSelection));
+
+    commands_->signal_changed()
+        .connect(sigc::mem_fun(*this, &MainWindow::onCommandChanged));
 
     log(new CommandComment("initDialog complete."));
 
@@ -141,6 +140,67 @@ void MainWindow::log(ipctest::Command* cmd)
     std::cout << "LOG: " << cmd->toString() << std::endl;
     historyList_->add(cmd);
 }
+
+void MainWindow::guiToParams(ipctest::Params* params)
+{
+    if (!params)
+        return;
+
+    const ParamMap& pm = params->getAllParams();
+    ParamMap::const_iterator it;
+    for (it = pm.begin(); it != pm.end(); ++it)
+    {
+        ParamValue* pv = it->second;
+        Gtk::Entry* inEntry = pv->widget;
+        std::cout << "+guiToParam=" << it->first << std::endl;
+        if (inEntry)
+        {
+            std::string str = inEntry->get_text();
+            std::cout << "     ++ got widget value=" << str << std::endl;
+            pv->strValue = str;
+        }
+    }
+
+}
+
+
+void MainWindow::paramsToGui(ipctest::Params* params)
+{
+    // First, clear any previous widgets
+    while (!inputWidgets_.empty())
+    {
+        Gtk::Widget* wid = inputWidgets_.top();
+        if (wid)
+            delete wid;
+        inputWidgets_.pop();
+    }
+
+    if (!params)
+        return;
+
+    Gtk::Label* endLabel;
+    builder_->get_widget("endlabel", endLabel);
+    const ParamMap& pm = params->getAllParams();
+    ParamMap::const_iterator it;
+    for (it = pm.begin(); it != pm.end(); ++it)
+    {
+        std::cout << "+paramsToGui param=" << it->first << std::endl;
+        Gtk::Label* inLabel = new Gtk::Label(it->first + ":");
+        inLabel->show();
+        inputGrid_->attach_next_to(*inLabel, *endLabel, Gtk::POS_BOTTOM, 1, 1);
+        inputWidgets_.push(inLabel);
+        Gtk::Entry* inEntry = new Gtk::Entry;
+        inEntry->show();
+        inputGrid_->attach_next_to(*inEntry, *inLabel, Gtk::POS_RIGHT, 1, 1);
+        inputWidgets_.push(inEntry);
+        it->second->widget = inEntry;
+//        params->setWidget(it->first, inEntry);
+
+        endLabel = inLabel;
+    }
+
+}
+
 
 void MainWindow::setCommand(const std::string& cmdName)
 {
@@ -220,7 +280,8 @@ void MainWindow::onConnect()
             testBase_->setConnected(true);
             connectButton_->set_label("Disconnect");
             log(connect);
-            statusBar_->push("Connected");
+
+            statusBar_->push(connect->toString());
             statusIcon_->set(pixConnected_);
         }
     }
@@ -239,14 +300,28 @@ void MainWindow::onConnect()
 
 void MainWindow::onExecute()
 {
+    Command* cmd = testBase_->getWorkCommand();
+    if (!cmd)
+        return;
+
+    guiToParams(cmd->getParams());
+    cmd->execute(context_);
+    std::cout << "Executing command " << cmd->toString() << std::endl;
+    log(cmd);
+}
+
+void MainWindow::onCommandChanged()
+{
     const Gtk::TreeModel::iterator iter = commands_->get_active();
     if (iter)
     {
         Gtk::TreeModel::Row row = *iter;
         Glib::ustring cmdName = row[commandColumns_.colName_];
-        std::cout << "Execute " << cmdName << std::endl;
+        std::cout << "Work command is " << cmdName << std::endl;
         Command* cmd = testBase_->createCommand(cmdName);
-        log(cmd);
+        testBase_->setWorkCommand(cmd);
+
+        paramsToGui(cmd->getParams());
     }
 }
 
@@ -261,7 +336,9 @@ void MainWindow::onMessageSelection()
     std::cout << "Message selection changed" << std::endl;
     Glib::RefPtr<Gtk::TreeSelection> selection = messageListView_->get_selection();
     Gtk::TreeModel::Row row = *(selection->get_selected());
-    messageName_->set_text(row[mlColumns_.colName_]);
+    Glib::ustring msgName = row[mlColumns_.colName_];
+    messageName_->set_text(msgName);
+    context_.setValue("Message Name", msgName.raw());
 
     void * ptr = row[mlColumns_.colMessage_];
     Message* msg = (Message *) ptr;

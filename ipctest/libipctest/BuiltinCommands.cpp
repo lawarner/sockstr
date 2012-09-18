@@ -27,19 +27,39 @@
 using namespace ipctest;
 
 
+// Comment
+CommandComment::CommandComment(const std::string& comment)
+    : Command("Comment", new Params)
+{
+    params_->set("Comment", comment);
+}
+
+bool CommandComment::execute(RunContext& context)
+{
+    std::cout << "exec: " << toString() << std::endl;
+    return true;
+}
+
+std::string CommandComment::toString() 
+{
+    std::string str;
+    params_->get("Comment", str);
+    return commandName_ + ": " + str; 
+}
+
+
 // Connect
 CommandConnect::CommandConnect(const std::string& url)
-    : Command("Connect")
-    , params_(new Params)
-    , url_(url)
+    : Command("Connect", new Params)
 {
-
+    params_->set("Url", url);
 }
 
 
 bool CommandConnect::execute(RunContext& context)
 {
-    sockstr::Socket* sock = new sockstr::Socket(url_.c_str(), sockstr::Socket::modeReadWrite);
+    std::string url = params_->get("Url");
+    sockstr::Socket* sock = new sockstr::Socket(url.c_str(), sockstr::Socket::modeReadWrite);
     if (sock->queryStatus() != sockstr::SC_OK)
         return false;
 
@@ -53,6 +73,10 @@ sockstr::Socket* CommandConnect::getSocket() const
     return (sockstr::Socket*) data_;
 }
 
+std::string CommandConnect::toString()
+{
+    return commandName_ + ": " + params_->get("Url");
+}
 
 //  Disconnect
 CommandDisconnect::CommandDisconnect()
@@ -75,10 +99,9 @@ bool CommandDisconnect::execute(RunContext& context)
 
 //  Function
 CommandFunction::CommandFunction(const std::string& funcName, void* data, int delay)
-    : Command("Function", "", data, delay)
-    , functionName_(funcName)
+    : Command("Function", new Params, data, delay)
 {
-
+    params_->set("Function Name", funcName);
 }
 
 void CommandFunction::addCommand(Command* cmd)
@@ -88,12 +111,23 @@ void CommandFunction::addCommand(Command* cmd)
 
 bool CommandFunction::execute(RunContext& context)
 {
+    std::string funcName;
+    params_->get("Function Name", funcName);
+    std::cout << "exec function: " << funcName << std::endl;
+
     CommandIterator it = commands_.begin();
     for ( ; it != commands_.end(); ++it)
         if (!(*it)->execute(context))
             return false;       // stop on first error
 
     return true;
+}
+
+std::string CommandFunction::toString() 
+{
+    std::string str;
+    params_->get("Function Name", str);
+    return commandName_ + ": " + str; 
 }
 
 
@@ -110,6 +144,7 @@ bool CommandReceive::execute(RunContext& context)
 }
 
 
+// Send
 CommandSend::CommandSend(const std::string& msgName, void* msgData)
     : Command("Send", msgName, msgData)
 {
@@ -118,5 +153,18 @@ CommandSend::CommandSend(const std::string& msgName, void* msgData)
 
 bool CommandSend::execute(RunContext& context)
 {
-    return false;
+    std::string msgName = context.getValue("Message Name");
+    if (!msgName.empty())
+        messageName_ = msgName;
+    else if (messageName_.empty())
+        return false;
+    messageName_ = msgName;
+
+    std::cout << "exec: " << toString() << std::endl;
+    return true;
+}
+
+std::string CommandSend::toString()
+{
+    return commandName_ + ": " + messageName_;
 }

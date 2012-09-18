@@ -65,6 +65,9 @@ public:
 
     Command* createCommand(const std::string& cmdName, 
                            const std::string& msgName = std::string(), void* msgData = 0);
+    Command* getWorkCommand() { return workCommand_; }
+    void setWorkCommand(Command* cmd) { workCommand_ = cmd; }
+
     bool isConnected() const { return isConnected_; }
     void setConnected(bool connected) { isConnected_ = connected; }
     sockstr::Socket* getSocket() { return socket_; }
@@ -81,6 +84,7 @@ private:
     Command* currentMain_;
     CommandList commandList_;
     MessageList messageList_;
+    Command* workCommand_;
     std::vector<std::string> builtinCommands_;
     bool isConnected_;
     sockstr::Socket* socket_;

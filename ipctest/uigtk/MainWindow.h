@@ -35,6 +35,7 @@ namespace ipctest
 // FORWARD CLASS DECLARATIONS
 class Command;
 class Field;
+class Params;
 class RunContext;
 class TestBase;
 
@@ -109,6 +110,8 @@ public:
     virtual ~MainWindow();
 
     void log(ipctest::Command* cmd);
+    void guiToParams(ipctest::Params* params);
+    void paramsToGui(ipctest::Params* params);
     void setCommand(const std::string& cmdName);
     bool setup(const std::string& defFilename);
 
@@ -124,6 +127,7 @@ private:
                              const Gtk::TreeModel::iterator& iter);
     void onConnect();
     void onExecute();
+    void onCommandChanged();
     void onMessageActivated(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
     void onMessageSelection();
 
@@ -155,6 +159,8 @@ private:
     HistoryList* historyList_;
     ipctest::RunContext& context_;
     ipctest::TestBase*  testBase_;
+
+    std::stack<Gtk::Widget*> inputWidgets_;
 };
 
 }  // namespace uigtk

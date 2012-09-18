@@ -61,19 +61,10 @@ namespace ipctest
 class CommandComment : public Command
 {
 public:
-	CommandComment(const std::string& comment)
-        : Command("Comment", new Params)
-    {
-        params_->set("comment", comment);
-    }
+	CommandComment(const std::string& comment);
 
-    virtual bool execute(RunContext& context)  { return true; }
-    virtual std::string toString() 
-    {
-        std::string str;
-        params_->get("comment", str);
-        return commandName_ + ": " + str; 
-    }
+    virtual bool execute(RunContext& context);
+    virtual std::string toString();
 };
 
 /** Connect command. */
@@ -83,12 +74,10 @@ public:
     CommandConnect(const std::string& url);
 
     virtual bool execute(RunContext& context);
-    virtual std::string toString() { return commandName_ + ": " + url_; }
+    virtual std::string toString();
 
     sockstr::Socket* getSocket() const;
 
-private:
-    std::string url_;
 };
 
 /** Connect command. */
@@ -111,9 +100,9 @@ public:
     void addCommand(Command* cmd);
 
     virtual bool execute(RunContext& context);
+    virtual std::string toString();
 
 private:
-    std::string functionName_;
     CommandList commands_;
 };
 
@@ -144,7 +133,7 @@ public:
     CommandSend(const std::string& msgName, void* msgData = 0);
 
     virtual bool execute(RunContext& context);
-
+    virtual std::string toString();
 };
 
 }  // namespace ipctest

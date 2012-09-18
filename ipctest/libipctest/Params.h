@@ -33,11 +33,14 @@
 //
 // FORWARD CLASS DECLARATIONS
 //
+namespace Gtk
+{
+    class Entry;
+}
 namespace sockstr
 {
     class Socket;
 }
-
 
 namespace ipctest
 {
@@ -56,6 +59,17 @@ namespace ipctest
 //
 // CLASS DEFINITIONS
 //
+class ParamValue
+{
+public:
+    ParamValue() : widget(0) { }
+    std::string strValue;
+    Gtk::Entry* widget;
+};
+
+typedef std::map<std::string, ParamValue*> ParamMap;
+
+
 class Params
 {
 public:
@@ -64,11 +78,18 @@ public:
 
     bool get(const std::string& name, int& value);
     bool get(const std::string& name, std::string& value);
+    bool get(const std::string& name, ParamValue*& value);
+    const std::string& get(const std::string& name) const;
+    bool getWidget(const std::string& name, Gtk::Entry*& widget);
     bool set(const std::string& name, int value);
     bool set(const std::string& name, const std::string& value);
+    bool set(const std::string& name, ParamValue* value);
+    bool setWidget(const std::string& name, Gtk::Entry* widget);
+
+    const ParamMap& getAllParams() const;
 
 private:
-    std::map<std::string, std::string> env_;
+    ParamMap env_;
 
 private:
     Params(const Params&);	// disable copy constructor

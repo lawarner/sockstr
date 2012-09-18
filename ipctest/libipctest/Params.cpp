@@ -51,15 +51,49 @@ bool Params::get(const std::string& name, int& value)
 
 bool Params::get(const std::string& name, std::string& value)
 {
-    std::map<std::string, std::string>::iterator it;
-
-    it = env_.find(name);
+    ParamMap::iterator it = env_.find(name);
     if (it == env_.end())
         return false;
 
-	value = it->second;
+    ParamValue* pv = it->second;
+	value = pv->strValue;
     return true;
 }
+
+
+bool Params::get(const std::string& name, ParamValue*& value)
+{
+    ParamMap::iterator it = env_.find(name);
+    if (it == env_.end())
+        return false;
+
+    value = it->second;
+    return true;
+}
+
+
+const std::string& Params::get(const std::string& name) const
+{
+    ParamMap::const_iterator it = env_.find(name);
+    if (it == env_.end())
+        return "";
+
+    ParamValue* pv = it->second;
+	return pv->strValue;
+}
+
+
+bool Params::getWidget(const std::string& name, Gtk::Entry*& widget)
+{
+    ParamMap::iterator it = env_.find(name);
+    if (it == env_.end())
+        return false;
+
+    ParamValue* pv = it->second;
+	widget = pv->widget;
+    return true;
+}
+
 
 bool Params::set(const std::string& name, int value)
 {
@@ -70,8 +104,47 @@ bool Params::set(const std::string& name, int value)
 
 bool Params::set(const std::string& name, const std::string& value)
 {
+    ParamValue* pv;
+    ParamMap::iterator it = env_.find(name);
+    if (it != env_.end())
+        pv = it->second;
+    else
+    {
+        pv = new ParamValue;
+        pv->strValue = value;
+        env_[name] = pv;
+    }
+    
+    return true;
+}
+
+
+bool Params::set(const std::string& name, ParamValue* value)
+{
     env_[name] = value;
     return true;
+}
+
+bool Params::setWidget(const std::string& name, Gtk::Entry* widget)
+{
+    ParamValue* pv;
+    ParamMap::iterator it = env_.find(name);
+    if (it != env_.end())
+        pv = it->second;
+    else
+    {
+        pv = new ParamValue;
+        pv->widget = widget;
+        env_[name] = pv;
+    }
+
+    return true;
+}
+
+
+const ParamMap& Params::getAllParams() const
+{
+    return env_;
 }
 
 

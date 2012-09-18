@@ -53,4 +53,6 @@ clean:
 
 .PHONY: depends
 depends:
-	make -C src depends
+	for dir in $(SUBDIRS); do \
+		make -C $$dir depends; \
+	done

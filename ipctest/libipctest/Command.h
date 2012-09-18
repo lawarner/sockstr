@@ -77,6 +77,9 @@ public:
             params_->get(name, val);
         return val;
     }
+    Params* getParams() { return params_; }
+    void setParams(Params* params) { params_ = params; }
+
     virtual std::string toString() { return commandName_; }
 
 protected:
@@ -84,7 +87,8 @@ protected:
     Command(const std::string& cname, 
             const std::string& msgname = std::string(),
             void* data = 0, int delay = 0)
-        : commandName_(cname), messageName_(msgname), data_(data), delay_(delay) {  }
+        : params_(0), commandName_(cname), messageName_(msgname)
+        , data_(data), delay_(delay) {  }
     Command(const std::string& cname, 
             Params* params,
             void* data = 0, int delay = 0)
@@ -93,8 +97,6 @@ protected:
     void* getData() const { return data_; }
     int getDelay() const { return delay_; }
     void setDelay(int delay) { delay_ = delay; }
-    Params* getParams() { return params_; }
-    void setParams(Params* params) { params_ = params; }
 
 private:
     Command(const Command&);	// disable copy constructor
