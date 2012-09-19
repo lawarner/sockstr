@@ -28,6 +28,7 @@ using namespace ipctest;
 
 RunContext::RunContext()
     : sock_(0)
+    , message_(0)
 {
 
 }
@@ -41,6 +42,27 @@ CommandIterator RunContext::getCommandIterator() const
 void RunContext::setCommandIterator(const CommandIterator& cmdIter)
 {
     iter_ = cmdIter;
+}
+
+std::vector<std::string>& RunContext::getFieldValues()
+{
+    return fieldValues_;
+}
+
+void RunContext::setFieldValues(std::vector<std::string>& vals)
+{
+    fieldValues_ = vals;
+}
+
+
+Message* RunContext::getMessage() const
+{
+    return message_;
+}
+
+void RunContext::setMessage(Message* msg)
+{
+    message_ = msg;
 }
 
 sockstr::Socket* RunContext::getSocket() const

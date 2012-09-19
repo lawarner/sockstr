@@ -49,6 +49,7 @@ class Message;
 
 typedef std::vector<Field *>  FieldsArray;
 typedef FieldsArray::iterator FieldsIterator;
+typedef FieldsArray::const_iterator FieldsConstIterator;
 typedef std::vector<Message *> MessageList;
 //
 // CLASS DEFINITIONS
@@ -60,10 +61,15 @@ public:
     virtual ~Message();
 
     void addField(Field* field);
+    int bumpSequence(bool incr = true);
     const FieldsArray& getFields() const;
     const std::string& getName() const;
     const int getOrdinal() const;
     const int getSize() const;
+    // Returns the total size packed
+    int packFields(const std::vector<std::string>& vals, char* buf) const;
+    // Returns the total size unpacked
+    int unpackFields(const char* buf, std::vector<std::string>& vals) const;
 
 private:
     std::string name_;
@@ -73,6 +79,7 @@ private:
     FieldsArray fields_;
 
     static int ordinalSeq;
+    static int messageSeq;
 };
 
 }  // namespace sockstr

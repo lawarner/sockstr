@@ -17,5 +17,3 @@ SocketState.o: SocketState.cpp ../config.h ../include/sockstr/sstypes.h \
  ../include/sockstr/SocketState.h
 Stream.o: Stream.cpp ../config.h ../include/sockstr/sstypes.h \
  ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
-ss_ipc.o: ss_ipc.cpp ../config.h ../include/sockstr/sstypes.h \
- ../include/sockstr/IPC.h

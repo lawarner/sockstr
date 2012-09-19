@@ -72,7 +72,7 @@ bool Params::get(const std::string& name, ParamValue*& value)
 }
 
 
-const std::string& Params::get(const std::string& name) const
+const std::string Params::get(const std::string& name) const
 {
     ParamMap::const_iterator it = env_.find(name);
     if (it == env_.end())

@@ -290,13 +290,13 @@ Socket::remoteProcedure(IpcStruct* pData, Callback pCallback)
 
 	Callback pOldCallback;
 
-	pData->m_dwSequence = ++m_dwSequence;
+	pData->dwSequence_ = ++m_dwSequence;
 	if (pCallback)
 	{
 		pOldCallback = (Callback) registerCallback(pCallback);
 	}
 
-	write(pData, pData->m_wPacketSize);
+	write(pData, pData->wPacketSize_);
 
 	if (pCallback)
 	{
@@ -343,7 +343,7 @@ Socket::remoteReadData(IpcStruct* pData, UINT uMaxLength)
 	// Warning: This routine does not work in overlapped I/O mode.  The
 	//          next statement (temporarily) goes to polling mode.
 	Callback pOldCallback = (Callback) registerCallback();
-	UINT uLength = pData->m_wPacketSize;
+	UINT uLength = pData->wPacketSize_;
 	if (uMaxLength != 0 && uMaxLength < uLength)
 	{
 		uLength = uMaxLength;
@@ -370,7 +370,7 @@ Socket::remoteReadData(IpcStruct* pData, UINT uMaxLength)
 		{
 			continue;
 		}
-		if (uLength < pData->m_wPacketSize)
+		if (uLength < pData->wPacketSize_)
 		{
 			// flush buffer
 			DWORD dwBytes;
@@ -388,7 +388,7 @@ Socket::remoteReadData(IpcStruct* pData, UINT uMaxLength)
 			continue;
 		}
 #endif
-		uLength = pData->m_wPacketSize - uActual;
+		uLength = pData->wPacketSize_ - uActual;
 		uActual = read((char *)pData + uActual, uLength);
 #ifdef _DEBUG
 		VERIFY(uActual == uLength);
@@ -428,10 +428,10 @@ Socket::remoteWriteReply(IpcReplyStruct* pData, DWORD dwSequence)
 	// Fill-in the cookie, if caller specifies it separately
 	if (dwSequence)
 	{
-		pData->m_dwSequence = dwSequence;
+		pData->dwSequence_ = dwSequence;
 	}
 
-	write(pData, pData->m_wPacketSize);
+	write(pData, pData->wPacketSize_);
 
 	return 0;
 }

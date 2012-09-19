@@ -79,7 +79,7 @@ public:
     bool get(const std::string& name, int& value);
     bool get(const std::string& name, std::string& value);
     bool get(const std::string& name, ParamValue*& value);
-    const std::string& get(const std::string& name) const;
+    const std::string get(const std::string& name) const;
     bool getWidget(const std::string& name, Gtk::Entry*& widget);
     bool set(const std::string& name, int value);
     bool set(const std::string& name, const std::string& value);

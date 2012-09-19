@@ -20,11 +20,15 @@
 
 // BuiltinCommands.cpp
 //
+#include <sockstr/IPC.h>
 #include <sockstr/Socket.h>
 
 #include "BuiltinCommands.h"
+#include "Message.h"
 #include "RunContext.h"
 using namespace ipctest;
+
+#include <string.h>
 
 
 // Comment
@@ -137,10 +141,36 @@ CommandReceive::CommandReceive(const std::string& msgName)
 
 }
 
-
 bool CommandReceive::execute(RunContext& context)
 {
+    Message* msg = context.getMessage();
+    sockstr::Socket* sock = context.getSocket();
+
+    if (msg && sock)
+    {
+        messageName_ = msg->getName();
+        if (messageName_.empty())
+            return false;
+        std::cout << "exec: " << toString() << std::endl;
+
+        sockstr::GenericReply reply;
+        sock->setAsyncMode(true);
+        UINT sz = sock->read(&reply, sizeof(reply));
+        if (sz == 0)
+            return false;
+
+        std::cout << "Got " << sz << " bytes, function=" << reply.wFunction_
+                  << ", seq=" << reply.dwSequence_ << std::endl;
+        if (sz > 12)
+            std::cout << " +-+ filler: " << reply.filler_ << std::endl;
+    }
+
     return false;
+}
+
+std::string CommandReceive::toString()
+{
+    return commandName_ + ": " + messageName_;
 }
 
 
@@ -153,14 +183,28 @@ CommandSend::CommandSend(const std::string& msgName, void* msgData)
 
 bool CommandSend::execute(RunContext& context)
 {
-    std::string msgName = context.getValue("Message Name");
-    if (!msgName.empty())
-        messageName_ = msgName;
-    else if (messageName_.empty())
-        return false;
-    messageName_ = msgName;
+    Message* msg = context.getMessage();
+    sockstr::Socket* sock = context.getSocket();
 
-    std::cout << "exec: " << toString() << std::endl;
+    if (msg && sock)
+    {
+        std::cout << " Yes, we rock with message and socks!" << std::endl;
+        messageName_ = msg->getName();
+        if (messageName_.empty())
+            return false;
+
+        std::cout << "exec: " << toString() << std::endl;
+        sockstr::GenericReply basicMsg;
+        // Write header and payload together
+        basicMsg.wFunction_   = msg->getOrdinal();
+        basicMsg.wPacketSize_ = msg->getSize();
+        basicMsg.dwSequence_  = msg->bumpSequence();	// cookie
+        strcpy(basicMsg.filler_, "Andy Warner was here.");
+// msg->packFields(context_.getFieldValues(), basicMsg.filler_);
+
+        sock->write(&basicMsg, sizeof(sockstr::IpcStruct) + basicMsg.wPacketSize_);
+    }
+
     return true;
 }
 

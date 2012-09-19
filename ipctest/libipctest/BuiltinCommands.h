@@ -123,7 +123,7 @@ public:
     CommandReceive(const std::string& msgName);
 
     virtual bool execute(RunContext& context);
-
+    virtual std::string toString();
 };
 
 /** Send command. */

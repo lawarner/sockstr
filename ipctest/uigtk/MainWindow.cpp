@@ -305,6 +305,17 @@ void MainWindow::onExecute()
         return;
 
     guiToParams(cmd->getParams());
+    
+    std::vector<std::string> flds;
+    Gtk::TreeModel::iterator iter = messageTableList_->children().begin();
+    for ( ; iter != messageTableList_->children().end(); ++iter)
+    {
+        Gtk::TreeModel::Row row = *iter;
+        Glib::ustring val = row[mtlColumns_.colFieldValue_];
+        std::cout << "value: " << val << std::endl;
+        flds.push_back(val.raw());
+    }
+
     cmd->execute(context_);
     std::cout << "Executing command " << cmd->toString() << std::endl;
     log(cmd);
@@ -338,10 +349,11 @@ void MainWindow::onMessageSelection()
     Gtk::TreeModel::Row row = *(selection->get_selected());
     Glib::ustring msgName = row[mlColumns_.colName_];
     messageName_->set_text(msgName);
-    context_.setValue("Message Name", msgName.raw());
 
     void * ptr = row[mlColumns_.colMessage_];
     Message* msg = (Message *) ptr;
+    context_.setMessage(msg);
+//    testBase_->setWorkMessage(msg);
     messageTableList_->clear();
 
     FieldsArray fields = msg->getFields();

@@ -28,6 +28,7 @@ using namespace ipctest;
 
 // Initialize static member variables:
 int Message::ordinalSeq = 1;
+int Message::messageSeq = 1;
 
 
 Message::Message(const std::string& name, int ordinal)
@@ -49,6 +50,14 @@ void Message::addField(Field* field)
     totalSize_ += field->size() * field->elements();
 }
 
+int Message::bumpSequence(bool incr)
+{
+    if (incr)
+        return messageSeq++;
+    else
+        return messageSeq;
+}
+
 const FieldsArray& Message::getFields() const
 {
     return fields_;
@@ -68,3 +77,25 @@ const int Message::getSize() const
 {
     return totalSize_;
 }
+
+
+int Message::packFields(const std::vector<std::string>& vals, char* buf) const
+{
+    int idx = 0;
+    FieldsConstIterator fi;
+    for (fi = fields_.begin(); fi != fields_.end(); ++fi)
+    {
+        Field* fld = *fi;
+//        row[mtlColumns_.colFieldName_] = fld->name();
+        idx += fld->size() * fld->elements();
+    }
+  
+    return 0;
+}
+
+int Message::unpackFields(const char* buf, std::vector<std::string>& vals) const
+{
+    return 0;
+}
+
+

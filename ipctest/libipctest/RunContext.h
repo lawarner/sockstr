@@ -41,7 +41,7 @@ namespace sockstr
 }
 namespace ipctest
 {
-    class RunContext;
+    class Message;
 }
 
 
@@ -69,6 +69,10 @@ public:
 
     CommandIterator getCommandIterator() const;
     void setCommandIterator(const CommandIterator& cmdIter);
+    std::vector<std::string>& getFieldValues();
+    void setFieldValues(std::vector<std::string>& vals);
+    Message* getMessage() const;
+    void setMessage(Message* msg);
     sockstr::Socket* getSocket() const;
     void setSocket(sockstr::Socket* sock);
     Params& getParams();
@@ -78,7 +82,9 @@ public:
 private:
     CommandIterator iter_;
     sockstr::Socket* sock_;
+    Message* message_;
     Params params_;
+    std::vector<std::string> fieldValues_;
 
 private:
     RunContext(const RunContext&);	// disable copy constructor
