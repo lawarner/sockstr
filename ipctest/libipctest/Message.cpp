@@ -25,6 +25,8 @@
 #include "Message.h"
 using namespace ipctest;
 
+#include <string.h>
+
 
 // Initialize static member variables:
 int Message::ordinalSeq = 1;
@@ -82,12 +84,17 @@ const int Message::getSize() const
 int Message::packFields(const std::vector<std::string>& vals, char* buf) const
 {
     int idx = 0;
-    FieldsConstIterator fi;
-    for (fi = fields_.begin(); fi != fields_.end(); ++fi)
+    FieldsConstIterator fi = fields_.begin();
+    std::vector<std::string>::const_iterator it = vals.begin();
+    for ( ; (fi != fields_.end()) && (it != vals.end()); ++fi, ++it)
     {
         Field* fld = *fi;
+	std::string strval = *it;
 //        row[mtlColumns_.colFieldName_] = fld->name();
-        idx += fld->size() * fld->elements();
+	int sz = fld->size() * fld->elements();
+	memcpy(&buf[idx], strval.c_str(), sz);
+
+        idx += sz;
     }
   
     return 0;

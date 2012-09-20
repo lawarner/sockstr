@@ -73,12 +73,15 @@ public:
 
 	FieldType(FieldIdent ft, int sz) : ftype_(ft), size_(sz) { }
 
-    static FieldType& fromString(const std::string& ftStr);
-    static std::string toString(const FieldType& fType);
+    static FieldType& stringToType(const std::string& ftStr);
+    static std::string typeToString(const FieldType& fType);
     
+    static bool toString(void* raw, std::string& str);
+    static bool fromString(std::string& str, void* raw);
+
     FieldIdent ident() const { return ftype_; }
     int size() const { return size_; }
-    std::string toString() const { return toString(*this); }
+    std::string toString() const { return typeToString(*this); }
 
 protected:
     FieldIdent ftype_;

@@ -315,6 +315,7 @@ void MainWindow::onExecute()
         std::cout << "value: " << val << std::endl;
         flds.push_back(val.raw());
     }
+    context_.setFieldValues(flds);
 
     cmd->execute(context_);
     std::cout << "Executing command " << cmd->toString() << std::endl;

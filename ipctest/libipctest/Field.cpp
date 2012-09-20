@@ -42,7 +42,7 @@ Field::~Field()
 Field* Field::create(const std::string& name, const std::string& ftype, int occurs)
 {
     Field* field = 0;
-    FieldType& refFt = FieldType::fromString(ftype);
+    FieldType& refFt = FieldType::stringToType(ftype);
     if (refFt.ident() != FieldType::Undefined)
     {
         field = new Field(name, refFt, occurs);

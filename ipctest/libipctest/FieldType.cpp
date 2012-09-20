@@ -34,7 +34,7 @@ FieldTypeStruct FieldType::gFieldTypeStruct;
 FieldTypeUndefined FieldType::gFieldTypeUndefined;
 
 
-FieldType& FieldType::fromString(const std::string& ftStr)
+FieldType& FieldType::stringToType(const std::string& ftStr)
 {
     if (ftStr == "int")
         return gFieldTypeInt;
@@ -54,7 +54,7 @@ FieldType& FieldType::fromString(const std::string& ftStr)
 }
 
 
-std::string FieldType::toString(const FieldType& fType)
+std::string FieldType::typeToString(const FieldType& fType)
 {
     const char* ret = "?err";
 
@@ -90,5 +90,15 @@ std::string FieldType::toString(const FieldType& fType)
     }
 
     return ret;
+}
+
+bool FieldType::toString(void* raw, std::string& str)
+{
+    return false;
+}
+
+bool FieldType::fromString(std::string& str, void* raw)
+{
+    return false;
 }
 

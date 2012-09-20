@@ -199,8 +199,8 @@ bool CommandSend::execute(RunContext& context)
         basicMsg.wFunction_   = msg->getOrdinal();
         basicMsg.wPacketSize_ = msg->getSize();
         basicMsg.dwSequence_  = msg->bumpSequence();	// cookie
-        strcpy(basicMsg.filler_, "Andy Warner was here.");
-// msg->packFields(context_.getFieldValues(), basicMsg.filler_);
+//        strcpy(basicMsg.filler_, "Andy Warner was here.");
+	msg->packFields(context.getFieldValues(), basicMsg.filler_);
 
         sock->write(&basicMsg, sizeof(sockstr::IpcStruct) + basicMsg.wPacketSize_);
     }
