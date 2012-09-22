@@ -36,6 +36,7 @@
 //
 namespace ipctest
 {
+    class Message;
     class RunContext;
 }
 
@@ -77,24 +78,33 @@ public:
             params_->get(name, val);
         return val;
     }
+    void* getData() const { return data_; }
+    void  setData(void* data) { data_ = data; }
+    Message* getMessage() const { return message_; }
     Params* getParams() { return params_; }
     void setParams(Params* params) { params_ = params; }
 
     virtual std::string toString() { return commandName_; }
+    virtual std::string toXml() { return "<" + commandName_ + "/>\n"; }
 
 protected:
-	Command(Params* params = 0) : params_(params) { }
+    Command(Params* params = 0) 
+        : params_(params ? params : new Params)
+        , message_(0)
+        , data_(0), delay_(0)  { }
     Command(const std::string& cname, 
-            const std::string& msgname = std::string(),
+            const std::string& keyname,
+            const std::string& keyvalue = std::string(),
             void* data = 0, int delay = 0)
-        : params_(0), commandName_(cname), messageName_(msgname)
-        , data_(data), delay_(delay) {  }
-    Command(const std::string& cname, 
-            Params* params,
-            void* data = 0, int delay = 0)
-        : params_(params), commandName_(cname), data_(data), delay_(delay) {  }
+        : params_(new Params), message_(0), commandName_(cname)
+        , data_(data), delay_(delay) 
+    {
+        params_->set(keyname, keyvalue);
+    }
+    Command(const std::string& cname, void* data = 0, int delay = 0)
+        : params_(new Params), message_(0)
+        , commandName_(cname), data_(data), delay_(delay) {  }
 
-    void* getData() const { return data_; }
     int getDelay() const { return delay_; }
     void setDelay(int delay) { delay_ = delay; }
 
@@ -104,8 +114,8 @@ private:
 
 protected:
     Params* params_;
+    Message* message_;
     std::string commandName_;	// Name of command
-    std::string messageName_;	// Name of message
     void* data_;	// any message related to command
     int delay_;		// delay before executing (for realtime playback)
 

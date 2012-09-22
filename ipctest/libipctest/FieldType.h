@@ -76,8 +76,12 @@ public:
     static FieldType& stringToType(const std::string& ftStr);
     static std::string typeToString(const FieldType& fType);
     
-    static bool toString(void* raw, std::string& str);
-    static bool fromString(std::string& str, void* raw);
+    // Convert between string and internal representation.
+    // The internal format depends on the type (i.e. FieldIdent) of the data.
+    virtual bool   toString(const void* raw,
+                            std::string& strval, int elements = 1) const;
+    virtual bool fromString(const std::string& strval,
+                            void* raw, int elements = 1) const;
 
     FieldIdent ident() const { return ftype_; }
     int size() const { return size_; }
@@ -100,13 +104,21 @@ private:
 class FieldTypeInt : public FieldType
 {
 public:
-FieldTypeInt() : FieldType(Int, 4) { }
+    FieldTypeInt() : FieldType(Int, 4) { }
+    virtual bool   toString(const void* raw,
+                            std::string& strval, int elements = 1) const;
+    virtual bool fromString(const std::string& strval,
+                            void* raw, int elements = 1) const;
 };
 
 class FieldTypeInt16 : public FieldType
 {
 public:
 FieldTypeInt16() : FieldType(Int16, 2) { }
+    virtual bool   toString(const void* raw,
+                            std::string& strval, int elements = 1) const;
+    virtual bool fromString(const std::string& strval,
+                            void* raw, int elements = 1) const;
 };
 
 class FieldTypeInt32 : public FieldType
@@ -119,6 +131,10 @@ class FieldTypeInt64 : public FieldType
 {
 public:
 FieldTypeInt64() : FieldType(Int64, 8) { }
+    virtual bool   toString(const void* raw,
+                            std::string& strval, int elements = 1) const;
+    virtual bool fromString(const std::string& strval,
+                            void* raw, int elements = 1) const;
 };
 
 class FieldTypeChar : public FieldType
@@ -131,6 +147,10 @@ class FieldTypeStruct : public FieldType
 {
 public:
 FieldTypeStruct() : FieldType(Struct, 0) { }
+    virtual bool   toString(const void* raw,
+                            std::string& strval, int elements = 1) const;
+    virtual bool fromString(const std::string& strval,
+                            void* raw, int elements = 1) const;
 };
 
 class FieldTypeUndefined : public FieldType

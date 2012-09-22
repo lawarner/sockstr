@@ -67,12 +67,12 @@ public:
     std::string name() const { return name_; }
     void set(const FieldValue fv);
     int size() const;
-    FieldType type() const { return type_; }
+    const FieldType& type() const { return type_; }
     const FieldType* typePointer() const { return &type_; }
 
 private:
     std::string name_;
-    FieldType type_;
+    const FieldType& type_;
     int size_;
     int elements_;
     FieldValue* value_;

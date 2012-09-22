@@ -21,6 +21,8 @@
 // Message.cpp
 //
 
+#include <iostream>
+
 #include "Field.h"
 #include "Message.h"
 using namespace ipctest;
@@ -89,20 +91,34 @@ int Message::packFields(const std::vector<std::string>& vals, char* buf) const
     for ( ; (fi != fields_.end()) && (it != vals.end()); ++fi, ++it)
     {
         Field* fld = *fi;
-	std::string strval = *it;
-//        row[mtlColumns_.colFieldName_] = fld->name();
-	int sz = fld->size() * fld->elements();
-	memcpy(&buf[idx], strval.c_str(), sz);
+        std::string strval = *it;
+//        std::cout << " idx = " << idx << std::endl;
+        fld->type().fromString(strval, &buf[idx], fld->elements());
 
-        idx += sz;
+        idx += fld->size() * fld->elements()
+            +  (idx & 1);		// Align on 2 bytes
     }
   
-    return 0;
+    return idx;
 }
 
 int Message::unpackFields(const char* buf, std::vector<std::string>& vals) const
 {
-    return 0;
+    int idx = 0;
+
+    vals.clear();
+    FieldsConstIterator fi = fields_.begin();
+    for ( ; fi != fields_.end(); ++fi)
+    {
+        Field* fld = *fi;
+        std::string strval;
+//        std::cout << " idx = " << idx << std::endl;
+        fld->type().toString(&buf[idx], strval, fld->elements());
+
+        vals.push_back(strval);
+        idx += fld->size() * fld->elements()
+            +  (idx & 1);		// Align on 2 bytes
+    }
+  
+    return idx;
 }
-
-

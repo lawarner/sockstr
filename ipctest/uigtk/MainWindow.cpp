@@ -21,6 +21,7 @@
 // MainWindow.cpp
 //
 
+#include <fstream>
 #include <iostream>
 #include <sstream>
 
@@ -129,6 +130,16 @@ bool MainWindow::initDialog()
     commands_->signal_changed()
         .connect(sigc::mem_fun(*this, &MainWindow::onCommandChanged));
 
+    Gtk::ImageMenuItem* menuit;
+    builder_->get_widget("menuquit", menuit);
+    menuit->signal_activate().connect(sigc::mem_fun(*this, &MainWindow::onQuit));
+    builder_->get_widget("menusave", menuit);
+    menuit->signal_activate().connect(sigc::mem_fun(*this, &MainWindow::onSave));
+    builder_->get_widget("menusaveas", menuit);
+    menuit->signal_activate().connect(sigc::mem_fun(*this, &MainWindow::onSaveAs));
+    builder_->get_widget("menuopen", menuit);
+    menuit->signal_activate().connect(sigc::mem_fun(*this, &MainWindow::onOpen));
+
     log(new CommandComment("initDialog complete."));
 
     return true;
@@ -139,6 +150,7 @@ void MainWindow::log(ipctest::Command* cmd)
 {
     std::cout << "LOG: " << cmd->toString() << std::endl;
     historyList_->add(cmd);
+    testBase_->addCommand(cmd);
 }
 
 void MainWindow::guiToParams(ipctest::Params* params)
@@ -202,21 +214,53 @@ void MainWindow::paramsToGui(ipctest::Params* params)
 }
 
 
-void MainWindow::setCommand(const std::string& cmdName)
+void MainWindow::setCommand(ipctest::Command* cmd)
 {
     Glib::RefPtr<Gtk::TreeModel> cmdModel = commands_->get_model();
     Gtk::TreeModel::iterator iter = cmdModel->children().begin();
+
     for ( ; iter != cmdModel->children().end(); ++iter)
     {
         Gtk::TreeModel::Row row = *iter;
-        Glib::ustring cmd = row[commandColumns_.colName_];
-        if (cmd.raw() == cmdName)
+        Glib::ustring cmdr = row[commandColumns_.colName_];
+        if (cmdr.raw() == cmd->getName())
         {
             commands_->set_active(iter);
             break;
         }
     }
+
+    paramsToGui(cmd->getParams());
+
+    // copy fields
+    const char* dat = (const char*) cmd->getData();
+    Message* msg = cmd->getMessage();
+    if (msg && dat)
+    {
+        messageList_->children();
+        Gtk::TreeModel::iterator iter = messageList_->children().begin();
+
+        for ( ; iter != messageList_->children().end(); ++iter)
+        {
+            Gtk::TreeModel::Row row = *iter;
+            if (row[mlColumns_.colName_] == msg->getName())
+            {
+                Glib::RefPtr<Gtk::TreeSelection> selection = messageListView_->get_selection();
+                selection->select(iter);
+                break;
+            }
+        }
+
+        std::vector<std::string> fldValues;
+        int szdata = msg->unpackFields(dat, fldValues);
+        if (szdata)
+        {
+            context_.setFieldValues(fldValues);
+            stringsToFields(fldValues);
+        }
+    }
 }
+
 
 bool MainWindow::setup(const std::string& defFilename)
 {
@@ -235,6 +279,22 @@ bool MainWindow::setup(const std::string& defFilename)
     }
 
     return true;
+}
+
+
+void MainWindow::stringsToFields(const std::vector<std::string>& flds)
+{
+    std::vector<std::string>::const_iterator itstr = flds.begin();
+    Gtk::TreeModel::iterator iter = messageTableList_->children().begin();
+
+    for ( ; iter != messageTableList_->children().end() && itstr != flds.end();
+          ++iter, ++itstr)
+    {
+        Gtk::TreeModel::Row row = *iter;
+        std::string str = *itstr;
+        row[mtlColumns_.colFieldValue_] = str;
+        std::cout << "stringsToFields: " << str << std::endl;
+    }
 }
 
 
@@ -260,8 +320,6 @@ void MainWindow::onCellDataFieldType(Gtk::CellRenderer* renderer,
 
 void MainWindow::onConnect()
 {
-    ipctest::CommandIterator it;
-
     if (!testBase_->isConnected())
     {
         Gtk::Entry* connUrl;
@@ -306,6 +364,9 @@ void MainWindow::onExecute()
 
     guiToParams(cmd->getParams());
     
+    // Make a string array based on the message's field values.
+    // This only needs to be done if command is going to use these values,
+    // but its being done every time now.
     std::vector<std::string> flds;
     Gtk::TreeModel::iterator iter = messageTableList_->children().begin();
     for ( ; iter != messageTableList_->children().end(); ++iter)
@@ -315,10 +376,15 @@ void MainWindow::onExecute()
         std::cout << "value: " << val << std::endl;
         flds.push_back(val.raw());
     }
+
     context_.setFieldValues(flds);
 
     cmd->execute(context_);
-    std::cout << "Executing command " << cmd->toString() << std::endl;
+//    std::cout << "Executed command " << cmd->toString() << std::endl;
+
+    flds = context_.getFieldValues();
+    stringsToFields(flds);
+
     log(cmd);
 }
 
@@ -345,7 +411,7 @@ void MainWindow::onMessageActivated(const Gtk::TreeModel::Path& path,
 
 void MainWindow::onMessageSelection()
 {
-    std::cout << "Message selection changed" << std::endl;
+    std::cout << "Messaetge selection changed" << std::endl;
     Glib::RefPtr<Gtk::TreeSelection> selection = messageListView_->get_selection();
     Gtk::TreeModel::Row row = *(selection->get_selected());
     Glib::ustring msgName = row[mlColumns_.colName_];
@@ -365,5 +431,116 @@ void MainWindow::onMessageSelection()
         row = *(messageTableList_->append());
         row[mtlColumns_.colFieldName_] = fld->name();
         row[mtlColumns_.colField_] = fld;
+    }
+}
+
+
+void MainWindow::onOpen()
+{
+    Gtk::FileChooserDialog dlg("Please choose a test case to open",
+                               Gtk::FILE_CHOOSER_ACTION_OPEN);
+    dlg.set_transient_for(*this);
+    dlg.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+    dlg.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
+
+    Glib::RefPtr<Gtk::FileFilter> filter_testsuite = Gtk::FileFilter::create();
+    filter_testsuite->set_name("Ipctest Testsuite files");
+    filter_testsuite->add_pattern("*.its");
+    Glib::RefPtr<Gtk::FileFilter> filter_any = Gtk::FileFilter::create();
+    filter_any->set_name("Any files");
+    filter_any->add_pattern("*");
+    dlg.add_filter(filter_testsuite);
+    dlg.add_filter(filter_any);
+
+    int result = dlg.run();
+    switch (result)
+    {
+    case Gtk::RESPONSE_OK:
+        std::string filename = dlg.get_filename();
+        if (!filename.empty() && filename != testBase_->getFileName())
+        {
+            testBase_->setFileName(filename);
+            // read it in
+            std::ifstream fi(filename.c_str());
+            if (fi.is_open())
+            {
+                std::string magic;
+                fi >> magic;
+                std::cout << "File " << filename 
+                          << " contains magic: " << magic << std::endl;
+            }
+                
+        }
+        break;
+    }
+
+}
+
+void MainWindow::onQuit()
+{
+    hide();
+}
+
+void MainWindow::onSave()
+{
+    if (testBase_->getFileName().empty())
+        onSaveAs();
+    if (testBase_->getFileName().empty())
+        return;
+
+    std::string filename(testBase_->getFileName());
+    if (filename.find('.') == filename.npos)
+    {
+        filename += ".its";
+    }
+
+    // warn if file exists, before overwriting
+    std::ifstream fi(filename.c_str());
+    if (fi.is_open())
+    {
+        fi.close();
+        Gtk::MessageDialog dlg(*this, "File already exists.  "
+                               "Are you sure you want to overwrite this file?",
+                               false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_OK_CANCEL);
+        
+        if (dlg.run() != Gtk::RESPONSE_OK)
+        {
+            testBase_->setFileName("");
+            return;
+        }
+    }
+
+    testBase_->setFileName(filename);
+    testBase_->serialize();
+}
+
+void MainWindow::onSaveAs()
+{
+    Gtk::FileChooserDialog dlg("Please choose a file to save test case",
+                               Gtk::FILE_CHOOSER_ACTION_SAVE);
+    dlg.set_transient_for(*this);
+    dlg.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+    dlg.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
+
+    Glib::RefPtr<Gtk::FileFilter> filter_testsuite = Gtk::FileFilter::create();
+    filter_testsuite->set_name("Ipctest Testsuite files");
+    filter_testsuite->add_pattern("*.its");
+    Glib::RefPtr<Gtk::FileFilter> filter_any = Gtk::FileFilter::create();
+    filter_any->set_name("Any files");
+    filter_any->add_pattern("*");
+    dlg.add_filter(filter_testsuite);
+    dlg.add_filter(filter_any);
+
+    int result = dlg.run();
+    switch (result)
+    {
+    case Gtk::RESPONSE_OK:
+        std::string filename = dlg.get_filename();
+        if (!filename.empty() && filename != testBase_->getFileName())
+        {
+            testBase_->setFileName(filename);
+            onSave();
+        }
+        break;
     }
 }

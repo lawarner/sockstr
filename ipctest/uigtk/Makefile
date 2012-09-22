@@ -33,7 +33,8 @@ SUBDIRS =
 
 CC = g++
 #CFLAGS = -Wall -O2 -I..
-CPPFLAGS = -Wall -g -O0 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR) -I$(LIBIPCDIR) -I$(GTKINC)
+DEPCPPFLAGS = -Wall -g -O0 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR) -I$(LIBIPCDIR)
+CPPFLAGS = $(DEPCPPFLAGS) -I$(GTKINC)
 LDFLAGS = -pthread
 LDLIBS = $(LIBIPCTEST) $(LIBSOCKLIB) $(GTKLIB)
 
@@ -68,7 +69,7 @@ clean:
 
 .PHONY: depends
 depends: $(SRCS) $(INCS)
-	$(CC) -I. $(CPPFLAGS) -MM $(SRCS) > .makedepends
+	$(CC) -I. $(DEPCPPFLAGS) -MM $(SRCS) > .makedepends
 	touch .mkdep-timestamp
 
 .makedepends:

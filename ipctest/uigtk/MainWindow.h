@@ -112,7 +112,7 @@ public:
     void log(ipctest::Command* cmd);
     void guiToParams(ipctest::Params* params);
     void paramsToGui(ipctest::Params* params);
-    void setCommand(const std::string& cmdName);
+    void setCommand(ipctest::Command* cmd);
     bool setup(const std::string& defFilename);
 
 private:
@@ -121,6 +121,7 @@ private:
 
 private:
     bool initDialog();
+    void stringsToFields(const std::vector<std::string>& flds);
 
 	// signal handlers
     void onCellDataFieldType(Gtk::CellRenderer* renderer,
@@ -130,6 +131,10 @@ private:
     void onCommandChanged();
     void onMessageActivated(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
     void onMessageSelection();
+    void onOpen();
+    void onQuit();
+    void onSave();
+    void onSaveAs();
 
     Glib::RefPtr<Gtk::Builder> builder_;
     CommandColumns commandColumns_;

@@ -99,5 +99,5 @@ void HistoryList::onHistorySelection()
     Gtk::TreeModel::Row row = *(selection->get_selected());
     ipctest::Command* cmd = row[histColumns_.colCommand_];
     if (cmd)
-        mainWindow_->setCommand(cmd->getName());
+        mainWindow_->setCommand(cmd);
 }

@@ -28,6 +28,9 @@
 
 #include "MainWindow.h"
 
+#ifndef GTK_VERSION_GE
+#define GTK_VERSION_GE(x,y) 1
+#endif
 
 
 int main(int argc, char* argv[])
@@ -57,8 +60,8 @@ int main(int argc, char* argv[])
 #if GTK_VERSION_GE(3,4)
         return app->run(*mainWindow);
 #else
-	kit.run(*mainWindow);
-	return 0;
+        kit.run(*mainWindow);
+        return 0;
 #endif
     }
 

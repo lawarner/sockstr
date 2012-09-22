@@ -36,10 +36,6 @@ namespace sockstr
 {
     class Socket;
 }
-namespace ipctest
-{
-    class RunContext;
-}
 
 
 namespace ipctest
@@ -65,6 +61,7 @@ public:
 
     virtual bool execute(RunContext& context);
     virtual std::string toString();
+    virtual std::string toXml();
 };
 
 /** Connect command. */
@@ -75,6 +72,7 @@ public:
 
     virtual bool execute(RunContext& context);
     virtual std::string toString();
+    virtual std::string toXml();
 
     sockstr::Socket* getSocket() const;
 
@@ -101,6 +99,7 @@ public:
 
     virtual bool execute(RunContext& context);
     virtual std::string toString();
+    virtual std::string toXml();
 
 private:
     CommandList commands_;
@@ -120,20 +119,22 @@ public:
 class CommandReceive : public Command
 {
 public:
-    CommandReceive(const std::string& msgName);
+    CommandReceive(Message* msg = 0);
 
     virtual bool execute(RunContext& context);
     virtual std::string toString();
+    virtual std::string toXml();
 };
 
 /** Send command. */
 class CommandSend : public Command
 {
 public:
-    CommandSend(const std::string& msgName, void* msgData = 0);
+    CommandSend(Message* msg = 0, void* msgData = 0);
 
     virtual bool execute(RunContext& context);
     virtual std::string toString();
+    virtual std::string toXml();
 };
 
 }  // namespace ipctest

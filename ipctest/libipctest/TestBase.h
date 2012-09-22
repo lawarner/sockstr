@@ -64,17 +64,22 @@ public:
     ~TestBase();
 
     Command* createCommand(const std::string& cmdName, 
-                           const std::string& msgName = std::string(), void* msgData = 0);
+                           Message* msg = 0, void* msgData = 0);
     Command* getWorkCommand() { return workCommand_; }
     void setWorkCommand(Command* cmd) { workCommand_ = cmd; }
 
     bool isConnected() const { return isConnected_; }
     void setConnected(bool connected) { isConnected_ = connected; }
+    std::string getFileName() const { return fileName_; }
+    void setFileName(const std::string& filename) { fileName_ = filename; }
     sockstr::Socket* getSocket() { return socket_; }
     void setSocket(sockstr::Socket* sock) { socket_ = sock; }
 
     bool readIpcDefs(const std::string& fileName);
+    bool serialize();
     const std::vector<std::string>& builtinCommandNames() const { return builtinCommands_; }
+    void addCommand(Command* cmd) { commandList_.push_back(cmd); }
+    CommandList& commandList() { return commandList_; }
     const MessageList& messageList() const { return messageList_; }
 
 private:
@@ -88,6 +93,7 @@ private:
     std::vector<std::string> builtinCommands_;
     bool isConnected_;
     sockstr::Socket* socket_;
+    std::string fileName_;
 
 private:
     TestBase(const TestBase&);	// disable copy constructor

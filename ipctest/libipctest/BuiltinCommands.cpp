@@ -33,14 +33,14 @@ using namespace ipctest;
 
 // Comment
 CommandComment::CommandComment(const std::string& comment)
-    : Command("Comment", new Params)
+    : Command("Comment", "Comment", comment)
 {
-    params_->set("Comment", comment);
+//    params_->set("Comment", comment);
 }
 
 bool CommandComment::execute(RunContext& context)
 {
-    std::cout << "exec: " << toString() << std::endl;
+    std::cout << toString() << std::endl;
     return true;
 }
 
@@ -51,14 +51,20 @@ std::string CommandComment::toString()
     return commandName_ + ": " + str; 
 }
 
+std::string CommandComment::toXml()
+{
+    std::string str("<" + commandName_ + ">\n");
+    str += params_->get("Comment") + "\n";
+    str += "</" + commandName_ + ">\n";
+    return str;
+}
 
 // Connect
 CommandConnect::CommandConnect(const std::string& url)
-    : Command("Connect", new Params)
+    : Command("Connect", "Url", url)
 {
-    params_->set("Url", url);
-}
 
+}
 
 bool CommandConnect::execute(RunContext& context)
 {
@@ -82,6 +88,15 @@ std::string CommandConnect::toString()
     return commandName_ + ": " + params_->get("Url");
 }
 
+
+std::string CommandConnect::toXml()
+{
+    std::string str("<" + commandName_ + ">\n");
+    str += "</" + commandName_ + ">\n";
+    return str;
+}
+
+
 //  Disconnect
 CommandDisconnect::CommandDisconnect()
     : Command("Disconnect")
@@ -103,9 +118,9 @@ bool CommandDisconnect::execute(RunContext& context)
 
 //  Function
 CommandFunction::CommandFunction(const std::string& funcName, void* data, int delay)
-    : Command("Function", new Params, data, delay)
+    : Command("Function", "Function Name", funcName)
 {
-    params_->set("Function Name", funcName);
+
 }
 
 void CommandFunction::addCommand(Command* cmd)
@@ -135,10 +150,18 @@ std::string CommandFunction::toString()
 }
 
 
-CommandReceive::CommandReceive(const std::string& msgName)
-    : Command("Receive", msgName, 0)
+std::string CommandFunction::toXml()
 {
+    std::string str("<" + commandName_ + ">\n");
+    str += "</" + commandName_ + ">\n";
+    return str;
+}
 
+
+CommandReceive::CommandReceive(Message* msg)
+    : Command("Receive")
+{
+    message_ = msg;
 }
 
 bool CommandReceive::execute(RunContext& context)
@@ -148,13 +171,13 @@ bool CommandReceive::execute(RunContext& context)
 
     if (msg && sock)
     {
-        messageName_ = msg->getName();
-        if (messageName_.empty())
+        message_ = msg;
+        if (message_->getName().empty())
             return false;
         std::cout << "exec: " << toString() << std::endl;
 
         sockstr::GenericReply reply;
-        sock->setAsyncMode(true);
+        sock->setAsyncMode(true); 	// Don't block if no data available
         UINT sz = sock->read(&reply, sizeof(reply));
         if (sz == 0)
             return false;
@@ -162,23 +185,41 @@ bool CommandReceive::execute(RunContext& context)
         std::cout << "Got " << sz << " bytes, function=" << reply.wFunction_
                   << ", seq=" << reply.dwSequence_ << std::endl;
         if (sz > 12)
-            std::cout << " +-+ filler: " << reply.filler_ << std::endl;
+        {
+            std::vector<std::string> fldValues;
+            int szdata = msg->unpackFields(reply.filler_, fldValues);
+            if (szdata)
+            {
+                char* databuf = new char[szdata];
+                memcpy(databuf, reply.filler_, szdata);
+                setData(databuf);
+                context.setFieldValues(fldValues);
+            }
+        }
     }
 
-    return false;
+    return true;
 }
 
 std::string CommandReceive::toString()
 {
-    return commandName_ + ": " + messageName_;
+    return commandName_ + ": " + message_->getName();
+}
+
+
+std::string CommandReceive::toXml()
+{
+    std::string str("<" + commandName_ + "message=\"" + message_->getName() + "\">\n");
+    str += "</" + commandName_ + ">\n";
+    return str;
 }
 
 
 // Send
-CommandSend::CommandSend(const std::string& msgName, void* msgData)
-    : Command("Send", msgName, msgData)
+CommandSend::CommandSend(Message* msg, void* msgData)
+    : Command("Send", msgData)
 {
-
+    message_ = msg;
 }
 
 bool CommandSend::execute(RunContext& context)
@@ -189,8 +230,8 @@ bool CommandSend::execute(RunContext& context)
     if (msg && sock)
     {
         std::cout << " Yes, we rock with message and socks!" << std::endl;
-        messageName_ = msg->getName();
-        if (messageName_.empty())
+        message_ = msg;
+        if (message_->getName().empty())
             return false;
 
         std::cout << "exec: " << toString() << std::endl;
@@ -199,8 +240,14 @@ bool CommandSend::execute(RunContext& context)
         basicMsg.wFunction_   = msg->getOrdinal();
         basicMsg.wPacketSize_ = msg->getSize();
         basicMsg.dwSequence_  = msg->bumpSequence();	// cookie
-//        strcpy(basicMsg.filler_, "Andy Warner was here.");
-	msg->packFields(context.getFieldValues(), basicMsg.filler_);
+        int szdata = msg->packFields(context.getFieldValues(), basicMsg.filler_);
+
+        if (szdata > 0)
+        {
+            char* databuf = new char[szdata];
+            memcpy(databuf, basicMsg.filler_, szdata);
+            setData(databuf);
+        }
 
         sock->write(&basicMsg, sizeof(sockstr::IpcStruct) + basicMsg.wPacketSize_);
     }
@@ -208,7 +255,15 @@ bool CommandSend::execute(RunContext& context)
     return true;
 }
 
+
 std::string CommandSend::toString()
 {
-    return commandName_ + ": " + messageName_;
+    return commandName_ + ": " + message_->getName();
+}
+
+std::string CommandSend::toXml()
+{
+    std::string str("<" + commandName_ + "message=\"" + message_->getName() + "\">\n");
+    str += "</" + commandName_ + ">\n";
+    return str;
 }

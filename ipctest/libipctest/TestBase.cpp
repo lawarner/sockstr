@@ -56,24 +56,24 @@ void TestBase::init()
 
 
 Command* TestBase::createCommand(const std::string& cmdName, 
-                                 const std::string& msgName, void* msgData)
+                                 Message* msg, void* msgData)
 {
     Command* cmd = 0;
 
     if (cmdName == "Comment")
-        cmd = new CommandComment(msgName);
+        cmd = new CommandComment("");
     else if (cmdName == "Connect")
-        cmd = new CommandConnect(msgName);
+        cmd = new CommandConnect("");
     else if (cmdName == "Disconnect")
         cmd = new CommandDisconnect;
     else if (cmdName == "Function")
-        cmd = new CommandFunction(msgName, msgData);
+        cmd = new CommandFunction("", msgData);
     else if (cmdName == "Noop")
         cmd = new CommandNoop;
     else if (cmdName == "Receive")
-        cmd = new CommandReceive(msgName);
+        cmd = new CommandReceive(msg);
     else if (cmdName == "Send")
-        cmd = new CommandSend(msgName, msgData);
+        cmd = new CommandSend(msg, msgData);
 
     return cmd;
 }
@@ -99,5 +99,23 @@ bool TestBase::readIpcDefs(const std::string& fileName)
         return false;
     }
 
+    return true;
+}
+
+
+bool TestBase::serialize()
+{
+    std::ofstream fo(fileName_.c_str());
+    if (!fo.is_open())
+        return false;
+
+    fo << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl
+       << "<ipctest>\n  <!-- Ipctest Testsuite file version 1.0 -->" << std::endl;
+
+    CommandIterator it = commandList_.begin();
+    for ( ; it != commandList_.end(); ++it)
+        (*it)->toXml();
+
+    fo << "</ipctest>" << std::endl;
     return true;
 }

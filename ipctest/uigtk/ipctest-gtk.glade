@@ -43,7 +43,7 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="imagemenuitem2">
+                      <object class="GtkImageMenuItem" id="menuopen">
                         <property name="label">gtk-open</property>
                         <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
@@ -53,7 +53,7 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="imagemenuitem3">
+                      <object class="GtkImageMenuItem" id="menusave">
                         <property name="label">gtk-save</property>
                         <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
@@ -63,7 +63,7 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="imagemenuitem4">
+                      <object class="GtkImageMenuItem" id="menusaveas">
                         <property name="label">gtk-save-as</property>
                         <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
@@ -80,7 +80,7 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="imagemenuitem5">
+                      <object class="GtkImageMenuItem" id="menuquit">
                         <property name="label">gtk-quit</property>
                         <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>

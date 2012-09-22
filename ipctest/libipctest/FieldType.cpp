@@ -21,6 +21,9 @@
 // FieldType.cpp
 //
 
+#include <iostream>
+#include <sstream>
+#include <string.h>             // for memcpy()
 #include "FieldType.h"
 using namespace ipctest;
 
@@ -64,27 +67,11 @@ std::string FieldType::typeToString(const FieldType& fType)
     {
         STRNAME(Undefined);
         STRNAME(Int16);
+        // note: Int == Int32
         STRNAME(Int32);
         STRNAME(Int64);
         STRNAME(Char);
         STRNAME(Struct);
-#if 0
-    case Undefined:
-        ret = "Undefined";
-        break;
-    case Int16:
-        ret = "Int16";
-        break;
-    case Int32:    // note: Int == Int32
-        ret = "Undefined";
-        break;
-    case Int64:
-        ret = "Undefined";
-        break;
-    case Char:
-        ret = "Undefined";
-        break;
-#endif
     default:
         break;
     }
@@ -92,13 +79,101 @@ std::string FieldType::typeToString(const FieldType& fType)
     return ret;
 }
 
-bool FieldType::toString(void* raw, std::string& str)
+
+bool FieldType::toString(const void* raw, std::string& strval, int elements) const
 {
+    const char* buf = (const char*) raw;
+    strval = std::string(buf, strlen(buf));
+    std::cout << __PRETTY_FUNCTION__ << " value=" << strval << std::endl;
+    return true;
+}
+
+bool FieldType::fromString(const std::string& strval, void* raw, int elements) const
+{
+    std::cout << __PRETTY_FUNCTION__ << " value=" << strval << std::endl;
+    if (strval.size() < (size_t) elements)
+    {
+        memcpy(raw, strval.c_str(), strval.size());
+        char* rest = (char*)raw + strval.size();
+        memset(rest, 0, elements - strval.size());
+    }
+    else
+        memcpy(raw, strval.c_str(), elements);
+
+    return true;
+}
+
+
+bool FieldTypeInt::toString(const void* raw, std::string& strval, int elements) const
+{
+    //TODO: loop thru elements
+    const int* buf = (const int*) raw;
+    std::ostringstream ss;
+    ss << *buf;
+    strval = ss.str();
+    std::cout << __PRETTY_FUNCTION__ << " value=" << strval << std::endl;
+    return true;
+}
+
+bool FieldTypeInt::fromString(const std::string& strval, void* raw, int elements) const
+{
+    int* buf = (int*) raw;
+    std::istringstream(strval) >> *buf;
+    std::cout << __PRETTY_FUNCTION__ << " value=" << *buf << std::endl;
+    return true;
+}
+
+// I know, this is screaming for templates :)
+
+bool FieldTypeInt16::toString(const void* raw, std::string& strval, int elements) const
+{
+    //TODO: loop thru elements
+    const short* buf = (const short*) raw;
+    std::ostringstream ss;
+    ss << *buf;
+    strval = ss.str();
+    std::cout << __PRETTY_FUNCTION__ << " value=" << strval << std::endl;
+    return true;
+}
+
+bool FieldTypeInt16::fromString(const std::string& strval, void* raw, int elements) const
+{
+    short* buf = (short*) raw;
+    std::istringstream(strval) >> *buf;
+    std::cout << __PRETTY_FUNCTION__ << " value=" << *buf << std::endl;
+    return true;
+}
+
+
+bool FieldTypeInt64::toString(const void* raw, std::string& strval, int elements) const
+{
+    //TODO: loop thru elements
+    const long long* buf = (const long long*) raw;
+    std::ostringstream ss;
+    ss << *buf;
+    strval = ss.str();
+    std::cout << __PRETTY_FUNCTION__ << " value=" << strval << std::endl;
+    return true;
+}
+
+bool FieldTypeInt64::fromString(const std::string& strval, void* raw, int elements) const
+{
+    long long* buf = (long long*) raw;
+    std::istringstream(strval) >> *buf;
+    std::cout << __PRETTY_FUNCTION__ << " value=" << *buf << std::endl;
+    return true;
+}
+
+
+bool FieldTypeStruct::toString(const void* raw, std::string& strval, int elements) const
+{
+    std::cout << __PRETTY_FUNCTION__ << " value=" << strval << std::endl;
     return false;
 }
 
-bool FieldType::fromString(std::string& str, void* raw)
+bool FieldTypeStruct::fromString(const std::string& strval, void* raw, int elements) const
 {
+    std::cout << __PRETTY_FUNCTION__ << " value=" << strval << std::endl;
     return false;
 }
 

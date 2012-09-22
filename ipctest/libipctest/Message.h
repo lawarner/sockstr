@@ -66,9 +66,20 @@ public:
     const std::string& getName() const;
     const int getOrdinal() const;
     const int getSize() const;
-    // Returns the total size packed
+
+    /*! Take array of field values in string format and pack them into
+     *  a buffer of internal representation, ready to be sent over the wire.
+     *  @param vals array of field values in string format
+     *  @param buf buffer in internal format (must be at least size of message).
+     *  @return the total size packed.
+     */
     int packFields(const std::vector<std::string>& vals, char* buf) const;
-    // Returns the total size unpacked
+    /*! Take an internal buffer received and unpack into an array of field
+     *  values in string format.
+     *  @param buf buffer in internal format (must be at least size of message).
+     *  @param vals array of field values in string format
+     *  @return the total size unpacked.
+     */
     int unpackFields(const char* buf, std::vector<std::string>& vals) const;
 
 private:
