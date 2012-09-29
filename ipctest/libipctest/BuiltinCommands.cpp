@@ -51,11 +51,13 @@ std::string CommandComment::toString()
     return commandName_ + ": " + str; 
 }
 
-std::string CommandComment::toXml()
+std::string CommandComment::toXml(int indent)
 {
-    std::string str("<" + commandName_ + ">\n");
+    std::string str(indent, ' ');
+    str += "<" + commandName_ + ">\n";
     str += params_->get("Comment") + "\n";
-    str += "</" + commandName_ + ">\n";
+    str += std::string(indent, ' ') + "</" + commandName_ + ">\n";
+
     return str;
 }
 
@@ -89,10 +91,12 @@ std::string CommandConnect::toString()
 }
 
 
-std::string CommandConnect::toXml()
+std::string CommandConnect::toXml(int indent)
 {
-    std::string str("<" + commandName_ + ">\n");
-    str += "</" + commandName_ + ">\n";
+    std::string str(indent, ' ');
+    str += "<" + commandName_ + ">\n";
+    str += params_->get("Url") + "\n";
+    str += std::string(indent, ' ') + "</" + commandName_ + ">\n";
     return str;
 }
 
@@ -150,10 +154,11 @@ std::string CommandFunction::toString()
 }
 
 
-std::string CommandFunction::toXml()
+std::string CommandFunction::toXml(int indent)
 {
-    std::string str("<" + commandName_ + ">\n");
-    str += "</" + commandName_ + ">\n";
+    std::string str(indent, ' ');
+    str += "<" + commandName_ + ">\n";
+    str += std::string(indent, ' ') + "</" + commandName_ + ">\n";
     return str;
 }
 
@@ -207,10 +212,14 @@ std::string CommandReceive::toString()
 }
 
 
-std::string CommandReceive::toXml()
+std::string CommandReceive::toXml(int indent)
 {
-    std::string str("<" + commandName_ + "message=\"" + message_->getName() + "\">\n");
-    str += "</" + commandName_ + ">\n";
+    std::string str(indent, ' ');
+    str += "<" + commandName_ + " message=\"" + message_->getName() + "\">\n";
+    // get message and field names/values
+    str += message_->toXml(indent + 4, (const char *) getData());
+    str += std::string(indent, ' ') + "</" + commandName_ + ">\n";
+
     return str;
 }
 
@@ -261,9 +270,13 @@ std::string CommandSend::toString()
     return commandName_ + ": " + message_->getName();
 }
 
-std::string CommandSend::toXml()
+std::string CommandSend::toXml(int indent)
 {
-    std::string str("<" + commandName_ + "message=\"" + message_->getName() + "\">\n");
-    str += "</" + commandName_ + ">\n";
+    std::string str(indent, ' ');
+    str += "<" + commandName_ + " message=\"" + message_->getName() + "\">\n";
+    // get message and field names/values
+    str += message_->toXml(indent + 4, (const char*) getData());
+    str += std::string(indent, ' ') + "</" + commandName_ + ">\n";
+
     return str;
 }

@@ -114,7 +114,7 @@ bool TestBase::serialize()
 
     CommandIterator it = commandList_.begin();
     for ( ; it != commandList_.end(); ++it)
-        (*it)->toXml();
+        fo << (*it)->toXml(4);
 
     fo << "</ipctest>" << std::endl;
     return true;

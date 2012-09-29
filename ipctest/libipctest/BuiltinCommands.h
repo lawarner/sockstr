@@ -61,7 +61,7 @@ public:
 
     virtual bool execute(RunContext& context);
     virtual std::string toString();
-    virtual std::string toXml();
+    virtual std::string toXml(int indent);
 };
 
 /** Connect command. */
@@ -72,7 +72,7 @@ public:
 
     virtual bool execute(RunContext& context);
     virtual std::string toString();
-    virtual std::string toXml();
+    virtual std::string toXml(int indent);
 
     sockstr::Socket* getSocket() const;
 
@@ -99,7 +99,7 @@ public:
 
     virtual bool execute(RunContext& context);
     virtual std::string toString();
-    virtual std::string toXml();
+    virtual std::string toXml(int indent);
 
 private:
     CommandList commands_;
@@ -123,7 +123,7 @@ public:
 
     virtual bool execute(RunContext& context);
     virtual std::string toString();
-    virtual std::string toXml();
+    virtual std::string toXml(int indent);
 };
 
 /** Send command. */
@@ -134,7 +134,7 @@ public:
 
     virtual bool execute(RunContext& context);
     virtual std::string toString();
-    virtual std::string toXml();
+    virtual std::string toXml(int indent);
 };
 
 }  // namespace ipctest

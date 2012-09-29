@@ -85,7 +85,12 @@ public:
     void setParams(Params* params) { params_ = params; }
 
     virtual std::string toString() { return commandName_; }
-    virtual std::string toXml() { return "<" + commandName_ + "/>\n"; }
+    virtual std::string toXml(int indent)
+    {
+        std::string str(indent, ' ');
+        str += "<" + commandName_ + "/>\n";
+        return str;
+    }
 
 protected:
     Command(Params* params = 0) 

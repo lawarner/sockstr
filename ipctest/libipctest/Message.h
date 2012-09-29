@@ -82,6 +82,8 @@ public:
      */
     int unpackFields(const char* buf, std::vector<std::string>& vals) const;
 
+    std::string toXml(int indent, const char* buf = 0) const;
+
 private:
     std::string name_;
     int ordinal_;

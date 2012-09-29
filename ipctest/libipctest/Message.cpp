@@ -22,6 +22,7 @@
 //
 
 #include <iostream>
+#include <sstream>
 
 #include "Field.h"
 #include "Message.h"
@@ -102,6 +103,7 @@ int Message::packFields(const std::vector<std::string>& vals, char* buf) const
     return idx;
 }
 
+
 int Message::unpackFields(const char* buf, std::vector<std::string>& vals) const
 {
     int idx = 0;
@@ -121,4 +123,33 @@ int Message::unpackFields(const char* buf, std::vector<std::string>& vals) const
     }
   
     return idx;
+}
+
+std::string Message::toXml(int indent, const char* buf) const
+{
+    std::string idstr(indent, ' ');
+    if (!buf)
+        return idstr + "<Message/>\n";
+
+    std::ostringstream str;
+    int idx = 0;
+
+    str << idstr << "<Message>" << std::endl;
+    FieldsConstIterator fi = fields_.begin();
+    for ( ; fi != fields_.end(); ++fi)
+    {
+        Field* fld = *fi;
+        std::string strval;
+//        std::cout << " idx = " << idx << std::endl;
+        fld->type().toString(&buf[idx], strval, fld->elements());
+
+        str << idstr << "    <Field name=\"" << fld->name() << "\">" << std::endl
+            << strval << std::endl << "    </Field>" << std::endl;
+
+        idx += fld->size() * fld->elements()
+            +  (idx & 1);		// Align on 2 bytes
+    }
+    str << idstr << "</Message>" << std::endl;
+
+    return str.str();
 }
