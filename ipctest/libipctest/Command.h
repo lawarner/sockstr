@@ -124,6 +124,7 @@ protected:
     void* data_;	// any message related to command
     int delay_;		// delay before executing (for realtime playback)
 
+    static Message* emptyMessage_;
 };
 
 

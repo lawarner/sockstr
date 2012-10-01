@@ -379,13 +379,16 @@ void MainWindow::onExecute()
 
     context_.setFieldValues(flds);
 
-    cmd->execute(context_);
 //    std::cout << "Executed command " << cmd->toString() << std::endl;
+    if (cmd->execute(context_))
+    {
+        flds = context_.getFieldValues();
+        stringsToFields(flds);
 
-    flds = context_.getFieldValues();
-    stringsToFields(flds);
-
-    log(cmd);
+        log(cmd);
+    }
+    else
+        log(new CommandComment("Command failed: " + cmd->getName()));
 }
 
 void MainWindow::onCommandChanged()

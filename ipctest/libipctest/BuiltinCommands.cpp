@@ -30,6 +30,9 @@ using namespace ipctest;
 
 #include <string.h>
 
+// static member initialization
+Message* Command::emptyMessage_ = new Message("EmptyMessage");
+
 
 // Comment
 CommandComment::CommandComment(const std::string& comment)
@@ -166,7 +169,7 @@ std::string CommandFunction::toXml(int indent)
 CommandReceive::CommandReceive(Message* msg)
     : Command("Receive")
 {
-    message_ = msg;
+    message_ = msg ? msg : emptyMessage_;
 }
 
 bool CommandReceive::execute(RunContext& context)
@@ -228,7 +231,7 @@ std::string CommandReceive::toXml(int indent)
 CommandSend::CommandSend(Message* msg, void* msgData)
     : Command("Send", msgData)
 {
-    message_ = msg;
+    message_ = msg ? msg : emptyMessage_;
 }
 
 bool CommandSend::execute(RunContext& context)
@@ -260,6 +263,8 @@ bool CommandSend::execute(RunContext& context)
 
         sock->write(&basicMsg, sizeof(sockstr::IpcStruct) + basicMsg.wPacketSize_);
     }
+    else
+        return false;
 
     return true;
 }
