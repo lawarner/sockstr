@@ -143,6 +143,8 @@ Stream::~Stream(void)
 // Remarks  : Note that the status of a stream should not be confused
 //            with its state.  For example, a stream's state can be
 //            "connected" with a status of "NoData".
+//            This function is deprecated as the std::ios base class functions
+//            and status bits should be used.
 //
 STATUSCODE
 Stream::queryStatus(void) const

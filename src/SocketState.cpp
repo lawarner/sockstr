@@ -67,6 +67,7 @@
 #endif
 
 #include <algorithm>
+#include <iostream>
 
 #include <sockstr/Socket.h>
 #include <sockstr/SocketState.h>
@@ -1101,9 +1102,11 @@ SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount)
 		if (iResult == 0 || iResult == SOCKET_ERROR)
         {
             pSocket->m_Status = SC_NODATA;
+            pSocket->setstate(std::ios::eofbit);
 			return 0;
         }
-	}
+        else
+            pSocket->clear(pSocket->rdstate() & ~std::ios::eofbit);	}
 	else
 	{
 		// Asynchronous mode -- if data is available on socket then read
@@ -1117,6 +1120,7 @@ SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount)
                 // WSAEINPROGRESS means a blocking call is still active.  Maybe
                 // in the future take action on this status?
                 pSocket->m_Status = SC_NODATA;
+                pSocket->setstate(std::ios::eofbit);
                 return 0;
         }
 
@@ -1131,6 +1135,8 @@ SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount)
 			if (iResult == 0 || iResult == SOCKET_ERROR)
             {
                 pSocket->m_Status = SC_NODATA;
+                pSocket->setstate(iResult == SOCKET_ERROR 
+                                   ? std::ios::badbit : std::ios::eofbit);
 				return 0;
             }
 		}
@@ -1139,6 +1145,7 @@ SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount)
 			if (pSocket->m_pDefCallback == 0)
 			{
                 pSocket->m_Status = SC_NODATA;
+                pSocket->setstate(std::ios::eofbit);
 				return 0;
 			}
 #if USE_PTHREADS
@@ -1173,7 +1180,10 @@ SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount)
 	}
 
     if (iResult >= 0)
+    {
         pSocket->m_Status = SC_OK;
+        pSocket->clear();
+    }
 
 	return iResult;
 }
@@ -1333,7 +1343,12 @@ SSConnected::write(Socket* pSocket, const void* pBuf, UINT uCount)
 			iResult = ::send(pSocket->m_hFile, (const char *)pBuf, uCount, 0);
 		}
 		if (iResult == SOCKET_ERROR)
+        {
 			pSocket->m_Status = SC_FAILED;
+            pSocket->setstate(std::ios::failbit);
+        }
+        else
+            pSocket->clear(pSocket->rdstate() & ~std::ios::failbit);
 	}
 	else
 	{

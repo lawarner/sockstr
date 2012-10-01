@@ -80,7 +80,10 @@ class DllExport Stream : public std::iostream
 public:
 	virtual ~Stream(void);
 
-	//!  Returns the current status of the stream.
+	/*!  Returns the current status of the stream.
+     *   @deprecated Use good(), bad() and such functions from the 
+     *       std::ios base class.
+     */
     STATUSCODE  queryStatus     (void) const;
 	/*!
 	     Register a user-defined callback function.

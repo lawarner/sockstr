@@ -127,6 +127,7 @@ Socket::Socket(const char* lpszFileName, UINT uOpenFlags)
 	if (!open(lpszFileName, uOpenFlags))
 	{
 		m_Status = SC_FAILED;
+        setstate(std::ios::failbit);
 	}
 }
 
@@ -137,6 +138,7 @@ Socket::Socket(SocketAddr& rSockAddr, UINT uOpenFlags)
 	if (!open(rSockAddr, uOpenFlags))
 	{
 		m_Status = SC_FAILED;
+        setstate(std::ios::failbit);
 	}
 }
 
@@ -176,6 +178,8 @@ Socket::~Socket(void)
 Socket&
 Socket::operator=(const Socket& rSource)
 {
+//    Stream::operator=(rSource);
+
 	m_hFile = rSource.m_hFile;
 	m_uOpenFlags = rSource.m_uOpenFlags;
 	m_bAsyncMode = rSource.m_bAsyncMode;
