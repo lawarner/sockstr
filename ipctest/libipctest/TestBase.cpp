@@ -23,11 +23,15 @@
 
 #include <fstream>
 #include <iostream>
+#include <expat.h>
 #include "BuiltinCommands.h"
 #include "Parser.h"
 #include "TestBase.h"
 using namespace ipctest;
 using namespace std;
+
+
+static int sLevel;
 
 
 TestBase::TestBase()
@@ -99,6 +103,68 @@ bool TestBase::readIpcDefs(const std::string& fileName)
         return false;
     }
 
+    return true;
+}
+
+
+static void _deserialStartTag(void* data, const char* el, const char** attr)
+{
+    std::string str(sLevel * 4, ' ');
+    std::cout << str << "<" << el << ">" << std::endl;
+    sLevel++;
+}
+
+static void _deserialEndTag(void* data, const char* el)
+{
+    sLevel--;
+}
+
+static void _deserialCharData(void *data, const char *txt, int txtlen)
+{
+    if (txtlen < 1) return;
+
+    std::string str(txt, txtlen);
+    std::cout << "-+- data: " << str << std::endl;
+}
+
+static void _deserialPI(void *data, const char *target, const char *pidata)
+{
+    std::cout << " xml PI target=" << target << ", pidata=" << pidata << std::endl;
+}
+
+
+bool TestBase::deserialize(const std::string& fileName)
+{
+    std::ifstream ifile(fileName.c_str());
+    if (!ifile.is_open())
+        return false;
+
+    string itsFile((istreambuf_iterator<char>(ifile)),
+                      istreambuf_iterator<char>());
+    ifile.close();
+
+    std::string magic("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<ipctest>");
+    if (itsFile.compare(0, magic.size(), magic))
+    {
+        std::cerr << "File " << fileName << " is not an ipctest file." << std::endl;
+        return false;
+    }
+
+    XML_Parser p = XML_ParserCreate(NULL);
+    if (!p) return false;
+
+    sLevel = 0;		// level of nesting while parsing XML
+
+    XML_UseParserAsHandlerArg(p);
+    XML_SetElementHandler(p, _deserialStartTag, _deserialEndTag);
+    XML_SetCharacterDataHandler(p, _deserialCharData);
+    XML_SetProcessingInstructionHandler(p, _deserialPI);
+
+    XML_Parse(p, itsFile.c_str(), itsFile.length(), 1);
+
+    XML_ParserFree(p);
+
+    fileName_ = fileName;
     return true;
 }
 

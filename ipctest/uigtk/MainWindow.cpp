@@ -462,16 +462,7 @@ void MainWindow::onOpen()
         std::string filename = dlg.get_filename();
         if (!filename.empty() && filename != testBase_->getFileName())
         {
-            testBase_->setFileName(filename);
-            // read it in
-            std::ifstream fi(filename.c_str());
-            if (fi.is_open())
-            {
-                std::string magic;
-                fi >> magic;
-                std::cout << "File " << filename 
-                          << " contains magic: " << magic << std::endl;
-            }
+            testBase_->deserialize(filename);
                 
         }
         break;
@@ -481,6 +472,8 @@ void MainWindow::onOpen()
 
 void MainWindow::onQuit()
 {
+    //TODO: check to save testcase before quitting.
+
     hide();
 }
 

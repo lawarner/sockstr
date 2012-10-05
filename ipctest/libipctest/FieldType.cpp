@@ -107,6 +107,9 @@ bool FieldType::fromString(const std::string& strval, void* raw, int elements) c
 bool FieldTypeInt::toString(const void* raw, std::string& strval, int elements) const
 {
     //TODO: loop thru elements
+    if ((long unsigned) raw & (sizeof(int)-1))
+        std::cout << "ERROR: int field is not aligned." << std::endl;
+
     const int* buf = (const int*) raw;
     std::ostringstream ss;
     ss << *buf;

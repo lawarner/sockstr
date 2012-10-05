@@ -76,6 +76,7 @@ public:
     void setSocket(sockstr::Socket* sock) { socket_ = sock; }
 
     bool readIpcDefs(const std::string& fileName);
+    bool deserialize(const std::string& fileName);
     bool serialize();
     const std::vector<std::string>& builtinCommandNames() const { return builtinCommands_; }
     void addCommand(Command* cmd) { commandList_.push_back(cmd); }
