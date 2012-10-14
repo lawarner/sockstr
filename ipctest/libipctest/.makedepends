@@ -6,5 +6,7 @@ Message.o: Message.cpp Field.h FieldType.h Message.h
 Params.o: Params.cpp Params.h
 Parser.o: Parser.cpp Field.h FieldType.h Message.h Parser.h
 RunContext.o: RunContext.cpp RunContext.h Command.h Params.h
+Serializer.o: Serializer.cpp Command.h Params.h Parser.h Message.h \
+ Serializer.h TestBase.h
 TestBase.o: TestBase.cpp BuiltinCommands.h Command.h Params.h Parser.h \
- Message.h TestBase.h
+ Message.h Serializer.h TestBase.h

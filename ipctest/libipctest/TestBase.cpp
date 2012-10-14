@@ -23,15 +23,13 @@
 
 #include <fstream>
 #include <iostream>
-#include <expat.h>
 #include "BuiltinCommands.h"
 #include "Parser.h"
+#include "Serializer.h"
 #include "TestBase.h"
 using namespace ipctest;
 using namespace std;
 
-
-static int sLevel;
 
 
 TestBase::TestBase()
@@ -83,6 +81,24 @@ Command* TestBase::createCommand(const std::string& cmdName,
 }
 
 
+Message* TestBase::lookupMessage(const std::string& msgName)
+{
+    Message* msg = 0;
+
+    MessageList::iterator it;
+    for (it = messageList_.begin(); it != messageList_.end(); ++it)
+    {
+        if ((*it)->getName() == msgName)
+        {
+            msg = *it;
+            cout << "Found message: " << msgName << " at " << msg << endl;
+            break;
+        }
+    }
+    return msg;
+}
+
+
 bool TestBase::readIpcDefs(const std::string& fileName)
 {
     ifstream ifile(fileName.c_str());
@@ -107,81 +123,19 @@ bool TestBase::readIpcDefs(const std::string& fileName)
 }
 
 
-static void _deserialStartTag(void* data, const char* el, const char** attr)
-{
-    std::string str(sLevel * 4, ' ');
-    std::cout << str << "<" << el << ">" << std::endl;
-    sLevel++;
-}
-
-static void _deserialEndTag(void* data, const char* el)
-{
-    sLevel--;
-}
-
-static void _deserialCharData(void *data, const char *txt, int txtlen)
-{
-    if (txtlen < 1) return;
-
-    std::string str(txt, txtlen);
-    std::cout << "-+- data: " << str << std::endl;
-}
-
-static void _deserialPI(void *data, const char *target, const char *pidata)
-{
-    std::cout << " xml PI target=" << target << ", pidata=" << pidata << std::endl;
-}
-
-
 bool TestBase::deserialize(const std::string& fileName)
 {
-    std::ifstream ifile(fileName.c_str());
-    if (!ifile.is_open())
-        return false;
+    Serializer serial(this);
+    bool ret = serial.deserialize(fileName);
+    if (ret)
+        fileName_ = fileName;
 
-    string itsFile((istreambuf_iterator<char>(ifile)),
-                      istreambuf_iterator<char>());
-    ifile.close();
-
-    std::string magic("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<ipctest>");
-    if (itsFile.compare(0, magic.size(), magic))
-    {
-        std::cerr << "File " << fileName << " is not an ipctest file." << std::endl;
-        return false;
-    }
-
-    XML_Parser p = XML_ParserCreate(NULL);
-    if (!p) return false;
-
-    sLevel = 0;		// level of nesting while parsing XML
-
-    XML_UseParserAsHandlerArg(p);
-    XML_SetElementHandler(p, _deserialStartTag, _deserialEndTag);
-    XML_SetCharacterDataHandler(p, _deserialCharData);
-    XML_SetProcessingInstructionHandler(p, _deserialPI);
-
-    XML_Parse(p, itsFile.c_str(), itsFile.length(), 1);
-
-    XML_ParserFree(p);
-
-    fileName_ = fileName;
-    return true;
+    return ret;
 }
 
 
 bool TestBase::serialize()
 {
-    std::ofstream fo(fileName_.c_str());
-    if (!fo.is_open())
-        return false;
-
-    fo << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl
-       << "<ipctest>\n  <!-- Ipctest Testsuite file version 1.0 -->" << std::endl;
-
-    CommandIterator it = commandList_.begin();
-    for ( ; it != commandList_.end(); ++it)
-        fo << (*it)->toXml(4);
-
-    fo << "</ipctest>" << std::endl;
-    return true;
+    Serializer serial(this);
+    return serial.serialize(fileName_);
 }

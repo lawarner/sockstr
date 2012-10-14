@@ -63,7 +63,7 @@ public:
     TestBase();
     ~TestBase();
 
-    Command* createCommand(const std::string& cmdName, 
+    static Command* createCommand(const std::string& cmdName, 
                            Message* msg = 0, void* msgData = 0);
     Command* getWorkCommand() { return workCommand_; }
     void setWorkCommand(Command* cmd) { workCommand_ = cmd; }
@@ -75,6 +75,7 @@ public:
     sockstr::Socket* getSocket() { return socket_; }
     void setSocket(sockstr::Socket* sock) { socket_ = sock; }
 
+    Message* lookupMessage(const std::string& msgName);
     bool readIpcDefs(const std::string& fileName);
     bool deserialize(const std::string& fileName);
     bool serialize();

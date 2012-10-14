@@ -462,8 +462,14 @@ void MainWindow::onOpen()
         std::string filename = dlg.get_filename();
         if (!filename.empty() && filename != testBase_->getFileName())
         {
-            testBase_->deserialize(filename);
-                
+            if (testBase_->deserialize(filename))
+            {
+                historyList_->clear();
+                CommandList& commandList = testBase_->commandList();
+                CommandIterator it = commandList.begin();
+                for ( ; it != commandList.end(); ++it)
+                    historyList_->add(*it);
+            }
         }
         break;
     }

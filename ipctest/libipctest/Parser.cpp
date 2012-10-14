@@ -166,19 +166,21 @@ void Parser::splitTokens(const std::string& str, vector<std::string>& strVec,
 //    cout << "]" << endl;
 }
 
-void Parser::trimSpace(PairIter& pi) const
+void Parser::trimSpace(PairIter& pi, bool stripComments)
 {
-    size_t comment = pi.get().find("//");
-    if (comment != string::npos)
+    if (stripComments)
     {
-//        cout << "Found comment at " << comment << endl;
-        pi.set(pi.begin(), pi.begin() + comment);
+        size_t comment = pi.get().find("//");
+        if (comment != string::npos)
+        {
+            pi.set(pi.begin(), pi.begin() + comment);
+        }
     }
 
     string::const_iterator it = pi.begin();
     for ( ; it != pi.end(); ++it)
     {
-        if (*it != ' ' && *it != '\t')
+        if (*it != ' ' && *it != '\t' && *it != '\n')
             break;
     }
     if (it == pi.end())
@@ -190,8 +192,32 @@ void Parser::trimSpace(PairIter& pi) const
     string::const_iterator ite = pi.end() - 1;
     for ( ; ite != it; --ite)
     {
-        if (*ite != ' ' && *ite != '\t')
+        if (*ite != ' ' && *ite != '\t' && *ite != '\n')
             break;
     }
     pi.set(it, ite+1);
+}
+
+std::string Parser::trimSpace(const std::string& str)
+{
+    PairIter pi(str);
+    trimSpace(pi, false);
+    return pi.get();
+}
+
+std::vector<string> Parser::splitString(const std::string& str)
+{
+    std::vector<string> v;
+    if (str.empty()) return v;
+
+    size_t last = 0;
+    size_t eol = str.find('\n');
+    do
+    {
+        v.push_back(str.substr(last, eol));
+        last = eol + 1;
+        eol = str.find('\n', last);
+    } while (eol != string::npos);
+
+    return v;
 }

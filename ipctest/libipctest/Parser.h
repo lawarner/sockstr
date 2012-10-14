@@ -102,7 +102,9 @@ public:
     bool getLine(PairIter& inStr, PairIter& outLine, bool trim = true) const;
     void splitTokens(const std::string& str, std::vector<std::string>& strVec,
         const char* seps = TOKEN_SEPERATORS) const;
-    void trimSpace(PairIter& pi) const;
+    static void trimSpace(PairIter& pi, bool stripComments = true);
+    static std::string trimSpace(const std::string& instr);
+    static std::vector<std::string> splitString(const std::string& str);
 
 private:
     Parser(const Parser&);	// disable copy constructor
