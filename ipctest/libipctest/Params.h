@@ -76,6 +76,8 @@ public:
     Params();
     ~Params();
 
+    void clear();
+    int loadFromNameValues(const char** nv);
     bool get(const std::string& name, int& value);
     bool get(const std::string& name, std::string& value);
     bool get(const std::string& name, ParamValue*& value);

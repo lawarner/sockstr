@@ -233,10 +233,12 @@ void MainWindow::setCommand(ipctest::Command* cmd)
     paramsToGui(cmd->getParams());
 
     // copy fields
-    const char* dat = (const char*) cmd->getData();
     Message* msg = cmd->getMessage();
-    if (msg && dat)
+    if (msg)
     {
+        if (!cmd->getData())
+            cmd->setData(new char[msg->getSize()]);
+
         messageList_->children();
         Gtk::TreeModel::iterator iter = messageList_->children().begin();
 
@@ -252,7 +254,8 @@ void MainWindow::setCommand(ipctest::Command* cmd)
         }
 
         std::vector<std::string> fldValues;
-        int szdata = msg->unpackFields(dat, fldValues);
+        int szdata = msg->unpackFields(static_cast<const char *>(cmd->getData()),
+                                       fldValues);
         if (szdata)
         {
             context_.setFieldValues(fldValues);
@@ -399,8 +402,14 @@ void MainWindow::onCommandChanged()
         Gtk::TreeModel::Row row = *iter;
         Glib::ustring cmdName = row[commandColumns_.colName_];
         std::cout << "Work command is " << cmdName << std::endl;
-        Command* cmd = testBase_->createCommand(cmdName);
-        testBase_->setWorkCommand(cmd);
+        Command* cmd = testBase_->getWorkCommand();
+        if (!cmd || (cmd->getName() != cmdName))
+        {
+            cmd = testBase_->createCommand(cmdName);
+            testBase_->setWorkCommand(cmd);
+        }
+        else
+            std::cout << "Reusing work command" << std::endl;
 
         paramsToGui(cmd->getParams());
     }

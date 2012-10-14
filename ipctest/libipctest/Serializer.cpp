@@ -26,6 +26,7 @@
 #include <sstream>
 #include <expat.h>
 #include "Command.h"
+#include "Params.h"
 #include "Parser.h"
 #include "Serializer.h"
 #include "TestBase.h"
@@ -87,8 +88,11 @@ void Serializer::deserialStartTag(const char* el, const char** attr)
         break;
     case 2:
         if (section_ == CommandSection && attr && *attr)
-            if (string("message") == *attr)
-                messageName_ = *(attr+1);
+        {
+            commandParams_.clear();
+            commandParams_.loadFromNameValues(attr);
+            commandParams_.get("message", messageName_);
+        }
         break;
     default:
         break;

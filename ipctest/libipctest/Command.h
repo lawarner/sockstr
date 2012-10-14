@@ -78,7 +78,7 @@ public:
             params_->get(name, val);
         return val;
     }
-    void* getData() const { return data_; }
+    void* getData() { return data_; }
     void  setData(void* data) { data_ = data; }
     Message* getMessage() const { return message_; }
     Params* getParams() { return params_; }

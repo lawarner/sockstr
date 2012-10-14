@@ -74,6 +74,7 @@ private:
     int parseLevel_;
     Section section_;
     std::string messageName_;
+    Params commandParams_;
 
 private:
     Serializer(const Serializer&);	// disable copy constructor

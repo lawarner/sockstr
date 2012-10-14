@@ -34,7 +34,28 @@ Params::Params()
 
 Params::~Params()
 {
+    clear();
+}
+
+
+void Params::clear()
+{
     env_.clear();
+}
+
+int Params::loadFromNameValues(const char** nv)
+{
+    if (!nv) return 0;
+
+    int nr = 0;
+
+    while (nv[nr*2])
+    {
+        set(nv[nr*2], nv[nr*2 + 1]);
+        nr++;
+    }
+
+    return nr;
 }
 
 
