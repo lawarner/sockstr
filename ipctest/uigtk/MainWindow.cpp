@@ -197,6 +197,8 @@ void MainWindow::paramsToGui(ipctest::Params* params)
     for (it = pm.begin(); it != pm.end(); ++it)
     {
         std::cout << "+paramsToGui param=" << it->first << std::endl;
+        if (it->first[0] == '_')
+            continue;
         Gtk::Label* inLabel = new Gtk::Label(it->first + ":");
         inLabel->show();
         inputGrid_->attach_next_to(*inLabel, *endLabel, Gtk::POS_BOTTOM, 1, 1);
@@ -405,7 +407,8 @@ void MainWindow::onCommandChanged()
         Command* cmd = testBase_->getWorkCommand();
         if (!cmd || (cmd->getName() != cmdName))
         {
-            cmd = testBase_->createCommand(cmdName);
+            Message* msg = context_.getMessage();
+            cmd = testBase_->createCommand(cmdName, msg);
             testBase_->setWorkCommand(cmd);
         }
         else
@@ -433,6 +436,10 @@ void MainWindow::onMessageSelection()
     Message* msg = (Message *) ptr;
     context_.setMessage(msg);
 //    testBase_->setWorkMessage(msg);
+    Command* cmd = testBase_->getWorkCommand();
+    if (cmd)
+        cmd->setMessage(msg);
+
     messageTableList_->clear();
 
     FieldsArray fields = msg->getFields();

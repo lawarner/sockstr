@@ -21,6 +21,7 @@
 // Params.cpp
 //
 #include <stdlib.h>
+#include <iostream>
 #include <sstream>
 
 #include "Params.h"
@@ -30,6 +31,11 @@ using namespace ipctest;
 Params::Params()
 {
 
+}
+
+Params::Params(const Params& other)
+{
+    env_ = other.env_;
 }
 
 Params::~Params()
@@ -128,13 +134,18 @@ bool Params::set(const std::string& name, const std::string& value)
     ParamValue* pv;
     ParamMap::iterator it = env_.find(name);
     if (it != env_.end())
-        pv = it->second;
+    {
+        pv = it->second;	// overwrite existing value
+        std::cout << "Param " << name << " already exists with value "
+                  << pv->strValue << std::endl
+                  << " - redefining to " << value << std::endl;
+    }
     else
     {
         pv = new ParamValue;
-        pv->strValue = value;
         env_[name] = pv;
     }
+    pv->strValue = value;
     
     return true;
 }
@@ -155,9 +166,9 @@ bool Params::setWidget(const std::string& name, Gtk::Entry* widget)
     else
     {
         pv = new ParamValue;
-        pv->widget = widget;
         env_[name] = pv;
     }
+    pv->widget = widget;
 
     return true;
 }

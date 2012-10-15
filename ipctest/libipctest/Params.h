@@ -74,6 +74,7 @@ class Params
 {
 public:
     Params();
+    Params(const Params& other);	// copy constructor
     ~Params();
 
     void clear();
@@ -94,7 +95,6 @@ private:
     ParamMap env_;
 
 private:
-    Params(const Params&);	// disable copy constructor
     Params& operator=(const Params& rSource);	// disable assignment operator
 };
 

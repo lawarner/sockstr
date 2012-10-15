@@ -30,15 +30,26 @@ using namespace ipctest;
 
 #include <string.h>
 
-// static member initialization
-Message* Command::emptyMessage_ = new Message("EmptyMessage");
-
 
 // Comment
 CommandComment::CommandComment(const std::string& comment)
     : Command("Comment", "Comment", comment)
 {
 //    params_->set("Comment", comment);
+}
+
+
+CommandComment::CommandComment(Params* params, Message* msg)
+    : Command("Comment", params, msg)
+{
+
+}
+
+Command* CommandComment::createCommand(Params* params, Message* msg)
+{
+    params->set("Comment", params->get("_cdata"));
+
+    return new CommandComment(params, msg);
 }
 
 bool CommandComment::execute(RunContext& context)
@@ -69,6 +80,19 @@ CommandConnect::CommandConnect(const std::string& url)
     : Command("Connect", "Url", url)
 {
 
+}
+
+CommandConnect::CommandConnect(Params* params, Message* msg)
+    : Command("Connect", params, msg)
+{
+
+}
+
+Command* CommandConnect::createCommand(Params* params, Message* msg)
+{
+    params->set("Url", params->get("_cdata"));
+
+    return new CommandConnect(params, msg);
 }
 
 bool CommandConnect::execute(RunContext& context)
@@ -111,6 +135,17 @@ CommandDisconnect::CommandDisconnect()
 
 }
 
+CommandDisconnect::CommandDisconnect(Params* params, Message* msg)
+    : Command("Disconnect", params, msg)
+{
+
+}
+
+Command* CommandDisconnect::createCommand(Params* params, Message* msg)
+{
+    return new CommandDisconnect(params, msg);
+}
+
 bool CommandDisconnect::execute(RunContext& context)
 {
     sockstr::Socket* sock = context.getSocket();
@@ -130,9 +165,20 @@ CommandFunction::CommandFunction(const std::string& funcName, void* data, int de
 
 }
 
+CommandFunction::CommandFunction(Params* params, Message* msg)
+    : Command("Function", params, msg)
+{
+
+}
+
 void CommandFunction::addCommand(Command* cmd)
 {
     commands_.push_back(cmd);
+}
+
+Command* CommandFunction::createCommand(Params* params, Message* msg)
+{
+    return new CommandFunction(params, msg);
 }
 
 bool CommandFunction::execute(RunContext& context)
@@ -170,6 +216,17 @@ CommandReceive::CommandReceive(Message* msg)
     : Command("Receive")
 {
     message_ = msg ? msg : emptyMessage_;
+}
+
+CommandReceive::CommandReceive(Params* params, Message* msg)
+    : Command("Receive", params, msg)
+{
+
+}
+
+Command* CommandReceive::createCommand(Params* params, Message* msg)
+{
+    return new CommandReceive(params, msg);
 }
 
 bool CommandReceive::execute(RunContext& context)
@@ -232,6 +289,17 @@ CommandSend::CommandSend(Message* msg, void* msgData)
     : Command("Send", msgData)
 {
     message_ = msg ? msg : emptyMessage_;
+}
+
+CommandSend::CommandSend(Params* params, Message* msg)
+    : Command("Send", params, msg)
+{
+
+}
+
+Command* CommandSend::createCommand(Params* params, Message* msg)
+{
+    return new CommandSend(params, msg);
 }
 
 bool CommandSend::execute(RunContext& context)

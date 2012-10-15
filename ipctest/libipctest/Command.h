@@ -58,6 +58,12 @@ namespace ipctest
 class Command
 {
 public:
+    static Command* createCommand(const std::string& cmdName, 
+                                  Params* params, Message* msg = 0);
+    static void registerCommand(Command* cmd);
+
+    virtual Command* createCommand(Params* params, Message* msg = 0) = 0;
+
    /** Run the command in a manner specific to the sub-class.
      * @param context The run context which contains an iterator through
      * a set of commands.  The first element of the list is the current command. <p>
@@ -81,6 +87,7 @@ public:
     void* getData() { return data_; }
     void  setData(void* data) { data_ = data; }
     Message* getMessage() const { return message_; }
+    void setMessage(Message* msg) { message_ = msg; }
     Params* getParams() { return params_; }
     void setParams(Params* params) { params_ = params; }
 
@@ -93,9 +100,10 @@ public:
     }
 
 protected:
-    Command(Params* params = 0) 
+    Command(const std::string& cname, Params* params = 0, Message* msg = 0) 
         : params_(params ? params : new Params)
-        , message_(0)
+        , message_(msg)
+        , commandName_(cname)
         , data_(0), delay_(0)  { }
     Command(const std::string& cname, 
             const std::string& keyname,
@@ -106,7 +114,7 @@ protected:
     {
         params_->set(keyname, keyvalue);
     }
-    Command(const std::string& cname, void* data = 0, int delay = 0)
+    Command(const std::string& cname, void* data, int delay = 0)
         : params_(new Params), message_(0)
         , commandName_(cname), data_(data), delay_(delay) {  }
 
@@ -125,6 +133,9 @@ protected:
     int delay_;		// delay before executing (for realtime playback)
 
     static Message* emptyMessage_;
+
+private:
+    static std::map<std::string, Command*> sCommands_;
 };
 
 

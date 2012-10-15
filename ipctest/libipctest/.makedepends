@@ -1,5 +1,6 @@
 BuiltinCommands.o: BuiltinCommands.cpp BuiltinCommands.h Command.h \
  Params.h Message.h RunContext.h
+Command.o: Command.cpp Command.h Params.h Message.h RunContext.h
 Field.o: Field.cpp Field.h FieldType.h
 FieldType.o: FieldType.cpp FieldType.h
 Message.o: Message.cpp Field.h FieldType.h Message.h

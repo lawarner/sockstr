@@ -54,6 +54,15 @@ void TestBase::init()
     builtinCommands_.push_back("Noop");
     builtinCommands_.push_back("Receive");
     builtinCommands_.push_back("Send");
+
+    std::vector<std::string>::const_iterator it;
+    for (it = builtinCommands_.begin(); it != builtinCommands_.end(); ++it)
+    {
+        std::string cmdName = *it;
+        Command* cmd = createCommand(cmdName, 0, 0);
+        if (cmd)
+            Command::registerCommand(cmd);
+    }
 }
 
 

@@ -58,7 +58,9 @@ class CommandComment : public Command
 {
 public:
 	CommandComment(const std::string& comment);
+	CommandComment(Params* params, Message* msg = 0);
 
+    virtual Command* createCommand(Params* params, Message* msg = 0);
     virtual bool execute(RunContext& context);
     virtual std::string toString();
     virtual std::string toXml(int indent);
@@ -69,7 +71,9 @@ class CommandConnect : public Command
 {
 public:
     CommandConnect(const std::string& url);
+	CommandConnect(Params* params, Message* msg = 0);
 
+    virtual Command* createCommand(Params* params, Message* msg = 0);
     virtual bool execute(RunContext& context);
     virtual std::string toString();
     virtual std::string toXml(int indent);
@@ -83,7 +87,9 @@ class CommandDisconnect : public Command
 {
 public:
     CommandDisconnect();
+	CommandDisconnect(Params* params, Message* msg = 0);
 
+    virtual Command* createCommand(Params* params, Message* msg = 0);
     virtual bool execute(RunContext& context);
 };
 
@@ -95,8 +101,10 @@ class CommandFunction : public Command
 {
 public:
     CommandFunction(const std::string& funcName, void* data = 0, int delay = 0);
+	CommandFunction(Params* params, Message* msg = 0);
     void addCommand(Command* cmd);
 
+    virtual Command* createCommand(Params* params, Message* msg = 0);
     virtual bool execute(RunContext& context);
     virtual std::string toString();
     virtual std::string toXml(int indent);
@@ -110,8 +118,14 @@ class CommandNoop : public Command
 {
 public:
     CommandNoop()
-        : Command("Noop") { }
+        : Command("Noop", (void *)0, 0) { }
+	CommandNoop(Params* params, Message* msg = 0)
+        : Command("Noop", params, msg) { }
 
+    virtual Command* createCommand(Params* params, Message* msg = 0)
+    {
+        return new CommandNoop(params, msg);
+    }
     virtual bool execute(RunContext& context)  { return true; }
 };
 
@@ -120,7 +134,9 @@ class CommandReceive : public Command
 {
 public:
     CommandReceive(Message* msg = 0);
+	CommandReceive(Params* params, Message* msg = 0);
 
+    virtual Command* createCommand(Params* params, Message* msg = 0);
     virtual bool execute(RunContext& context);
     virtual std::string toString();
     virtual std::string toXml(int indent);
@@ -131,7 +147,9 @@ class CommandSend : public Command
 {
 public:
     CommandSend(Message* msg = 0, void* msgData = 0);
+	CommandSend(Params* params, Message* msg = 0);
 
+    virtual Command* createCommand(Params* params, Message* msg = 0);
     virtual bool execute(RunContext& context);
     virtual std::string toString();
     virtual std::string toXml(int indent);

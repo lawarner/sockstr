@@ -87,11 +87,14 @@ void Serializer::deserialStartTag(const char* el, const char** attr)
         }
         break;
     case 2:
-        if (section_ == CommandSection && attr && *attr)
+        if (section_ == CommandSection)
         {
             commandParams_.clear();
-            commandParams_.loadFromNameValues(attr);
-            commandParams_.get("message", messageName_);
+            if  (attr && *attr)
+            {
+                commandParams_.loadFromNameValues(attr);
+                commandParams_.get("message", messageName_);
+            }
         }
         break;
     default:
@@ -119,6 +122,15 @@ void Serializer::deserialEndTag(const char* el)
     parseLevel_--;
     std::string strindent(parseLevel_ * 4, ' ');
 
+    std::string param;
+    if (deserialData_.tellp() > 0)
+    {
+        std::vector<std::string> vstr = Parser::splitString(deserialData_.str());
+        //TODO: check if vstr.length() == 1
+        param = Parser::trimSpace(vstr[1]);
+        commandParams_.set("_cdata", param);
+    }
+
     if (parseLevel_ == 2 && section_ == CommandSection)
     {
         std::string cmdName = el;
@@ -126,19 +138,14 @@ void Serializer::deserialEndTag(const char* el)
              << cmdName << ", " << messageName_ << ")" << endl;
 
         Message* msg = testBase_->lookupMessage(messageName_);
-        Command* cmd = testBase_->createCommand(cmdName, msg, 0);
+        Params* cmdParams = new Params(commandParams_);
+        Command* cmd = Command::createCommand(cmdName, cmdParams, msg);
+//        Command* cmd = testBase_->createCommand(cmdName, msg, 0);
         CommandList& commandList = testBase_->commandList();
         commandList.push_back(cmd);
         return;
     }
 
-    std::string param;
-    if (deserialData_.tellp() > 0)
-    {
-        std::vector<std::string> vstr = Parser::splitString(deserialData_.str());
-        //TODO: check if vstr.length() == 1
-        param = Parser::trimSpace(vstr[1]);
-    }
     std::cout << strindent << "</"
               << el << "> data=" << param << std::endl;
 
