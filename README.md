@@ -12,7 +12,7 @@ Sample code
     $ #include <sockstr/Socket.h>
     $ 
     $ sockstr::Socket sock("localhost:8080", sockstr::Socket::modeReadWrite);
-    $ if (sock.queryStatus() == sockstr::SC_OK)
+    $ if (sock.good())
     $     sock << "Hello, world!" << std::endl;
 
 How to Build on Linux
@@ -28,7 +28,14 @@ to Linux.  During the port, the winsock functionality has broken.  I plan to fix
 in a future version.
 
 ## Building
-Simply type 'make'.
+Simply type 'make'.  This will build the sockstr library and example programs.
+
+To build the ipctest library and tools, type 'make ipctest'.  Additional prerequites 
+are required to build ipctest, such as:
+
+- expat
+- gtkmm
+
 
 How to Build on Windows
 =======================
