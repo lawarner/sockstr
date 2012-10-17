@@ -49,23 +49,13 @@ void Params::clear()
     env_.clear();
 }
 
-int Params::loadFromNameValues(const char** nv)
+bool Params::empty() const
 {
-    if (!nv) return 0;
-
-    int nr = 0;
-
-    while (nv[nr*2])
-    {
-        set(nv[nr*2], nv[nr*2 + 1]);
-        nr++;
-    }
-
-    return nr;
+    return env_.empty();
 }
 
 
-bool Params::get(const std::string& name, int& value)
+bool Params::get(const std::string& name, int& value) const
 {
     std::string str;
     if (!get(name, str))
@@ -75,10 +65,9 @@ bool Params::get(const std::string& name, int& value)
     return true;
 }
 
-
-bool Params::get(const std::string& name, std::string& value)
+bool Params::get(const std::string& name, std::string& value) const
 {
-    ParamMap::iterator it = env_.find(name);
+    ParamMap::const_iterator it = env_.find(name);
     if (it == env_.end())
         return false;
 
@@ -88,9 +77,9 @@ bool Params::get(const std::string& name, std::string& value)
 }
 
 
-bool Params::get(const std::string& name, ParamValue*& value)
+bool Params::get(const std::string& name, ParamValue*& value) const
 {
-    ParamMap::iterator it = env_.find(name);
+    ParamMap::const_iterator it = env_.find(name);
     if (it == env_.end())
         return false;
 
@@ -110,15 +99,32 @@ const std::string Params::get(const std::string& name) const
 }
 
 
-bool Params::getWidget(const std::string& name, Gtk::Entry*& widget)
+bool Params::getWidget(const std::string& name, Gtk::Entry*& widget) const
 {
-    ParamMap::iterator it = env_.find(name);
+    ParamMap::const_iterator it = env_.find(name);
     if (it == env_.end())
         return false;
 
     ParamValue* pv = it->second;
 	widget = pv->widget;
     return true;
+}
+
+
+int Params::loadFromNameValues(const char** nv)
+{
+    if (!nv) return 0;
+
+    int nr = 0;
+
+    std::string ul("_");
+    while (nv[nr*2])
+    {
+        set(ul + nv[nr*2], nv[nr*2 + 1]);
+        nr++;
+    }
+
+    return nr;
 }
 
 

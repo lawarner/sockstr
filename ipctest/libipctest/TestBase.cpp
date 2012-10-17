@@ -100,7 +100,7 @@ Message* TestBase::lookupMessage(const std::string& msgName)
         if ((*it)->getName() == msgName)
         {
             msg = *it;
-            cout << "Found message: " << msgName << " at " << msg << endl;
+//            cout << "Found message: " << msgName << " at " << msg << endl;
             break;
         }
     }

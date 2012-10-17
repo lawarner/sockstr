@@ -73,8 +73,11 @@ private:
     TestBase* testBase_;
     int parseLevel_;
     Section section_;
+    Message* commandMessage_;
     std::string messageName_;
     Params commandParams_;
+    Params fieldParams_;
+    Params messageFields_;
 
 private:
     Serializer(const Serializer&);	// disable copy constructor

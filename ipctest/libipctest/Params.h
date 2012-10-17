@@ -78,12 +78,13 @@ public:
     ~Params();
 
     void clear();
-    int loadFromNameValues(const char** nv);
-    bool get(const std::string& name, int& value);
-    bool get(const std::string& name, std::string& value);
-    bool get(const std::string& name, ParamValue*& value);
+    bool empty() const;
+    bool get(const std::string& name, int& value) const;
+    bool get(const std::string& name, std::string& value) const;
+    bool get(const std::string& name, ParamValue*& value) const;
     const std::string get(const std::string& name) const;
-    bool getWidget(const std::string& name, Gtk::Entry*& widget);
+    bool getWidget(const std::string& name, Gtk::Entry*& widget) const;
+    int loadFromNameValues(const char** nv);
     bool set(const std::string& name, int value);
     bool set(const std::string& name, const std::string& value);
     bool set(const std::string& name, ParamValue* value);

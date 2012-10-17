@@ -178,6 +178,7 @@ void CommandFunction::addCommand(Command* cmd)
 
 Command* CommandFunction::createCommand(Params* params, Message* msg)
 {
+    params->set("Function Name", params->get("_name"));
     return new CommandFunction(params, msg);
 }
 

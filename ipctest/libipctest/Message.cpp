@@ -26,6 +26,7 @@
 
 #include "Field.h"
 #include "Message.h"
+#include "Params.h"
 using namespace ipctest;
 
 #include <string.h>
@@ -100,6 +101,30 @@ int Message::packFields(const std::vector<std::string>& vals, char* buf) const
             +  (idx & 1);		// Align on 2 bytes
     }
   
+    return idx;
+}
+
+
+int Message::packParams(const Params& params, char* buf) const
+{
+    memset(buf, 0, getSize());
+
+    if (params.empty())
+        return getSize();
+
+    int idx = 0;
+    FieldsConstIterator fi = fields_.begin();
+    for ( ; fi != fields_.end(); ++fi)
+    {
+        Field* fld = *fi;
+        std::string strval;
+        if (params.get(fld->name(), strval))
+            fld->type().fromString(strval, &buf[idx], fld->elements());
+
+        idx += fld->size() * fld->elements()
+            +  (idx & 1);		// Align on 2 bytes
+    }
+
     return idx;
 }
 

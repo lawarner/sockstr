@@ -45,6 +45,7 @@ namespace ipctest
 //
 class Field;
 class Message;
+class Params;
 
 
 typedef std::vector<Field *>  FieldsArray;
@@ -74,6 +75,15 @@ public:
      *  @return the total size packed.
      */
     int packFields(const std::vector<std::string>& vals, char* buf) const;
+
+    /*! Take a set of Params contain field name/value pairs in string format and pack 
+     *  them into a buffer of internal representation, ready to be sent over the wire.
+     *  @param params dictionary of field name/values
+     *  @param buf buffer in internal format (must be at least size of message).
+     *  @return the total size packed.
+     */
+    int packParams(const Params& params, char* buf) const;
+
     /*! Take an internal buffer received and unpack into an array of field
      *  values in string format.
      *  @param buf buffer in internal format (must be at least size of message).

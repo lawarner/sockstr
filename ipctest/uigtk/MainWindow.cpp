@@ -241,7 +241,7 @@ void MainWindow::setCommand(ipctest::Command* cmd)
         if (!cmd->getData())
             cmd->setData(new char[msg->getSize()]);
 
-        messageList_->children();
+//        messageList_->children();
         Gtk::TreeModel::iterator iter = messageList_->children().begin();
 
         for ( ; iter != messageList_->children().end(); ++iter)

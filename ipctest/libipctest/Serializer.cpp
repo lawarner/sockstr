@@ -93,8 +93,27 @@ void Serializer::deserialStartTag(const char* el, const char** attr)
             if  (attr && *attr)
             {
                 commandParams_.loadFromNameValues(attr);
-                commandParams_.get("message", messageName_);
+                if (commandParams_.get("_message", messageName_))
+                {
+                    cout << " CommandSection message=" << messageName_ << endl;
+                    commandMessage_ = testBase_->lookupMessage(messageName_);
+                }
+                else
+                    commandMessage_ = 0;
             }
+        }
+        break;
+    case 3:
+        if (section_ == CommandSection && startTag == "Message")
+        {
+            messageFields_.clear();
+        }
+        break;
+    case 4:
+        if (section_ == CommandSection && startTag == "Field")
+        {
+            fieldParams_.clear();
+            fieldParams_.loadFromNameValues(attr);
         }
         break;
     default:
@@ -122,33 +141,55 @@ void Serializer::deserialEndTag(const char* el)
     parseLevel_--;
     std::string strindent(parseLevel_ * 4, ' ');
 
-    std::string param;
+    std::string cdata;
     if (deserialData_.tellp() > 0)
     {
         std::vector<std::string> vstr = Parser::splitString(deserialData_.str());
         //TODO: check if vstr.length() == 1
-        param = Parser::trimSpace(vstr[1]);
-        commandParams_.set("_cdata", param);
+        cdata = Parser::trimSpace(vstr[1]);
     }
 
     if (parseLevel_ == 2 && section_ == CommandSection)
     {
+        commandParams_.set("_cdata", cdata);
         std::string cmdName = el;
         cout << strindent << "createCommand("
              << cmdName << ", " << messageName_ << ")" << endl;
 
         Message* msg = testBase_->lookupMessage(messageName_);
+//        if (msg) cout << " Found message " << messageName_ << endl;
+        
         Params* cmdParams = new Params(commandParams_);
         Command* cmd = Command::createCommand(cmdName, cmdParams, msg);
 //        Command* cmd = testBase_->createCommand(cmdName, msg, 0);
         CommandList& commandList = testBase_->commandList();
         commandList.push_back(cmd);
-        return;
     }
-
-    std::cout << strindent << "</"
-              << el << "> data=" << param << std::endl;
-
+    else if (parseLevel_ == 3 && section_ == CommandSection)
+    {
+        // the messageFields may not be complete and not in order, so iterate 
+        // thru all fields in the Message.
+        Command* cmd = testBase_->commandList().back();
+        Message* msg = commandMessage_;
+        if (msg)
+        {
+            if (!cmd->getData())
+                cmd->setData(new char[msg->getSize()]);
+            msg->packParams(messageFields_, static_cast<char *>(cmd->getData()));
+        }
+    }
+    else if (parseLevel_ == 4 && section_ == CommandSection)
+    {
+        // build field values
+        std::string fldName(fieldParams_.get("_name"));
+        std::string fldVal(cdata);
+//        std::string fldVal(fieldParams_.get("_cdata"));
+        messageFields_.set(fldName, fldVal);
+        cout << "messageFields set " << fldName << " to " << fldVal << endl;
+    }
+    else
+        std::cout << strindent << "</"
+                  << el << "> cdata=" << cdata << std::endl;
 }
 
 
