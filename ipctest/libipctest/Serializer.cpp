@@ -162,22 +162,21 @@ void Serializer::deserialEndTag(const char* el)
         Params* cmdParams = new Params(commandParams_);
         Command* cmd = Command::createCommand(cmdName, cmdParams, msg);
 //        Command* cmd = testBase_->createCommand(cmdName, msg, 0);
+        // the messageFields may not be complete or not in order, so iterate 
+        // thru all fields in the Message.
+        if (commandMessage_)
+        {
+            if (!cmd->getData())
+                cmd->setData(new char[commandMessage_->getSize()]);
+            commandMessage_->packParams(messageFields_, static_cast<char *>(cmd->getData()));
+        }
+
         CommandList& commandList = testBase_->commandList();
         commandList.push_back(cmd);
     }
-    else if (parseLevel_ == 3 && section_ == CommandSection)
-    {
-        // the messageFields may not be complete and not in order, so iterate 
-        // thru all fields in the Message.
-        Command* cmd = testBase_->commandList().back();
-        Message* msg = commandMessage_;
-        if (msg)
-        {
-            if (!cmd->getData())
-                cmd->setData(new char[msg->getSize()]);
-            msg->packParams(messageFields_, static_cast<char *>(cmd->getData()));
-        }
-    }
+//    else if (parseLevel_ == 3 && section_ == CommandSection)
+//    {
+//    }
     else if (parseLevel_ == 4 && section_ == CommandSection)
     {
         // build field values
