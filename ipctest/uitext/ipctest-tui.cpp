@@ -36,7 +36,7 @@ using namespace sockstr;
 using namespace std;
 using namespace ipctest;
 
-struct Params
+struct TParams
 {
     string ipcDefsFile;
 };
@@ -44,7 +44,7 @@ struct Params
 void* server_process(void* args)
 {
     void* ret = (void*) 2;
-//    Params* params = (Params*) args;
+//    TParams* params = (TParams*) args;
 
     Socket sock;
     SocketAddr saddr(0, 4321);
@@ -79,7 +79,7 @@ void* server_process(void* args)
 void* client_process(void* args)
 {
     void* ret = (void*) 2;
-    Params* params = (Params*) args;
+    TParams* params = (TParams*) args;
     cout << "Client process started, reading from " << params->ipcDefsFile << endl;
 
     ifstream ifile(params->ipcDefsFile.c_str());
@@ -115,7 +115,7 @@ void* client_process(void* args)
 
 int main(int argc, const char* argv[])
 {
-    Params params;
+    TParams params;
     if (argc > 1)
         params.ipcDefsFile = argv[1];
     else
