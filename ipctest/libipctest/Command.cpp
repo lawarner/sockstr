@@ -21,6 +21,7 @@
 // Command.cpp
 //
 #include <iostream>
+#include <sstream>
 #include "Command.h"
 #include "Message.h"
 #include "RunContext.h"
@@ -30,6 +31,7 @@ using namespace ipctest;
 
 // static member initialization
 Message* Command::emptyMessage_ = new Message("EmptyMessage");
+int Command::currLevel_ = 0;
 std::map<std::string, Command*> Command::sCommands_;
 
 
@@ -58,4 +60,45 @@ void Command::registerCommand(Command* cmd)
 {
     sCommands_[cmd->getName()] = cmd;
     std::cout << "register command " << cmd->getName() << std::endl;
+}
+
+
+int Command::bumpLevel(int incr)
+{
+    currLevel_ += incr;
+    if (currLevel_ < 0) currLevel_ = 0;
+    return currLevel_;
+}
+
+
+std::string Command::getXmlPart(int indent, bool header)
+{
+    std::string strAttr;
+    return getXmlPart(indent, strAttr, header);
+}
+
+std::string Command::getXmlPart(int indent, std::string& strAttr, bool header)
+{
+    std::string str(indent, ' ');
+    if (header)
+    {
+        if (currLevel_ != 0)
+        {
+            std::stringstream ss;
+            ss << " level=\"" << currLevel_ << "\"";
+            strAttr += ss.str();
+        }
+        str += "<" + commandName_ + strAttr + ">\n";
+    }
+    else
+        str += "</" + commandName_ + ">\n";
+
+    return str;
+}
+
+
+std::string Command::toXml(int indent)
+{
+    std::string strAttr;
+    return getXmlPart(indent, strAttr, true) + getXmlPart(indent, strAttr, false);
 }

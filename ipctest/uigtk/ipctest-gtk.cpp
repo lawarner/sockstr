@@ -43,12 +43,20 @@ int main(int argc, char* argv[])
 #else
     Gtk::Main kit(argc, argv);
 #endif
+    std::string defFilename =  "t";
+    std::string testFilename = "t.its";
+#if 0
     if (argc < 2)
     {
         std::cerr << "Usage: ipctest-gtk <ipcdef_filename>" << std::endl;
         return 1;
     }
-    std::string defFilename = argv[1];
+#else
+    if (argc > 1)
+        defFilename = argv[1];
+    if (argc > 2)
+        testFilename = argv[2];
+#endif
 
     Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_file("ipctest-gtk.glade");
 
@@ -56,7 +64,7 @@ int main(int argc, char* argv[])
     builder->get_widget_derived("IpcTestMainWindow", mainWindow);
     if (mainWindow)
     {
-        mainWindow->setup(defFilename);
+        mainWindow->setup(defFilename, testFilename);
 #if GTK_VERSION_GE(3,4)
         return app->run(*mainWindow);
 #else

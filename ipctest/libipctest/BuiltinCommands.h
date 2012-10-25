@@ -113,6 +113,27 @@ private:
     CommandList commands_;
 };
 
+/** This command loops through other commands.  In the simpliest
+ *  form this command loops a fixed number of iterations of one command.
+ *  The command can of course be a function containing other commands.
+ */
+class CommandLoop : public Command
+{
+public:
+    CommandLoop(Command* cmd, int iters);
+	CommandLoop(Params* params, Message* msg = 0);
+    void addCommand(Command* cmd);
+
+    virtual Command* createCommand(Params* params, Message* msg = 0);
+    virtual bool execute(RunContext& context);
+    virtual std::string toString();
+    virtual std::string toXml(int indent);
+
+private:
+    int curr_;
+    CommandList commands_;
+};
+
 /** This command does nothing. */
 class CommandNoop : public Command
 {

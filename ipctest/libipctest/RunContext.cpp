@@ -27,10 +27,24 @@ using namespace ipctest;
 
 
 RunContext::RunContext()
-    : sock_(0)
+    : commands_(0)
+    , sock_(0)
     , message_(0)
 {
 
+}
+
+
+CommandList* RunContext::getCommands()
+{
+    return commands_;
+}
+
+void RunContext::setCommands(CommandList* cmds)
+{
+    commands_ = cmds;
+    if (cmds)
+        iter_ = cmds->begin();
 }
 
 
@@ -91,5 +105,3 @@ void RunContext::setValue(const std::string& key, const std::string& value)
 {
     params_.set(key, value);
 }
-
-

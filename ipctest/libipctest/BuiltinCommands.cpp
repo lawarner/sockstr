@@ -28,6 +28,7 @@
 #include "RunContext.h"
 using namespace ipctest;
 
+#include <sstream>
 #include <string.h>
 
 
@@ -67,10 +68,9 @@ std::string CommandComment::toString()
 
 std::string CommandComment::toXml(int indent)
 {
-    std::string str(indent, ' ');
-    str += "<" + commandName_ + ">\n";
+    std::string str = getXmlPart(indent, true);
     str += params_->get("Comment") + "\n";
-    str += std::string(indent, ' ') + "</" + commandName_ + ">\n";
+    str += getXmlPart(indent, false);
 
     return str;
 }
@@ -213,6 +213,109 @@ std::string CommandFunction::toXml(int indent)
 }
 
 
+// Loop
+CommandLoop::CommandLoop(Command* cmd, int iters)
+    : Command("Loop", "Iterations", iters)
+    , curr_(0)
+{
+    currLevel_++;
+    addCommand(cmd);
+    currLevel_--;
+}
+
+CommandLoop::CommandLoop(Params* params, Message* msg)
+    : Command("Loop", params, msg)
+    , curr_(0)
+{
+
+}
+
+void CommandLoop::addCommand(Command* cmd)
+{
+    if (cmd)
+        commands_.push_back(cmd);
+}
+
+//   virtual
+Command* CommandLoop::createCommand(Params* params, Message* msg)
+{
+    params->set("Iterations", params->get("_iterations"));
+
+    return new CommandLoop(params, msg);
+}
+
+bool CommandLoop::execute(RunContext& context)
+{
+    int iters = 1;
+    params_->get("Iterations", iters);
+    std::cout << "exec loop: " << iters << std::endl;
+
+    // Execute embedded commands
+    for (curr_ = 0; curr_ < iters; curr_++)
+    {
+        CommandIterator it = commands_.begin();
+        for ( ; it != commands_.end(); ++it)
+            if (!(*it)->execute(context))
+                return false;       // stop on first error
+    }
+
+    bool okStatus = true;
+
+    // Execute next commands in run context that are higher nesting level
+    CommandList* cmdList = context.getCommands();
+    if (cmdList)
+    {
+        CommandIterator it;
+        CommandIterator ij;
+        for (curr_ = 0; curr_ < iters; curr_++)
+        {
+            it = context.getCommandIterator();	// cmdList->begin();
+            ij = it;
+            for (++it ; it != cmdList->end(); ++it)
+            {
+                Command* cmd = *it;
+                if (cmd->getLevel() <= level_)
+                    break;
+
+//                std::cout << "-loop command (exec) " << cmd->getName() << std::endl;
+                if (okStatus && !cmd->execute(context))
+                    okStatus = false;
+
+                ij = it;
+            }
+        }
+        
+        context.setCommandIterator(ij);
+    }
+
+    return okStatus;
+}
+
+std::string CommandLoop::toString()
+{
+//    std::ostringstream oss;
+//    oss << iters_;
+//    return commandName_ + ": " + oss.str(); 
+    std::string striter;
+    params_->get("Iterations", striter);
+    return commandName_ + ": " + striter;
+}
+
+std::string CommandLoop::toXml(int indent)
+{
+    std::string str(indent, ' ');
+    std::string striter;
+    params_->get("Iterations", striter);
+    if (striter.empty())
+        striter = "1";
+
+    str += "<" + commandName_ + " iterations=\"" + striter + "\">\n";
+    str += std::string(indent, ' ') + "</" + commandName_ + ">\n";
+    return str;
+}
+
+
+// Receive
 CommandReceive::CommandReceive(Message* msg)
     : Command("Receive")
 {

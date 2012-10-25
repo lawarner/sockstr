@@ -73,6 +73,12 @@ void HistoryList::clear()
 }
 
 
+ipctest::CommandList* HistoryList::getCommands()
+{
+    return &commands_;
+}
+
+
 void HistoryList::setup()
 {
     historyView_->append_column("Command", histColumns_.colText_);
@@ -96,8 +102,11 @@ void HistoryList::onHistorySelection()
 {
     std::cout << "History selection changed" << std::endl;
     Glib::RefPtr<Gtk::TreeSelection> selection = historyView_->get_selection();
-    Gtk::TreeModel::Row row = *(selection->get_selected());
-    ipctest::Command* cmd = row[histColumns_.colCommand_];
-    if (cmd)
-        mainWindow_->setCommand(cmd);
+    if (selection->count_selected_rows() > 0)
+    {
+        Gtk::TreeModel::Row row = *(selection->get_selected());
+        ipctest::Command* cmd = row[histColumns_.colCommand_];
+        if (cmd)
+            mainWindow_->setCommand(cmd);
+    }
 }

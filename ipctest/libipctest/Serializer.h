@@ -68,6 +68,9 @@ public:	// Callback handlers for xml parsing
     void deserialPI(const char *target, const char *pidata);
 
 private:
+    void startCommand(const char** attr);
+
+private:
 	// buffer for deserialize xml parsing callbacks
 	std::ostringstream& deserialData_;
     TestBase* testBase_;

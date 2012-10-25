@@ -62,6 +62,8 @@ public:
                                   Params* params, Message* msg = 0);
     static void registerCommand(Command* cmd);
 
+    static int bumpLevel(int incr = 0);
+
     virtual Command* createCommand(Params* params, Message* msg = 0) = 0;
 
    /** Run the command in a manner specific to the sub-class.
@@ -76,6 +78,8 @@ public:
      */
     virtual bool execute(RunContext& context) = 0;
 
+    int  getLevel() { return level_; }
+    void setLevel(int level) { level_ = level; }
     std::string getName() { return commandName_; }
     std::string getParam(const std::string& name)
     {
@@ -90,33 +94,44 @@ public:
     void setMessage(Message* msg) { message_ = msg; }
     Params* getParams() { return params_; }
     void setParams(Params* params) { params_ = params; }
+    std::string getXmlPart(int indent, bool header);
+    std::string getXmlPart(int indent, std::string& strAttr, bool header);
 
     virtual std::string toString() { return commandName_; }
-    virtual std::string toXml(int indent)
-    {
-        std::string str(indent, ' ');
-        str += "<" + commandName_ + "/>\n";
-        return str;
-    }
+    virtual std::string toXml(int indent);
 
 protected:
     Command(const std::string& cname, Params* params = 0, Message* msg = 0) 
         : params_(params ? params : new Params)
         , message_(msg)
         , commandName_(cname)
-        , data_(0), delay_(0)  { }
+        , data_(0), delay_(0)
+        , level_(currLevel_)  { }
     Command(const std::string& cname, 
             const std::string& keyname,
             const std::string& keyvalue = std::string(),
             void* data = 0, int delay = 0)
         : params_(new Params), message_(0), commandName_(cname)
         , data_(data), delay_(delay) 
+        , level_(currLevel_)
+    {
+        params_->set(keyname, keyvalue);
+    }
+    Command(const std::string& cname, 
+            const std::string& keyname,
+            int keyvalue = 0,
+            void* data = 0, int delay = 0)
+        : params_(new Params), message_(0), commandName_(cname)
+        , data_(data), delay_(delay) 
+        , level_(currLevel_)
     {
         params_->set(keyname, keyvalue);
     }
     Command(const std::string& cname, void* data, int delay = 0)
         : params_(new Params), message_(0)
-        , commandName_(cname), data_(data), delay_(delay) {  }
+        , commandName_(cname), data_(data), delay_(delay)
+        , level_(currLevel_)
+    {  }
 
     int getDelay() const { return delay_; }
     void setDelay(int delay) { delay_ = delay; }
@@ -131,8 +146,10 @@ protected:
     std::string commandName_;	// Name of command
     void* data_;	// any message related to command
     int delay_;		// delay before executing (for realtime playback)
+    int level_;		// nesting level of this command
 
     static Message* emptyMessage_;
+    static int currLevel_;		// nesting level while running commands
 
 private:
     static std::map<std::string, Command*> sCommands_;

@@ -140,7 +140,14 @@ bool MainWindow::initDialog()
     builder_->get_widget("menuopen", menuit);
     menuit->signal_activate().connect(sigc::mem_fun(*this, &MainWindow::onOpen));
 
-    log(new CommandComment("initDialog complete."));
+    builder_->get_widget("menurun", menuit);
+    menuit->signal_activate().connect(sigc::mem_fun(*this, &MainWindow::onRun));
+    builder_->get_widget("menudemote", menuit);
+    menuit->signal_activate().connect(sigc::mem_fun(*this, &MainWindow::onDemote));
+    builder_->get_widget("menupromote", menuit);
+    menuit->signal_activate().connect(sigc::mem_fun(*this, &MainWindow::onPromote));
+
+//    log(new CommandComment("initDialog complete."));
 
     return true;
 }
@@ -151,6 +158,14 @@ void MainWindow::log(ipctest::Command* cmd)
     std::cout << "LOG: " << cmd->toString() << std::endl;
     historyList_->add(cmd);
     testBase_->addCommand(cmd);
+
+    std::string fstr(testBase_->getFileName());
+    if (fstr.empty())
+        fstr = "(No name)*";
+    else
+        fstr += "*";
+
+    set_title(fstr);
 }
 
 void MainWindow::guiToParams(ipctest::Params* params)
@@ -182,9 +197,9 @@ void MainWindow::paramsToGui(ipctest::Params* params)
     while (!inputWidgets_.empty())
     {
         Gtk::Widget* wid = inputWidgets_.top();
+        inputWidgets_.pop();
         if (wid)
             delete wid;
-        inputWidgets_.pop();
     }
 
     if (!params)
@@ -204,6 +219,7 @@ void MainWindow::paramsToGui(ipctest::Params* params)
         inputGrid_->attach_next_to(*inLabel, *endLabel, Gtk::POS_BOTTOM, 1, 1);
         inputWidgets_.push(inLabel);
         Gtk::Entry* inEntry = new Gtk::Entry;
+        inEntry->set_text(it->second->strValue);
         inEntry->show();
         inputGrid_->attach_next_to(*inEntry, *inLabel, Gtk::POS_RIGHT, 1, 1);
         inputWidgets_.push(inEntry);
@@ -267,7 +283,7 @@ void MainWindow::setCommand(ipctest::Command* cmd)
 }
 
 
-bool MainWindow::setup(const std::string& defFilename)
+bool MainWindow::setup(const std::string& defFilename, const std::string& testFilename)
 {
     if (!testBase_->readIpcDefs(defFilename))
         return false;
@@ -281,6 +297,15 @@ bool MainWindow::setup(const std::string& defFilename)
         row[mlColumns_.colOrdinal_] = (*it)->getOrdinal();
         row[mlColumns_.colName_] = (*it)->getName();
         row[mlColumns_.colMessage_] = (*it);
+    }
+
+    if (testBase_->deserialize(testFilename))
+    {
+        historyList_->clear();
+        CommandList& commandList = testBase_->commandList();
+        CommandIterator it = commandList.begin();
+        for ( ; it != commandList.end(); ++it)
+            historyList_->add(*it);
     }
 
     return true;
@@ -409,10 +434,11 @@ void MainWindow::onCommandChanged()
         {
             Message* msg = context_.getMessage();
             cmd = testBase_->createCommand(cmdName, msg);
+            std::cout << "Set work command " << cmdName << std::endl;
             testBase_->setWorkCommand(cmd);
         }
         else
-            std::cout << "Reusing work command" << std::endl;
+            std::cout << "Reusing work command " << cmdName << std::endl;
 
         paramsToGui(cmd->getParams());
     }
@@ -485,10 +511,49 @@ void MainWindow::onOpen()
                 CommandIterator it = commandList.begin();
                 for ( ; it != commandList.end(); ++it)
                     historyList_->add(*it);
+
+                set_title(filename);
             }
         }
         break;
     }
+
+}
+
+void MainWindow::onRun()
+{
+    ipctest::CommandList* commands = historyList_->getCommands();
+    if (!commands->empty())
+    {
+        context_.setCommands(commands);
+        ipctest::CommandIterator it = context_.getCommandIterator();
+        for ( ; it != commands->end(); it++)
+        {
+            ipctest::Command* cmd = *it;
+            context_.setCommandIterator(it);
+            cmd->execute(context_);
+            it = context_.getCommandIterator();
+        }
+    }
+}
+
+void MainWindow::onDemote()
+{
+    ipctest::Command::bumpLevel(-1);
+}
+
+void MainWindow::onPromote()
+{
+    ipctest::Command::bumpLevel(+1);
+}
+
+void MainWindow::onMoveDown()
+{
+
+}
+
+void MainWindow::onMoveUp()
+{
 
 }
 
@@ -530,6 +595,8 @@ void MainWindow::onSave()
 
     testBase_->setFileName(filename);
     testBase_->serialize();
+
+    set_title(filename);
 }
 
 void MainWindow::onSaveAs()

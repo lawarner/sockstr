@@ -34,7 +34,9 @@ using namespace std;
 
 TestBase::TestBase()
     : currentMain_(new CommandFunction("main"))
+    , workCommand_(0)
     , isConnected_(false)
+    , socket_(0)
 {
     init();
 }
@@ -51,6 +53,7 @@ void TestBase::init()
     builtinCommands_.push_back("Connect");
     builtinCommands_.push_back("Disconnect");
     builtinCommands_.push_back("Function");
+    builtinCommands_.push_back("Loop");
     builtinCommands_.push_back("Noop");
     builtinCommands_.push_back("Receive");
     builtinCommands_.push_back("Send");
@@ -79,6 +82,8 @@ Command* TestBase::createCommand(const std::string& cmdName,
         cmd = new CommandDisconnect;
     else if (cmdName == "Function")
         cmd = new CommandFunction("", msgData);
+    else if (cmdName == "Loop")
+        cmd = new CommandLoop(0, 1);
     else if (cmdName == "Noop")
         cmd = new CommandNoop;
     else if (cmdName == "Receive")

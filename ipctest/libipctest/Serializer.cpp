@@ -40,6 +40,7 @@ Serializer::Serializer(TestBase* testBase)
     , testBase_(testBase)
     , parseLevel_(0)
     , section_(UnknownSection)
+    , commandMessage_(0)
 {
 
 }
@@ -87,33 +88,30 @@ void Serializer::deserialStartTag(const char* el, const char** attr)
         }
         break;
     case 2:
-        if (section_ == CommandSection)
+        if (section_ == CommandSection && startTag != "commands")
         {
-            commandParams_.clear();
-            if  (attr && *attr)
-            {
-                commandParams_.loadFromNameValues(attr);
-                if (commandParams_.get("_message", messageName_))
-                {
-                    cout << " CommandSection message=" << messageName_ << endl;
-                    commandMessage_ = testBase_->lookupMessage(messageName_);
-                }
-                else
-                    commandMessage_ = 0;
-            }
+            startCommand(attr);
         }
         break;
     case 3:
-        if (section_ == CommandSection && startTag == "Message")
+        if (section_ == CommandSection)
         {
-            messageFields_.clear();
+            if (startTag == "Message")
+                messageFields_.clear();
+            else if (startTag != "commands")
+                startCommand(attr);
         }
         break;
     case 4:
-        if (section_ == CommandSection && startTag == "Field")
+        if (section_ == CommandSection)
         {
-            fieldParams_.clear();
-            fieldParams_.loadFromNameValues(attr);
+            if (startTag == "Field")
+            {
+                fieldParams_.clear();
+                fieldParams_.loadFromNameValues(attr);
+            }
+            else if (startTag != "commands")
+                startCommand(attr);
         }
         break;
     default:
@@ -129,6 +127,24 @@ void Serializer::deserialStartTag(const char* el, const char** attr)
 
     parseLevel_++;
 }
+
+
+void Serializer::startCommand(const char** attr)
+{
+    commandParams_.clear();
+    if  (attr && *attr)
+    {
+        commandParams_.loadFromNameValues(attr);
+        if (commandParams_.get("_message", messageName_))
+        {
+            cout << " CommandSection message=" << messageName_ << endl;
+            commandMessage_ = testBase_->lookupMessage(messageName_);
+        }
+        else
+            commandMessage_ = 0;
+    }
+}
+
 
 static void _deserialEndTag(void* data, const char* el)
 {
@@ -153,15 +169,20 @@ void Serializer::deserialEndTag(const char* el)
     {
         commandParams_.set("_cdata", cdata);
         std::string cmdName = el;
+        int level = 0;
+        commandParams_.get("_level", level);
         cout << strindent << "createCommand("
-             << cmdName << ", " << messageName_ << ")" << endl;
+             << cmdName << ", " << messageName_ << ") level=" 
+             << level << endl;
 
         Message* msg = testBase_->lookupMessage(messageName_);
 //        if (msg) cout << " Found message " << messageName_ << endl;
         
         Params* cmdParams = new Params(commandParams_);
         Command* cmd = Command::createCommand(cmdName, cmdParams, msg);
-//        Command* cmd = testBase_->createCommand(cmdName, msg, 0);
+
+        cmd->setLevel(level);
+
         // the messageFields may not be complete or not in order, so iterate 
         // thru all fields in the Message.
         if (commandMessage_)
@@ -267,7 +288,7 @@ bool Serializer::serialize(const std::string& fileName)
        << "<ipctest>\n    <!-- Ipctest Testsuite file version 1.0 -->" << std::endl;
 
     // Optional, dump messages definitions
-    fo << "    <messages>" << std::endl;
+    fo << "    <messages/>" << std::endl;
 
     fo << "    <commands>" << std::endl;
     CommandList& commandList = testBase_->commandList();

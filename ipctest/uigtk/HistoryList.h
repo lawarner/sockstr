@@ -81,6 +81,7 @@ public:
     void add(const std::string& str);
     void add(ipctest::Command* cmd);
     void clear();
+    CommandList* getCommands();
 
 private:
     HistoryList(const HistoryList&);	// disable copy constructor

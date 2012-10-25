@@ -67,6 +67,9 @@ class RunContext
 public:
     RunContext();
 
+    CommandList* getCommands();
+
+    void setCommands(CommandList* cmds);
     CommandIterator getCommandIterator() const;
     void setCommandIterator(const CommandIterator& cmdIter);
     std::vector<std::string>& getFieldValues();
@@ -80,6 +83,7 @@ public:
     void setValue(const std::string& key, const std::string& value);
 
 private:
+    CommandList* commands_;
     CommandIterator iter_;
     sockstr::Socket* sock_;
     Message* message_;

@@ -113,7 +113,7 @@ public:
     void guiToParams(ipctest::Params* params);
     void paramsToGui(ipctest::Params* params);
     void setCommand(ipctest::Command* cmd);
-    bool setup(const std::string& defFilename);
+    bool setup(const std::string& defFilename, const std::string& testFilename);
 
 private:
     MainWindow(const MainWindow&);	// disable copy constructor
@@ -132,6 +132,11 @@ private:
     void onMessageActivated(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn* column);
     void onMessageSelection();
     void onOpen();
+    void onRun();
+    void onDemote();
+    void onPromote();
+    void onMoveDown();
+    void onMoveUp();
     void onQuit();
     void onSave();
     void onSaveAs();
