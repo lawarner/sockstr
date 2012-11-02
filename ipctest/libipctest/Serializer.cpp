@@ -25,6 +25,8 @@
 #include <iostream>
 #include <sstream>
 #include <expat.h>
+#include <string.h>
+
 #include "Command.h"
 #include "Params.h"
 #include "Parser.h"
@@ -34,6 +36,8 @@ using namespace ipctest;
 using namespace std;
 
 
+const char* ESCAPECHARS  = "<>&";
+const char* ESCAPESEQS[] = { "&lt;", "&gt;", "&amp;" };
 
 Serializer::Serializer(TestBase* testBase)
     : deserialData_(*new std::ostringstream)
@@ -299,4 +303,29 @@ bool Serializer::serialize(const std::string& fileName)
 
     fo << "</ipctest>" << std::endl;
     return true;
+}
+
+
+string Serializer::encodeString(const string& str)
+{
+    ostringstream oss;
+
+    size_t last = 0;
+    size_t pos = str.find_first_of(ESCAPECHARS, 0);
+    if (pos != 0)
+        oss << str.substr(0, pos);
+
+    while (pos != str.npos)
+    {
+        size_t idx = strchr(ESCAPECHARS, str[pos]) - ESCAPECHARS;
+        const char* eseq = ESCAPESEQS[idx];
+        oss.write(eseq, strlen(eseq));
+
+        last = pos + 1;
+        pos = str.find_first_of(ESCAPECHARS, last);
+
+        oss << str.substr(last, (pos==str.npos) ? pos : pos - last);
+    }
+
+    return oss.str();
 }

@@ -60,6 +60,7 @@ public:
 
     bool serialize(const std::string& fileName);
     bool deserialize(const std::string& fileName);
+    static std::string encodeString(const std::string& str);
 
 public:	// Callback handlers for xml parsing
     void deserialStartTag(const char* el, const char** attr);

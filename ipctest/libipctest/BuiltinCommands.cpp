@@ -26,6 +26,7 @@
 #include "BuiltinCommands.h"
 #include "Message.h"
 #include "RunContext.h"
+#include "Serializer.h"
 using namespace ipctest;
 
 #include <sstream>
@@ -69,7 +70,7 @@ std::string CommandComment::toString()
 std::string CommandComment::toXml(int indent)
 {
     std::string str = getXmlPart(indent, true);
-    str += params_->get("Comment") + "\n";
+    str += Serializer::encodeString(params_->get("Comment")) + "\n";
     str += getXmlPart(indent, false);
 
     return str;
@@ -120,10 +121,10 @@ std::string CommandConnect::toString()
 
 std::string CommandConnect::toXml(int indent)
 {
-    std::string str(indent, ' ');
-    str += "<" + commandName_ + ">\n";
+    std::string str(getXmlPart(indent, true));
     str += params_->get("Url") + "\n";
-    str += std::string(indent, ' ') + "</" + commandName_ + ">\n";
+    str += getXmlPart(indent, false);
+
     return str;
 }
 
@@ -310,7 +311,7 @@ std::string CommandLoop::toXml(int indent)
         striter = "1";
 
     str += "<" + commandName_ + " iterations=\"" + striter + "\">\n";
-    str += std::string(indent, ' ') + "</" + commandName_ + ">\n";
+    str += getXmlPart(indent, false);
     return str;
 }
 
