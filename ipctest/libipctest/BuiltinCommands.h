@@ -113,6 +113,28 @@ private:
     CommandList commands_;
 };
 
+/** This command tests its condition and if true executes the contained
+ *  (nested) commands.  Commands following the "If" that are higher level
+ *  are executed.  It is possible to encounter an "Else" command at the same
+ *  level as the "If".  In this case, an standard if/else is formed.
+ */
+class CommandIf : public Command
+{
+public:
+    CommandIf(Command* cmd, bool condition);
+	CommandIf(Params* params, Message* msg = 0);
+    void addCondition(bool condition);
+
+    virtual Command* createCommand(Params* params, Message* msg = 0);
+    virtual bool execute(RunContext& context);
+    virtual std::string toString();
+    virtual std::string toXml(int indent);
+
+private:
+    bool condition_;
+    CommandList commands_;
+};
+
 /** This command loops through other commands.  In the simpliest
  *  form this command loops a fixed number of iterations of one command.
  *  The command can of course be a function containing other commands.

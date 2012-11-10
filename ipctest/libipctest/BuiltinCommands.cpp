@@ -214,6 +214,101 @@ std::string CommandFunction::toXml(int indent)
 }
 
 
+// If
+CommandIf::CommandIf(Command* cmd, bool condition)
+    : Command("If", "Condition", condition)
+    , condition_(condition)
+{
+
+}
+
+CommandIf::CommandIf(Params* params, Message* msg)
+    : Command("If", params, msg)
+    , condition_(false)
+{
+
+}
+
+void CommandIf::addCondition(bool condition)
+{
+
+}
+
+Command* CommandIf::createCommand(Params* params, Message* msg)
+{
+    params->set("Condition", params->get("_condition"));
+
+    return new CommandIf(params, msg);
+}
+
+bool CommandIf::execute(RunContext& context)
+{
+    condition_ = false;
+    params_->get("Condition", condition_);
+    std::cout << "exec if: " << condition_ << std::endl;
+
+    // Execute embedded commands
+    if (condition_)
+    {
+        CommandIterator it = commands_.begin();
+        for ( ; it != commands_.end(); ++it)
+            if (!(*it)->execute(context))
+                return false;       // stop on first error
+    }
+
+    bool okStatus = true;
+
+    // Execute next commands in run context that are higher nesting level
+    CommandList* cmdList = context.getCommands();
+    if (cmdList)
+    {
+        CommandIterator it;
+        CommandIterator ij;
+        if (condition_)
+        {
+            it = context.getCommandIterator();	// cmdList->begin();
+            ij = it;
+            for (++it ; it != cmdList->end(); ++it)
+            {
+                Command* cmd = *it;
+                if (cmd->getLevel() <= level_)
+                    break;
+
+//                std::cout << "-if command (exec) " << cmd->getName() << std::endl;
+                if (okStatus && !cmd->execute(context))
+                    okStatus = false;
+
+                ij = it;
+            }
+            context.setCommandIterator(ij);
+        }
+        //TODO implement Else
+    }
+
+    return okStatus;
+}
+
+std::string CommandIf::toString()
+{
+    std::string strcond;
+    params_->get("Condition", strcond);
+    return commandName_ + ": " + strcond;
+}
+
+std::string CommandIf::toXml(int indent)
+{
+    std::string str(indent, ' ');
+    std::string strcond;
+    params_->get("Condition", strcond);
+    if (strcond.empty())
+        strcond = "false";
+
+    str += "<" + commandName_ + " condition=\"" + strcond + "\">\n";
+    str += getXmlPart(indent, false);
+    return str;
+}
+
+
 // Loop
 CommandLoop::CommandLoop(Command* cmd, int iters)
     : Command("Loop", "Iterations", iters)
@@ -285,8 +380,8 @@ bool CommandLoop::execute(RunContext& context)
                 ij = it;
             }
         }
-        
-        context.setCommandIterator(ij);
+        if (iters > 0)
+            context.setCommandIterator(ij);
     }
 
     return okStatus;

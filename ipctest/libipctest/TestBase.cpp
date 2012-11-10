@@ -53,6 +53,7 @@ void TestBase::init()
     builtinCommands_.push_back("Connect");
     builtinCommands_.push_back("Disconnect");
     builtinCommands_.push_back("Function");
+    builtinCommands_.push_back("If");
     builtinCommands_.push_back("Loop");
     builtinCommands_.push_back("Noop");
     builtinCommands_.push_back("Receive");
@@ -82,6 +83,8 @@ Command* TestBase::createCommand(const std::string& cmdName,
         cmd = new CommandDisconnect;
     else if (cmdName == "Function")
         cmd = new CommandFunction("", msgData);
+    else if (cmdName == "If")
+        cmd = new CommandIf(0, false);
     else if (cmdName == "Loop")
         cmd = new CommandLoop(0, 1);
     else if (cmdName == "Noop")

@@ -38,8 +38,9 @@ int main(int argc, char* argv[])
     std::cout << "Program ipctest-gtk start." << std::endl;
 
 #if GTK_VERSION_GE(3,4)
+    int fakeargc = 1;
     Glib::RefPtr<Gtk::Application> app
-        = Gtk::Application::create(argc, argv, "sockstr.ipctest.gtk");
+        = Gtk::Application::create(fakeargc, argv, "sockstr.ipctest.gtk");
 #else
     Gtk::Main kit(argc, argv);
 #endif
@@ -48,7 +49,7 @@ int main(int argc, char* argv[])
 #if 0
     if (argc < 2)
     {
-        std::cerr << "Usage: ipctest-gtk <ipcdef_filename>" << std::endl;
+        std::cerr << "Usage: ipctest-gtk <ipcdef_filename> <testcase>" << std::endl;
         return 1;
     }
 #else
@@ -57,6 +58,8 @@ int main(int argc, char* argv[])
     if (argc > 2)
         testFilename = argv[2];
 #endif
+
+    std::cout << "Defs=" << defFilename << ", testcase=" << testFilename << std::endl;
 
     Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_file("ipctest-gtk.glade");
 

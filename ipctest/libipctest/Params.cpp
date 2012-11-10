@@ -65,6 +65,20 @@ bool Params::get(const std::string& name, int& value) const
     return true;
 }
 
+bool Params::get(const std::string& name, bool& value) const
+{
+    std::string str;
+    if (!get(name, str))
+        return false;
+
+    if (str=="true" || str=="1")
+        value = true;
+    else
+        value = false;
+
+    return true;
+}
+
 bool Params::get(const std::string& name, std::string& value) const
 {
     ParamMap::const_iterator it = env_.find(name);
@@ -120,7 +134,8 @@ int Params::loadFromNameValues(const char** nv)
     std::string ul("_");
     while (nv[nr*2])
     {
-        set(ul + nv[nr*2], nv[nr*2 + 1]);
+        std::string val(nv[nr*2 + 1]);
+        set(ul + nv[nr*2], val);
         nr++;
     }
 
@@ -133,6 +148,12 @@ bool Params::set(const std::string& name, int value)
     std::stringstream ss;
     ss << value;
     return set(name, ss.str());
+}
+
+bool Params::set(const std::string& name, bool value)
+{
+    std::string str(value ? "true" : "false");
+    return set(name, str);
 }
 
 bool Params::set(const std::string& name, const std::string& value)
