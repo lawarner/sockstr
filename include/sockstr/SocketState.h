@@ -91,8 +91,7 @@ public:
 	//! Open the socket connection
 	virtual bool   open        (Socket* pSocket,
 								SocketAddr& rSockAddr,
-								UINT uOpenFlags,
-								CFileException* pError);
+								UINT uOpenFlags);
 	//! Read raw data from socket stream
 	virtual UINT   read        (Socket* pSocket, void* pBuf, UINT uCount);
 	//! Reader worker thread processing routine.
@@ -149,8 +148,7 @@ public:
 								socklen_t* nOptionLen,  int   nLevel);
 	virtual bool   open        (Socket* pSocket,
 					            SocketAddr& rSockAddr,
-					            UINT uOpenFlags,
-					            CFileException* pError);
+					            UINT uOpenFlags);
 	virtual bool   setSockOpt  (Socket* pSocket,
 								int nOptionName, const void* pOptionValue,
 								int nOptionLen, int nLevel);
@@ -170,8 +168,7 @@ public:
 								socklen_t* nOptionLen,  int   nLevel);
 	virtual bool   open        (Socket* pSocket,
 					            SocketAddr& rSockAddr,
-					            UINT uOpenFlags,
-					            CFileException* pError);
+					            UINT uOpenFlags);
 	virtual bool   setSockOpt  (Socket* pSocket,
 								int nOptionName, const void* pOptionValue,
 								int nOptionLen, int nLevel);

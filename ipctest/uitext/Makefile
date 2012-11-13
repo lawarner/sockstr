@@ -20,53 +20,58 @@
 
 # Simple makefile for the sockstr class library
 
-TOP = ..
+TOP = ../..
 INCDIR = $(TOP)/include
+LIBIPCDIR = ../libipctest
+LIBIPCTEST = $(LIBIPCDIR)/libipctest.a
+LIBSOCKLIB = $(TOP)/src/libsockstr.a
+
+SUBDIRS = 
 
 CC = g++
 #CFLAGS = -Wall -O2 -I..
-CCFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
-LDFLAGS = -pthread $(LIBSOCKLIB)
+#CCFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR) -I$(LIBIPCDIR)
+CPPFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR) -I$(LIBIPCDIR)
+#LDFLAGS = -pthread $(LIBIPCTEST) $(LIBSOCKLIB)
+LDFLAGS = -pthread
+LDLIBS = $(LIBIPCTEST) $(LIBSOCKLIB)
 
 #COMPILE = $(CC) $(CFLAGS) -c
 
-OBJS := simplest.o echoserver.o filecopy.o fbread.o fb2read.o testsockstr.o
+OBJS := ipctest-tui.o
 
 SRCS := $(OBJS:.o=.cpp)
 
 INCS = 
 
-LIBSOCKLIB = $(TOP)/src/libsockstr.a
-
-PROGRAMS = simplest echoserver filecopy fbread fb2read testsockstr
 
 
-.cpp.o: ; $(CC) $(CCFLAGS) -c $<
+PROGRAMS = ipctest-tui
 
 
-all: $(PROGRAMS)
+all: $(PROGRAMS) subdirs
 
-simplest: simplest.o $(LIBSOCKLIB)
+# ipctest: $(OBJS) $(LIBIPCTEST) $(LIBSOCKLIB)
 
-echoserver: echoserver.o $(LIBSOCKLIB)
 
-filecopy: filecopy.o $(LIBSOCKLIB)
-
-fbread: fbread.o $(LIBSOCKLIB)
-
-fb2read: fb2read.o $(LIBSOCKLIB)
-
-testsockstr: testsockstr.o $(LIBSOCKLIB)
-
+.PHONY: subdirs
+subdirs:
+	for dir in $(SUBDIRS); do \
+		make -C $$dir; \
+	done
 
 
 .PHONY: clean
 clean:
-	rm -f $(OBJS) $(PROGRAMS)
+	rm -f $(OBJS) $(PROGRAMS) .makedepends
+	touch -r .mkdep-timestamp .makedepends
+	for dir in $(SUBDIRS); do \
+		make -C $$dir clean; \
+	done
 
 .PHONY: depends
 depends: $(SRCS) $(INCS)
-	$(CC) -I. -MM $(SRCS) > .makedepends
+	$(CC) -I. $(CPPFLAGS) -MM $(SRCS) > .makedepends
 	touch .mkdep-timestamp
 
 .makedepends:

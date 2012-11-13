@@ -20,53 +20,56 @@
 
 # Simple makefile for the sockstr class library
 
-TOP = ..
+TOP = ../..
 INCDIR = $(TOP)/include
+LIBIPCDIR = ../libipctest
+LIBIPCTEST = $(LIBIPCDIR)/libipctest.a
+LIBSOCKLIB = $(TOP)/src/libsockstr.a
+
+GTKINC = `pkg-config --cflags gtkmm-3.0`
+GTKLIB = `pkg-config --libs gtkmm-3.0`
+
+SUBDIRS = 
 
 CC = g++
 #CFLAGS = -Wall -O2 -I..
-CCFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
-LDFLAGS = -pthread $(LIBSOCKLIB)
+DEPCPPFLAGS = -Wall -g -O0 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR) -I$(LIBIPCDIR)
+CPPFLAGS = $(DEPCPPFLAGS) -I$(GTKINC)
+LDFLAGS = -pthread
+LDLIBS = $(LIBIPCTEST) $(LIBSOCKLIB) $(GTKLIB)
 
-#COMPILE = $(CC) $(CFLAGS) -c
-
-OBJS := simplest.o echoserver.o filecopy.o fbread.o fb2read.o testsockstr.o
+OBJS := ipctest-gtk.o MainWindow.o HistoryList.o
 
 SRCS := $(OBJS:.o=.cpp)
 
 INCS = 
 
-LIBSOCKLIB = $(TOP)/src/libsockstr.a
 
-PROGRAMS = simplest echoserver filecopy fbread fb2read testsockstr
-
-
-.cpp.o: ; $(CC) $(CCFLAGS) -c $<
+PROGRAMS = ipctest-gtk
 
 
-all: $(PROGRAMS)
+all: $(PROGRAMS) subdirs
 
-simplest: simplest.o $(LIBSOCKLIB)
+ipctest-gtk: $(OBJS) $(LIBIPCTEST) $(LIBSOCKLIB)
 
-echoserver: echoserver.o $(LIBSOCKLIB)
 
-filecopy: filecopy.o $(LIBSOCKLIB)
-
-fbread: fbread.o $(LIBSOCKLIB)
-
-fb2read: fb2read.o $(LIBSOCKLIB)
-
-testsockstr: testsockstr.o $(LIBSOCKLIB)
-
+.PHONY: subdirs
+subdirs:
+	for dir in $(SUBDIRS); do \
+		make -C $$dir; \
+	done
 
 
 .PHONY: clean
 clean:
 	rm -f $(OBJS) $(PROGRAMS)
+	for dir in $(SUBDIRS); do \
+		make -C $$dir clean; \
+	done
 
 .PHONY: depends
 depends: $(SRCS) $(INCS)
-	$(CC) -I. -MM $(SRCS) > .makedepends
+	$(CC) -I. $(DEPCPPFLAGS) -MM $(SRCS) > .makedepends
 	touch .mkdep-timestamp
 
 .makedepends:

@@ -23,6 +23,8 @@
 TOP = ..
 INCDIR = $(TOP)/include
 
+SUBDIRS = libipctest uitext uigtk
+
 CC = g++
 #CFLAGS = -Wall -O2 -I..
 CCFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
@@ -30,44 +32,40 @@ LDFLAGS = -pthread $(LIBSOCKLIB)
 
 #COMPILE = $(CC) $(CFLAGS) -c
 
-OBJS := simplest.o echoserver.o filecopy.o fbread.o fb2read.o testsockstr.o
+OBJS := 
 
 SRCS := $(OBJS:.o=.cpp)
 
 INCS = 
 
+
 LIBSOCKLIB = $(TOP)/src/libsockstr.a
 
-PROGRAMS = simplest echoserver filecopy fbread fb2read testsockstr
+PROGRAMS = 
 
 
 .cpp.o: ; $(CC) $(CCFLAGS) -c $<
 
 
-all: $(PROGRAMS)
+all: $(PROGRAMS) subdirs
 
-simplest: simplest.o $(LIBSOCKLIB)
 
-echoserver: echoserver.o $(LIBSOCKLIB)
-
-filecopy: filecopy.o $(LIBSOCKLIB)
-
-fbread: fbread.o $(LIBSOCKLIB)
-
-fb2read: fb2read.o $(LIBSOCKLIB)
-
-testsockstr: testsockstr.o $(LIBSOCKLIB)
-
+.PHONY: subdirs
+subdirs:
+	for dir in $(SUBDIRS); do \
+		make -C $$dir; \
+	done
 
 
 .PHONY: clean
 clean:
-	rm -f $(OBJS) $(PROGRAMS)
+	for dir in $(SUBDIRS); do \
+		make -C $$dir clean; \
+	done
+
 
 .PHONY: depends
-depends: $(SRCS) $(INCS)
-	$(CC) -I. -MM $(SRCS) > .makedepends
-	touch .mkdep-timestamp
-
-.makedepends:
-include .makedepends
+depends:
+	for dir in $(SUBDIRS); do \
+		make -C $$dir depends; \
+	done

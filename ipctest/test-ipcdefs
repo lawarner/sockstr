@@ -1,0 +1,22 @@
+// These are just sample IPC messages
+#ifndef _TEST_IPCDEFS
+#define _TEST_IPCDEFS
+
+#pragma pack(2)
+
+#include <sockstr/IPC.h>
+
+
+IPC_MESSAGE(EndOfFile)
+	// Empty
+IPC_ENDMESSAGE
+
+IPC_MESSAGE(Login)
+	int userid;
+	int16 group;
+	char hashpwd[256];	// hash of password
+IPC_ENDMESSAGE
+
+#pragma pack()
+
+#endif

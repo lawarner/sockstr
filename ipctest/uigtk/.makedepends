@@ -1,0 +1,9 @@
+ipctest-gtk.o: ipctest-gtk.cpp MainWindow.h
+MainWindow.o: MainWindow.cpp MainWindow.h ../libipctest/Field.h \
+ ../libipctest/FieldType.h HistoryList.h ../libipctest/BuiltinCommands.h \
+ ../libipctest/Command.h ../libipctest/Params.h ../libipctest/Parser.h \
+ ../libipctest/Message.h ../libipctest/RunContext.h \
+ ../libipctest/TestBase.h
+HistoryList.o: HistoryList.cpp ../libipctest/BuiltinCommands.h \
+ ../libipctest/Command.h ../libipctest/Params.h HistoryList.h \
+ MainWindow.h

@@ -28,7 +28,7 @@ CC = g++
 #CFLAGS = -Wall -O2 -I.
 CCFLAGS = -Wall -g -O2 -I$(TOP) -I$(INCDIR)
 
-OBJS := IPAddress.o Socket.o SocketAddr.o StreamBuf.o SocketState.o Stream.o ss_ipc.o
+OBJS := IPAddress.o Socket.o SocketAddr.o StreamBuf.o SocketState.o Stream.o
 
 SRCS := $(OBJS:.o=.cpp)
 
@@ -47,11 +47,12 @@ all: $(LIBSOCKSTR)
 $(LIBSOCKSTR): $(OBJS)
 	$(AR) rsv $@ $(OBJS)
 
+$(IDIR2)/sstypes.h: $(IDIR2)/sstypes-linux.h
+	cp $(IDIR2)/sstypes-linux.h $(IDIR2)/sstypes.h
 
 .PHONY: clean
 clean:
-	rm -f $(OBJS) $(LIBSOCKSTR) .makedepends
-	touch -r .mkdep-timestamp .makedepends
+	rm -f $(OBJS) $(LIBSOCKSTR)
 
 .PHONY: depends
 depends: $(SRCS) $(INCS)

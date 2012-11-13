@@ -25,6 +25,7 @@ BACKUPFILE = ~/Downloads/srcrepo/sockstr-src-`date +%Y%j`.tar.bz2
 
 LIBSOCKSTR = libsockstr.a
 
+#SUBDIRS = src examples ipctest
 SUBDIRS = src examples
 
 
@@ -53,4 +54,6 @@ clean:
 
 .PHONY: depends
 depends:
-	make -C src depends
+	for dir in $(SUBDIRS); do \
+		make -C $$dir depends; \
+	done

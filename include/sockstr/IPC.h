@@ -58,11 +58,8 @@
 //
 // INCLUDE FILES
 //
-#include "config.h"
-#if 0
-#include <sockstr/Stream.h>
-#include <sockstr/Socket.h>
-#endif
+#include <sockstr/sstypes.h>
+
 
 namespace sockstr
 {
@@ -79,19 +76,19 @@ namespace sockstr
 #define IPC_SEPCHAR "\n"    // separator character for variable length fields
 #define IPC_SEPTOKEN '\n'
 
-#define IPC_MESSAGE(Message)				\
-class Message : public IpcStruct			\
+#define IPC_MESSAGE(MSGNAME)				\
+class MSGNAME : public IpcStruct			\
 {											\
 public:										\
-  Message(void) : IpcStruct(IPC_ ## Message, sizeof(Message)) { };
+    MSGNAME(void) : IpcStruct(IPC_ ## MSGNAME, sizeof(MSGNAME)) { }
 
 #define IPC_ENDMESSAGE };
 
-#define IPC_REPLY(Message)					\
-class Message : public IpcReplyStruct	\
+#define IPC_REPLY(MSGNAME)					\
+class MSGNAME : public IpcReplyStruct	\
 {											\
 public:										\
-  Message(void) : IpcReplyStruct(IPC_ ## Message + 10000, sizeof(Message)) { };
+    MSGNAME(void) : IpcReplyStruct(IPC_ ## MSGNAME + 10000, sizeof(MSGNAME)) { }
 
 #define IPC_ENDREPLY };
 
@@ -147,25 +144,37 @@ static const WORD IPC_SocketResponse           = 4;
 class DllExport IpcStruct
 {
 public:
-	IpcStruct(const WORD wFunction, const UINT wPacketSize);
+	IpcStruct(void)
+        : wFunction_(0)
+        , wPacketSize_(0)
+        , dwSequence_(0)
+    { }
+	IpcStruct(WORD wFunction, UINT wPacketSize, DWORD dwSequence = 0)
+        : wFunction_(wFunction)
+        , wPacketSize_(wPacketSize)
+        , dwSequence_(dwSequence)
+    { }
 
-	WORD  m_wFunction;
-	UINT  m_wPacketSize;
-	DWORD m_dwSequence;	// cookie
+	WORD  wFunction_;
+	UINT  wPacketSize_;
+	DWORD dwSequence_;	// cookie
 };
 
 class DllExport IpcReplyStruct : public IpcStruct
 {
 public:
-	IpcReplyStruct(const WORD wFunction, const UINT wPacketSize);
+	IpcReplyStruct(WORD wFunction, UINT wPacketSize)
+        : IpcStruct(wFunction, wPacketSize)
+        , dwReturn_(0)
+    { }
 
-	long  m_lReturn;	// Return value from remote procedure
+	DWORD dwReturn_;	// Return value from remote procedure
 };
 
 
 // General messages
 IPC_MESSAGE(EndOfData)
-    WORD m_wEndFunction;
+    WORD wEndFunction_;
 IPC_ENDMESSAGE
 
 IPC_MESSAGE(EndOfFile)
@@ -173,15 +182,15 @@ IPC_MESSAGE(EndOfFile)
 IPC_ENDMESSAGE
 
 IPC_MESSAGE(GenericReply)
-	char m_filler[2048];	// This should be large enough to contain
+	char filler_[2048];	    // This should be large enough to contain
 							// the biggest message.
 IPC_ENDMESSAGE
 
 // Useful for handshake negotitation of port setup between server-side and client
 IPC_MESSAGE(SocketResponse)
-    WORD m_wResponse;			// 0 = failure; 1 = success
-    WORD m_wPort;
-    char m_szServer[100];
+    WORD wResponse_;			// 0 = failure; 1 = success
+    WORD wPort_;
+    char szServer_[100];
 IPC_ENDMESSAGE
 
 // Application message here:
@@ -189,7 +198,6 @@ IPC_ENDMESSAGE
 //    DWORD m_dwIdentity;
 //    char  m_szName[24];
 //IPC_ENDMESSAGE
-
 
 
 #pragma pack()

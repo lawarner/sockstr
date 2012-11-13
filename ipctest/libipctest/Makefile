@@ -20,49 +20,57 @@
 
 # Simple makefile for the sockstr class library
 
-TOP = ..
+TOP = ../..
 INCDIR = $(TOP)/include
+
+SUBDIRS = 
 
 CC = g++
 #CFLAGS = -Wall -O2 -I..
-CCFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
+#DBGFLAGS = -g -O2
+DBGFLAGS = -g -O0
+CPPFLAGS = -Wall $(DBGFLAGS) -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
+CCFLAGS = -Wall -$(DBGFLAGS) -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
 LDFLAGS = -pthread $(LIBSOCKLIB)
 
 #COMPILE = $(CC) $(CFLAGS) -c
 
-OBJS := simplest.o echoserver.o filecopy.o fbread.o fb2read.o testsockstr.o
+OBJS := BuiltinCommands.o Command.o Field.o FieldType.o Message.o \
+	Params.o Parser.o RunContext.o Serializer.o TestBase.o
 
 SRCS := $(OBJS:.o=.cpp)
 
-INCS = 
+INCS = $(echo *.h)
+
+LIBIPCTEST = libipctest.a
 
 LIBSOCKLIB = $(TOP)/src/libsockstr.a
 
-PROGRAMS = simplest echoserver filecopy fbread fb2read testsockstr
+PROGRAMS = 
 
 
-.cpp.o: ; $(CC) $(CCFLAGS) -c $<
+# .cpp.o: ; $(CC) $(CCFLAGS) -c $<
 
 
-all: $(PROGRAMS)
+all: $(LIBIPCTEST)
 
-simplest: simplest.o $(LIBSOCKLIB)
+$(LIBIPCTEST): $(OBJS) $(LIBSOCKLIB)
+	$(AR) rsv $@ $(OBJS)
 
-echoserver: echoserver.o $(LIBSOCKLIB)
 
-filecopy: filecopy.o $(LIBSOCKLIB)
-
-fbread: fbread.o $(LIBSOCKLIB)
-
-fb2read: fb2read.o $(LIBSOCKLIB)
-
-testsockstr: testsockstr.o $(LIBSOCKLIB)
-
+.PHONY: subdirs
+subdirs:
+	for dir in $(SUBDIRS); do \
+		make -C $$dir; \
+	done
 
 
 .PHONY: clean
 clean:
-	rm -f $(OBJS) $(PROGRAMS)
+	rm -f $(OBJS) $(LIBIPCTEST)
+	for dir in $(SUBDIRS); do \
+		make -C $$dir clean; \
+	done
 
 .PHONY: depends
 depends: $(SRCS) $(INCS)

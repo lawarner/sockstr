@@ -18,13 +18,17 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-// sstypes.h: typedefs and defines used by SockStr classes
+// sstypes-linux.h: typedefs and defines used by SockStr classes
+// Need to copy this file to sstypes.h for Linux platform.
 //
 
 #ifndef _SSTYPES_H_INCLUDED_
 #define _SSTYPES_H_INCLUDED_
 
-#ifdef TARGET_LINUX
+#ifndef TARGET_LINUX
+#define TARGET_LINUX
+#endif
+
 typedef int WORD;
 typedef int DWORD;
 typedef void * LPVOID;
@@ -36,20 +40,5 @@ static const int INVALID_SOCKET = -1;
 static const int SOCKET_ERROR = -1;
 
 #define IOCTLSOCK ::ioctl
-#endif
-
-#ifdef TARGET_WINDOWS
-#define _X86_
-#include <WinDef.h>
-#include <WinSock2.h>
-
-#define IOCTLSOCK ::ioctlsocket
-#endif
-// #ifdef linux
-/*!
-  @typedef CFileException Definition for linux port
-*/
-typedef int CFileException;
-// #endif
 
 #endif

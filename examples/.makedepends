@@ -1,0 +1,6 @@
+simplest.o: simplest.cpp
+echoserver.o: echoserver.cpp
+filecopy.o: filecopy.cpp
+fbread.o: fbread.cpp
+fb2read.o: fb2read.cpp
+testsockstr.o: testsockstr.cpp

@@ -67,6 +67,7 @@
 #endif
 
 #include <algorithm>
+#include <iostream>
 
 #include <sockstr/Socket.h>
 #include <sockstr/SocketState.h>
@@ -294,7 +295,6 @@ SocketState::listen(Socket* /*pSocket*/, const int /*nBacklog*/)
 //   pSocket                   Pointer to socket object
 //   rSockAddr                 Reference to a socket address to open
 //   uOpenFlags                Flags indicating how the socket should be opened
-//   pError                    Optional pointer to CFileException object
 //
 // Pre      : This routine expects a well-formed SocketAddr.
 // Post     : Upon successful completion of this routine, either a server
@@ -313,9 +313,8 @@ SocketState::listen(Socket* /*pSocket*/, const int /*nBacklog*/)
 //
 bool
 SocketState::open(Socket* /*pSocket*/,
-					  SocketAddr& /*rSockAddr*/,
-					  UINT /*uOpenFlags*/,
-					  CFileException* /*pError*/)
+                  SocketAddr& /*rSockAddr*/,
+                  UINT /*uOpenFlags*/)
 {
 	VERIFY(0);	// We should never execute this base class virtual function
 	return false;
@@ -626,7 +625,6 @@ SSOpenedServer::getSockOpt(Socket* pSocket,
 //   pSocket                   Pointer to socket object
 //   rSockAddr                 Reference to a socket address to open
 //   uOpenFlags                Flags indicating how the socket should be opened
-//   pError                    Optional pointer to CFileException object
 //
 // Pre      : This routine expects a well-formed SocketAddr.
 // Post     : The open flags given as parameter are saved in member variables.
@@ -644,8 +642,7 @@ SSOpenedServer::getSockOpt(Socket* pSocket,
 bool
 SSOpenedServer::open(Socket* pSocket,
                      SocketAddr& rSockAddr,
-                     UINT  uOpenFlags,
-                     CFileException* /*pError*/)
+                     UINT  uOpenFlags)
 {
 	// Assume failure
 	changeState(pSocket, SSClosed::instance());
@@ -797,7 +794,6 @@ SSOpenedClient::getSockOpt(Socket* pSocket,
 //   pSocket                   Pointer to socket object
 //   rSockAddr                 Reference to a socket address to open
 //   uOpenFlags                Flags indicating how the socket should be opened
-//   pError                    Optional pointer to CFileException object
 //
 // Pre      : This routine expects a well-formed SocketAddr.
 // Post     : The open flags given as parameter are saved in member variables.
@@ -809,9 +805,8 @@ SSOpenedClient::getSockOpt(Socket* pSocket,
 //
 bool
 SSOpenedClient::open(Socket* pSocket,
-						 SocketAddr& rSockAddr,
-						 UINT  uOpenFlags,
-						 CFileException* /*pError*/)
+                     SocketAddr& rSockAddr,
+                     UINT  uOpenFlags)
 {
 	// Assume failure
 	changeState(pSocket, SSClosed::instance());
@@ -1107,9 +1102,11 @@ SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount)
 		if (iResult == 0 || iResult == SOCKET_ERROR)
         {
             pSocket->m_Status = SC_NODATA;
+            pSocket->setstate(std::ios::eofbit);
 			return 0;
         }
-	}
+        else
+            pSocket->clear(pSocket->rdstate() & ~std::ios::eofbit);	}
 	else
 	{
 		// Asynchronous mode -- if data is available on socket then read
@@ -1123,6 +1120,7 @@ SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount)
                 // WSAEINPROGRESS means a blocking call is still active.  Maybe
                 // in the future take action on this status?
                 pSocket->m_Status = SC_NODATA;
+                pSocket->setstate(std::ios::eofbit);
                 return 0;
         }
 
@@ -1137,6 +1135,8 @@ SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount)
 			if (iResult == 0 || iResult == SOCKET_ERROR)
             {
                 pSocket->m_Status = SC_NODATA;
+                pSocket->setstate(iResult == SOCKET_ERROR 
+                                   ? std::ios::badbit : std::ios::eofbit);
 				return 0;
             }
 		}
@@ -1145,6 +1145,7 @@ SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount)
 			if (pSocket->m_pDefCallback == 0)
 			{
                 pSocket->m_Status = SC_NODATA;
+                pSocket->setstate(std::ios::eofbit);
 				return 0;
 			}
 #if USE_PTHREADS
@@ -1179,7 +1180,10 @@ SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount)
 	}
 
     if (iResult >= 0)
+    {
         pSocket->m_Status = SC_OK;
+        pSocket->clear();
+    }
 
 	return iResult;
 }
@@ -1339,7 +1343,12 @@ SSConnected::write(Socket* pSocket, const void* pBuf, UINT uCount)
 			iResult = ::send(pSocket->m_hFile, (const char *)pBuf, uCount, 0);
 		}
 		if (iResult == SOCKET_ERROR)
+        {
 			pSocket->m_Status = SC_FAILED;
+            pSocket->setstate(std::ios::failbit);
+        }
+        else
+            pSocket->clear(pSocket->rdstate() & ~std::ios::failbit);
 	}
 	else
 	{

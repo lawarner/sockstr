@@ -102,7 +102,7 @@ const int Socket::modeReadWrite    = 16;
 // Returns  : -
 // Params   :
 //   lpszFileName              Fully qualified host name and port
-//   uOpenFlags                CFile::modeXXX open mode flags
+//   uOpenFlags                open mode flags
 //   rSockAddr                 An already resolved address
 //
 // Pre      :
@@ -127,6 +127,7 @@ Socket::Socket(const char* lpszFileName, UINT uOpenFlags)
 	if (!open(lpszFileName, uOpenFlags))
 	{
 		m_Status = SC_FAILED;
+        setstate(std::ios::failbit);
 	}
 }
 
@@ -137,6 +138,7 @@ Socket::Socket(SocketAddr& rSockAddr, UINT uOpenFlags)
 	if (!open(rSockAddr, uOpenFlags))
 	{
 		m_Status = SC_FAILED;
+        setstate(std::ios::failbit);
 	}
 }
 
@@ -176,6 +178,8 @@ Socket::~Socket(void)
 Socket&
 Socket::operator=(const Socket& rSource)
 {
+//    Stream::operator=(rSource);
+
 	m_hFile = rSource.m_hFile;
 	m_uOpenFlags = rSource.m_uOpenFlags;
 	m_bAsyncMode = rSource.m_bAsyncMode;
@@ -290,13 +294,13 @@ Socket::remoteProcedure(IpcStruct* pData, Callback pCallback)
 
 	Callback pOldCallback;
 
-	pData->m_dwSequence = ++m_dwSequence;
+	pData->dwSequence_ = ++m_dwSequence;
 	if (pCallback)
 	{
 		pOldCallback = (Callback) registerCallback(pCallback);
 	}
 
-	write(pData, pData->m_wPacketSize);
+	write(pData, pData->wPacketSize_);
 
 	if (pCallback)
 	{
@@ -343,7 +347,7 @@ Socket::remoteReadData(IpcStruct* pData, UINT uMaxLength)
 	// Warning: This routine does not work in overlapped I/O mode.  The
 	//          next statement (temporarily) goes to polling mode.
 	Callback pOldCallback = (Callback) registerCallback();
-	UINT uLength = pData->m_wPacketSize;
+	UINT uLength = pData->wPacketSize_;
 	if (uMaxLength != 0 && uMaxLength < uLength)
 	{
 		uLength = uMaxLength;
@@ -370,7 +374,7 @@ Socket::remoteReadData(IpcStruct* pData, UINT uMaxLength)
 		{
 			continue;
 		}
-		if (uLength < pData->m_wPacketSize)
+		if (uLength < pData->wPacketSize_)
 		{
 			// flush buffer
 			DWORD dwBytes;
@@ -388,7 +392,7 @@ Socket::remoteReadData(IpcStruct* pData, UINT uMaxLength)
 			continue;
 		}
 #endif
-		uLength = pData->m_wPacketSize - uActual;
+		uLength = pData->wPacketSize_ - uActual;
 		uActual = read((char *)pData + uActual, uLength);
 #ifdef _DEBUG
 		VERIFY(uActual == uLength);
@@ -428,10 +432,10 @@ Socket::remoteWriteReply(IpcReplyStruct* pData, DWORD dwSequence)
 	// Fill-in the cookie, if caller specifies it separately
 	if (dwSequence)
 	{
-		pData->m_dwSequence = dwSequence;
+		pData->dwSequence_ = dwSequence;
 	}
 
-	write(pData, pData->m_wPacketSize);
+	write(pData, pData->wPacketSize_);
 
 	return 0;
 }
@@ -572,7 +576,6 @@ Socket::listen(const int nBacklog)
 //   lpszFileName              Name of socket to open (in URL format)
 //   rSockAddr                 Reference to a socket address to open
 //   uOpenFlags                Flags indicating how the socket should be opened
-//   pError                    Optional pointer to CFileException object
 //
 // Pre      : The first form of Open expects the lpszFileName parameter to
 //            contain a valid URL name representing the socket to open.
@@ -602,7 +605,7 @@ Socket::listen(const int nBacklog)
 // Remarks  :
 //
 bool
-Socket::open(const char* lpszFileName, UINT uOpenFlags, CFileException* pError)
+Socket::open(const char* lpszFileName, UINT uOpenFlags)
 {
 	WORD wPort = 0;
 	size_t nColon;
@@ -653,18 +656,18 @@ Socket::open(const char* lpszFileName, UINT uOpenFlags, CFileException* pError)
 	if (wPort == 0 && nColon != std::string::npos)
 	{
 		SocketAddr SockAddr(Host.c_str(), Name.substr(nColon + 1).c_str());
-        return open(SockAddr, uOpenFlags, pError);
+        return open(SockAddr, uOpenFlags);
 	}
 	else
 	{
 		SocketAddr SockAddr(Host.c_str(), wPort);
-        return open(SockAddr, uOpenFlags, pError);
+        return open(SockAddr, uOpenFlags);
 	}
 }
 
 
 bool
-Socket::open(SocketAddr& rSockAddr, UINT uOpenFlags, CFileException* pError)
+Socket::open(SocketAddr& rSockAddr, UINT uOpenFlags)
 {
 #ifdef TARGET_WINDOWS
 	if (rSockAddr.m_pProtocol != 0 && _stricmp(rSockAddr.m_pProtocol, "udp") == 0)
@@ -691,7 +694,7 @@ Socket::open(SocketAddr& rSockAddr, UINT uOpenFlags, CFileException* pError)
 	}
 //    std::cout << "4 Socket::open errno=" << errno << std::endl;
 
-	if (! m_pState->open(this, rSockAddr, uOpenFlags, pError))
+	if (! m_pState->open(this, rSockAddr, uOpenFlags))
 	{
 //        std::cout << "5 Socket::open errno=" << errno << std::endl;
 		m_Status = SC_FAILED;

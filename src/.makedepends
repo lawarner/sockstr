@@ -1,0 +1,19 @@
+IPAddress.o: IPAddress.cpp ../config.h ../include/sockstr/sstypes.h \
+ ../include/sockstr/IPAddress.h ../include/sockstr/sstypes.h
+Socket.o: Socket.cpp ../config.h ../include/sockstr/sstypes.h \
+ ../include/sockstr/IPC.h ../include/sockstr/Socket.h \
+ ../include/sockstr/SocketAddr.h ../include/sockstr/IPAddress.h \
+ ../include/sockstr/sstypes.h ../include/sockstr/Stream.h \
+ ../include/sockstr/StreamBuf.h ../include/sockstr/SocketState.h
+SocketAddr.o: SocketAddr.cpp ../config.h ../include/sockstr/sstypes.h \
+ ../include/sockstr/SocketAddr.h ../include/sockstr/IPAddress.h \
+ ../include/sockstr/sstypes.h
+StreamBuf.o: StreamBuf.cpp ../config.h ../include/sockstr/sstypes.h \
+ ../include/sockstr/StreamBuf.h ../include/sockstr/Stream.h
+SocketState.o: SocketState.cpp ../config.h ../include/sockstr/sstypes.h \
+ ../include/sockstr/Socket.h ../include/sockstr/SocketAddr.h \
+ ../include/sockstr/IPAddress.h ../include/sockstr/sstypes.h \
+ ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h \
+ ../include/sockstr/SocketState.h
+Stream.o: Stream.cpp ../config.h ../include/sockstr/sstypes.h \
+ ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
