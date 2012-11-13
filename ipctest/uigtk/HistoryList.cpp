@@ -56,8 +56,11 @@ void HistoryList::add(ipctest::Command* cmd)
 
     Gtk::TreeModel::Row row;
 
+    std::string cmdstr(cmd->getLevel() * 2, ' ');
+    cmdstr += cmd->toString();
+
     row = *(historyList_->append());
-    row[histColumns_.colText_] = cmd->toString();
+    row[histColumns_.colText_] = cmdstr;
     row[histColumns_.colCommand_] = cmd;
 
     Gtk::TreeModel::iterator iter = historyList_->children().end();

@@ -121,7 +121,7 @@ private:
 class CommandIf : public Command
 {
 public:
-    CommandIf(Command* cmd, bool condition);
+    CommandIf(bool condition, Command* cmd = 0);
 	CommandIf(Params* params, Message* msg = 0);
     void addCondition(bool condition);
 
@@ -135,6 +135,20 @@ private:
     CommandList commands_;
 };
 
+class CommandElse : public Command
+{
+public:
+    CommandElse(Command* cmd = 0);
+	CommandElse(Params* params, Message* msg = 0);
+
+    virtual Command* createCommand(Params* params, Message* msg = 0);
+    virtual bool execute(RunContext& context);
+    virtual std::string toXml(int indent);
+
+private:
+    CommandList commands_;
+};
+
 /** This command loops through other commands.  In the simpliest
  *  form this command loops a fixed number of iterations of one command.
  *  The command can of course be a function containing other commands.
@@ -142,7 +156,7 @@ private:
 class CommandLoop : public Command
 {
 public:
-    CommandLoop(Command* cmd, int iters);
+    CommandLoop(int iters, Command* cmd = 0);
 	CommandLoop(Params* params, Message* msg = 0);
     void addCommand(Command* cmd);
 

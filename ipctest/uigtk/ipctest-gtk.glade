@@ -9,8 +9,8 @@
   </object>
   <object class="GtkWindow" id="IpcTestMainWindow">
     <property name="can_focus">False</property>
-    <property name="default_width">800</property>
-    <property name="default_height">580</property>
+    <property name="default_width">990</property>
+    <property name="default_height">710</property>
     <child>
       <object class="GtkBox" id="box1">
         <property name="visible">True</property>
@@ -105,16 +105,6 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkImageMenuItem" id="menurun">
-                        <property name="label">Run</property>
-                        <property name="use_action_appearance">False</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
-                      </object>
-                    </child>
-                    <child>
                       <object class="GtkImageMenuItem" id="menudemote">
                         <property name="label">Demote</property>
                         <property name="use_action_appearance">False</property>
@@ -167,6 +157,31 @@
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem9">
                         <property name="label">gtk-delete</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="menuitemrun">
+                <property name="use_action_appearance">False</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">_Run</property>
+                <property name="use_underline">True</property>
+                <child type="submenu">
+                  <object class="GtkMenu" id="menu2run">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkImageMenuItem" id="menurun">
+                        <property name="label">Run history</property>
                         <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
@@ -381,7 +396,7 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="orientation">vertical</property>
-            <property name="position">380</property>
+            <property name="position">220</property>
             <child>
               <object class="GtkPaned" id="paned2">
                 <property name="visible">True</property>
@@ -447,7 +462,6 @@
                 <property name="shadow_type">in</property>
                 <child>
                   <object class="GtkTreeView" id="history_view">
-                    <property name="height_request">88</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="tooltip_text" translatable="yes">List of command history.</property>

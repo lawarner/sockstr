@@ -215,11 +215,12 @@ std::string CommandFunction::toXml(int indent)
 
 
 // If
-CommandIf::CommandIf(Command* cmd, bool condition)
+CommandIf::CommandIf(bool condition, Command* cmd)
     : Command("If", "Condition", condition)
     , condition_(condition)
 {
-
+    if (cmd) 
+        commands_.push_back(cmd);
 }
 
 CommandIf::CommandIf(Params* params, Message* msg)
@@ -231,7 +232,7 @@ CommandIf::CommandIf(Params* params, Message* msg)
 
 void CommandIf::addCondition(bool condition)
 {
-
+    condition_ = condition;
 }
 
 Command* CommandIf::createCommand(Params* params, Message* msg)
@@ -247,43 +248,61 @@ bool CommandIf::execute(RunContext& context)
     params_->get("Condition", condition_);
     std::cout << "exec if: " << condition_ << std::endl;
 
+    bool okStatus = true;
+
     // Execute embedded commands
     if (condition_)
     {
         CommandIterator it = commands_.begin();
         for ( ; it != commands_.end(); ++it)
             if (!(*it)->execute(context))
-                return false;       // stop on first error
+            {
+                okStatus = false;
+                break;       // stop on first error
+            }
     }
-
-    bool okStatus = true;
 
     // Execute next commands in run context that are higher nesting level
     CommandList* cmdList = context.getCommands();
     if (cmdList)
     {
+        Command* cmd = 0;
         CommandIterator it;
         CommandIterator ij;
-        if (condition_)
+        it = context.getCommandIterator();	// cmdList->begin();
+        ij = it;
+        for (++it ; it != cmdList->end(); ++it)
         {
-            it = context.getCommandIterator();	// cmdList->begin();
-            ij = it;
-            for (++it ; it != cmdList->end(); ++it)
-            {
-                Command* cmd = *it;
-                if (cmd->getLevel() <= level_)
-                    break;
+            cmd = *it;
+            if (cmd->getLevel() <= level_)
+                break;
 
+            if (condition_)
+            {
 //                std::cout << "-if command (exec) " << cmd->getName() << std::endl;
                 if (okStatus && !cmd->execute(context))
                     okStatus = false;
+            }
 
+            ij = it;
+        }
+
+        // check for Else and skip past commands
+        if (condition_ && cmd && cmd->getName() == "Else")
+        {
+            ij = it;
+            for (++it ; it != cmdList->end(); ++it)
+            {
+                cmd = *it;
+                if (cmd->getLevel() <= level_)
+                    break;
                 ij = it;
             }
-            context.setCommandIterator(ij);
         }
-        //TODO implement Else
+
+        context.setCommandIterator(ij);
     }
+
 
     return okStatus;
 }
@@ -297,26 +316,99 @@ std::string CommandIf::toString()
 
 std::string CommandIf::toXml(int indent)
 {
-    std::string str(indent, ' ');
     std::string strcond;
     params_->get("Condition", strcond);
     if (strcond.empty())
         strcond = "false";
-
-    str += "<" + commandName_ + " condition=\"" + strcond + "\">\n";
+    strcond = " condition=\"" + strcond + "\"";
+    std::string str = getXmlPart(indent, strcond, true);
     str += getXmlPart(indent, false);
     return str;
 }
 
 
+// Else
+CommandElse::CommandElse(Command* cmd)
+    : Command("Else", (void *) 0, 0)
+{
+    if (cmd) 
+        commands_.push_back(cmd);
+}
+
+CommandElse::CommandElse(Params* params, Message* msg)
+    : Command("Else", params, msg)
+{
+
+}
+
+Command* CommandElse::createCommand(Params* params, Message* msg)
+{
+    return new CommandElse(params, msg);
+}
+
+bool CommandElse::execute(RunContext& context)
+{
+    bool condition = true;
+    std::cout << "exec else: " << std::endl;
+
+    bool okStatus = true;
+
+    // Execute embedded commands
+    if (condition)
+    {
+        CommandIterator it = commands_.begin();
+        for ( ; it != commands_.end(); ++it)
+            if (!(*it)->execute(context))
+            {
+                okStatus = false;
+                break;       // stop on first error
+            }
+    }
+
+    // Execute next commands in run context that are higher nesting level
+    CommandList* cmdList = context.getCommands();
+    if (cmdList)
+    {
+        CommandIterator it;
+        CommandIterator ij;
+        it = context.getCommandIterator();
+        ij = it;
+        for (++it ; it != cmdList->end(); ++it)
+        {
+            Command* cmd = *it;
+            if (cmd->getLevel() <= level_)
+                break;
+
+            if (condition)
+            {
+//                std::cout << "-else command (exec) " << cmd->getName() << std::endl;
+                if (okStatus && !cmd->execute(context))
+                    okStatus = false;
+            }
+
+            ij = it;
+        }
+        context.setCommandIterator(ij);
+    }
+
+    return okStatus;
+}
+
+
+std::string CommandElse::toXml(int indent)
+{
+    std::string str;
+    str = getXmlPart(indent, true) + getXmlPart(indent, false);
+    return str;
+}
+
+
 // Loop
-CommandLoop::CommandLoop(Command* cmd, int iters)
+CommandLoop::CommandLoop(int iters, Command* cmd)
     : Command("Loop", "Iterations", iters)
     , curr_(0)
 {
-    currLevel_++;
     addCommand(cmd);
-    currLevel_--;
 }
 
 CommandLoop::CommandLoop(Params* params, Message* msg)
@@ -328,8 +420,10 @@ CommandLoop::CommandLoop(Params* params, Message* msg)
 
 void CommandLoop::addCommand(Command* cmd)
 {
+    currLevel_++;
     if (cmd)
         commands_.push_back(cmd);
+    currLevel_--;
 }
 
 //   virtual
@@ -346,16 +440,19 @@ bool CommandLoop::execute(RunContext& context)
     params_->get("Iterations", iters);
     std::cout << "exec loop: " << iters << std::endl;
 
+    bool okStatus = true;
+
     // Execute embedded commands
-    for (curr_ = 0; curr_ < iters; curr_++)
+    for (curr_ = 0; okStatus && curr_ < iters; curr_++)
     {
         CommandIterator it = commands_.begin();
         for ( ; it != commands_.end(); ++it)
             if (!(*it)->execute(context))
-                return false;       // stop on first error
+            {
+                okStatus = false;
+                break;       // stop on first error
+            }
     }
-
-    bool okStatus = true;
 
     // Execute next commands in run context that are higher nesting level
     CommandList* cmdList = context.getCommands();
@@ -370,10 +467,10 @@ bool CommandLoop::execute(RunContext& context)
             for (++it ; it != cmdList->end(); ++it)
             {
                 Command* cmd = *it;
+//                std::cout << "-loop command (exec) " << cmd->getName() << std::endl;
                 if (cmd->getLevel() <= level_)
                     break;
 
-//                std::cout << "-loop command (exec) " << cmd->getName() << std::endl;
                 if (okStatus && !cmd->execute(context))
                     okStatus = false;
 

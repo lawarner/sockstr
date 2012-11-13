@@ -165,8 +165,10 @@ void Serializer::deserialEndTag(const char* el)
     if (deserialData_.tellp() > 0)
     {
         std::vector<std::string> vstr = Parser::splitString(deserialData_.str());
-        //TODO: check if vstr.length() == 1
-        cdata = Parser::trimSpace(vstr[1]);
+        if (vstr.size() > 1)
+            cdata = Parser::trimSpace(vstr[1]);
+        else if (vstr.size() == 1)
+            cdata = Parser::trimSpace(vstr[0]);
     }
 
     if (parseLevel_ == 2 && section_ == CommandSection)

@@ -82,10 +82,10 @@ std::string Command::getXmlPart(int indent, std::string& strAttr, bool header)
     std::string str(indent, ' ');
     if (header)
     {
-        if (currLevel_ != 0)
+        if (level_ != 0)
         {
             std::stringstream ss;
-            ss << " level=\"" << currLevel_ << "\"";
+            ss << " level=\"" << level_ << "\"";
             strAttr += ss.str();
         }
         str += "<" + commandName_ + strAttr + ">\n";

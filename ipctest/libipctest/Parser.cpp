@@ -210,6 +210,16 @@ std::vector<string> Parser::splitString(const std::string& str)
     std::vector<string> v;
     if (str.empty()) return v;
 
+#if 1
+    size_t last = 0;
+    size_t eol = 0;
+    while (eol != string::npos)
+    {
+        eol = str.find('\n', last);
+        v.push_back(str.substr(last, eol));
+        last = eol + 1;
+    }
+#else
     size_t last = 0;
     size_t eol = str.find('\n');
     do
@@ -218,6 +228,6 @@ std::vector<string> Parser::splitString(const std::string& str)
         last = eol + 1;
         eol = str.find('\n', last);
     } while (eol != string::npos);
-
+#endif
     return v;
 }
