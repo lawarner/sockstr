@@ -150,6 +150,37 @@ int Message::unpackFields(const char* buf, std::vector<std::string>& vals) const
     return idx;
 }
 
+int Message::unpackParams(char* buf, Params& params) const
+{
+    std::vector<std::string> vals;
+
+    if (unpackFields(buf, vals) > 0)
+        return unpackParams(vals, params);
+
+    return 0;
+}
+
+int Message::unpackParams(const std::vector<std::string>& vals, Params& params) const
+{
+    int idx = 0;
+
+    if (vals.size() != fields_.size())
+        std::cout << "Error, unpackParams got mismatch in fields and values" << std::endl;
+
+    std::vector<std::string>::const_iterator vi(vals.begin());
+    FieldsConstIterator fi = fields_.begin();
+    for ( ; fi != fields_.end() && vi != vals.end(); ++fi, ++vi)
+    {
+        Field* fld = *fi;
+        params.set(fld->name(), *vi);
+
+        idx++;
+    }
+
+    return idx;
+}
+
+
 std::string Message::toXml(int indent, const char* buf) const
 {
     std::string idstr(indent, ' ');

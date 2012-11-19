@@ -173,7 +173,8 @@ void Serializer::deserialEndTag(const char* el)
 
     if (parseLevel_ == 2 && section_ == CommandSection)
     {
-        commandParams_.set("_cdata", cdata);
+        commandParams_.set("_cdata", deserialData_.str());
+        commandParams_.set("_cdata_line", cdata);
         std::string cmdName = el;
         int level = 0;
         commandParams_.get("_level", level);

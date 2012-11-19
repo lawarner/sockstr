@@ -24,6 +24,7 @@
 #include <fstream>
 #include <iostream>
 #include "BuiltinCommands.h"
+#include "Condition.h"
 #include "Parser.h"
 #include "Serializer.h"
 #include "TestBase.h"
@@ -85,7 +86,7 @@ Command* TestBase::createCommand(const std::string& cmdName,
     else if (cmdName == "Function")
         cmd = new CommandFunction("", msgData);
     else if (cmdName == "If")
-        cmd = new CommandIf(false);
+        cmd = new CommandIf(Condition::createCondition("false"));
     else if (cmdName == "Else")
         cmd = new CommandElse;
     else if (cmdName == "Loop")

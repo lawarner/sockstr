@@ -35,8 +35,8 @@ LDFLAGS = -pthread $(LIBSOCKLIB)
 
 #COMPILE = $(CC) $(CFLAGS) -c
 
-OBJS := BuiltinCommands.o Command.o Field.o FieldType.o Message.o \
-	Params.o Parser.o RunContext.o Serializer.o TestBase.o
+OBJS := BuiltinCommands.o Command.o Condition.o Field.o FieldType.o \
+	Message.o Params.o Parser.o RunContext.o Serializer.o TestBase.o
 
 SRCS := $(OBJS:.o=.cpp)
 

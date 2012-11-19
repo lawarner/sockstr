@@ -26,6 +26,7 @@
 //
 // INCLUDE FILES
 //
+#include <map>
 #include <string>
 #include <vector>
 

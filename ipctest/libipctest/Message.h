@@ -76,7 +76,7 @@ public:
      */
     int packFields(const std::vector<std::string>& vals, char* buf) const;
 
-    /*! Take a set of Params contain field name/value pairs in string format and pack 
+    /*! Take a set of Params containing field name/value pairs in string format and pack 
      *  them into a buffer of internal representation, ready to be sent over the wire.
      *  @param params dictionary of field name/values
      *  @param buf buffer in internal format (must be at least size of message).
@@ -91,6 +91,9 @@ public:
      *  @return the total size unpacked.
      */
     int unpackFields(const char* buf, std::vector<std::string>& vals) const;
+
+    int unpackParams(char* buf, Params& params) const;
+    int unpackParams(const std::vector<std::string>& vals, Params& params) const;
 
     std::string toXml(int indent, const char* buf = 0) const;
 

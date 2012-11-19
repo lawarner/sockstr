@@ -24,6 +24,7 @@
 #include <sockstr/Socket.h>
 
 #include "BuiltinCommands.h"
+#include "Condition.h"
 #include "Message.h"
 #include "RunContext.h"
 #include "Serializer.h"
@@ -49,7 +50,7 @@ CommandComment::CommandComment(Params* params, Message* msg)
 
 Command* CommandComment::createCommand(Params* params, Message* msg)
 {
-    params->set("Comment", params->get("_cdata"));
+    params->set("Comment", params->get("_cdata_line"));
 
     return new CommandComment(params, msg);
 }
@@ -91,7 +92,7 @@ CommandConnect::CommandConnect(Params* params, Message* msg)
 
 Command* CommandConnect::createCommand(Params* params, Message* msg)
 {
-    params->set("Url", params->get("_cdata"));
+    params->set("Url", params->get("_cdata_line"));
 
     return new CommandConnect(params, msg);
 }
@@ -215,8 +216,8 @@ std::string CommandFunction::toXml(int indent)
 
 
 // If
-CommandIf::CommandIf(bool condition, Command* cmd)
-    : Command("If", "Condition", condition)
+CommandIf::CommandIf(Condition* condition, Command* cmd)
+    : Command("If", "Condition", condition->toString())
     , condition_(condition)
 {
     if (cmd) 
@@ -225,33 +226,33 @@ CommandIf::CommandIf(bool condition, Command* cmd)
 
 CommandIf::CommandIf(Params* params, Message* msg)
     : Command("If", params, msg)
-    , condition_(false)
+    , condition_(Condition::createCondition(params->get("Condition")))
 {
 
 }
 
-void CommandIf::addCondition(bool condition)
+void CommandIf::addCondition(Condition* condition)
 {
     condition_ = condition;
 }
 
 Command* CommandIf::createCommand(Params* params, Message* msg)
 {
-    params->set("Condition", params->get("_condition"));
+    params->set("Condition", params->get("_cdata"));
 
     return new CommandIf(params, msg);
 }
 
 bool CommandIf::execute(RunContext& context)
 {
-    condition_ = false;
-    params_->get("Condition", condition_);
-    std::cout << "exec if: " << condition_ << std::endl;
+//    condition_ = false;
+//    params_->get("Condition", condition_);
+    std::cout << "exec if: " << condition_->toString() << std::endl;
 
     bool okStatus = true;
 
     // Execute embedded commands
-    if (condition_)
+    if ((*condition_)())
     {
         CommandIterator it = commands_.begin();
         for ( ; it != commands_.end(); ++it)
@@ -277,7 +278,7 @@ bool CommandIf::execute(RunContext& context)
             if (cmd->getLevel() <= level_)
                 break;
 
-            if (condition_)
+            if ((*condition_)())
             {
 //                std::cout << "-if command (exec) " << cmd->getName() << std::endl;
                 if (okStatus && !cmd->execute(context))
@@ -288,7 +289,7 @@ bool CommandIf::execute(RunContext& context)
         }
 
         // check for Else and skip past commands
-        if (condition_ && cmd && cmd->getName() == "Else")
+        if (cmd && cmd->getName() == "Else" && (*condition_)())
         {
             ij = it;
             for (++it ; it != cmdList->end(); ++it)

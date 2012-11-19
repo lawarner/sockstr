@@ -40,6 +40,7 @@ namespace sockstr
 
 namespace ipctest
 {
+class Condition;
 
 //
 // MACRO DEFINITIONS
@@ -121,9 +122,9 @@ private:
 class CommandIf : public Command
 {
 public:
-    CommandIf(bool condition, Command* cmd = 0);
+    CommandIf(Condition* condition, Command* cmd = 0);
 	CommandIf(Params* params, Message* msg = 0);
-    void addCondition(bool condition);
+    void addCondition(Condition* condition);
 
     virtual Command* createCommand(Params* params, Message* msg = 0);
     virtual bool execute(RunContext& context);
@@ -131,7 +132,7 @@ public:
     virtual std::string toXml(int indent);
 
 private:
-    bool condition_;
+    Condition* condition_;
     CommandList commands_;
 };
 
