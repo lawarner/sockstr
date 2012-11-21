@@ -120,7 +120,7 @@ Message* Parser::createMessage(const std::string& msgName, PairIter& inStr)
 }
 
 
-bool Parser::getLine(PairIter& inStr, PairIter& outLine, bool trim) const
+bool Parser::getLine(PairIter& inStr, PairIter& outLine, bool trim)
 {
     string::const_iterator it = inStr.begin();
     for ( ; it != inStr.end(); ++it)
@@ -140,7 +140,7 @@ bool Parser::getLine(PairIter& inStr, PairIter& outLine, bool trim) const
 }
 
 void Parser::splitTokens(const std::string& str, vector<std::string>& strVec,
-                         const char* seps) const
+                         const char* seps)
 {
     size_t curr = str.find_first_not_of(seps, 0);
     size_t next = 0;
@@ -164,6 +164,34 @@ void Parser::splitTokens(const std::string& str, vector<std::string>& strVec,
         strVec.push_back(strTok);
     }
 //    cout << "]" << endl;
+}
+
+
+void Parser::splitDelimitedTokens(const std::string& str, vector<std::string>& strVec,
+                                  const char* seps)
+{
+    size_t curr = str.find_first_not_of(seps, 0);
+    size_t next = 0;
+
+    if (curr > 0)
+        strVec.push_back(string(str, 0, curr));
+
+    while (curr != str.npos)
+    {
+        next = str.find_first_of(seps, curr);
+        if (next == str.npos)
+            break;
+        string strTok(str, curr, next - curr);
+//        cout << strTok << ", ";
+        strVec.push_back(strTok);
+        curr = str.find_first_not_of(seps, next);
+        if (curr != str.npos)
+        {
+            string strDelim(str, next, curr - next);
+            strVec.push_back(strDelim);
+        }
+    }
+
 }
 
 void Parser::trimSpace(PairIter& pi, bool stripComments)
@@ -210,7 +238,6 @@ std::vector<string> Parser::splitString(const std::string& str)
     std::vector<string> v;
     if (str.empty()) return v;
 
-#if 1
     size_t last = 0;
     size_t eol = 0;
     while (eol != string::npos)
@@ -219,15 +246,6 @@ std::vector<string> Parser::splitString(const std::string& str)
         v.push_back(str.substr(last, eol));
         last = eol + 1;
     }
-#else
-    size_t last = 0;
-    size_t eol = str.find('\n');
-    do
-    {
-        v.push_back(str.substr(last, eol));
-        last = eol + 1;
-        eol = str.find('\n', last);
-    } while (eol != string::npos);
-#endif
+
     return v;
 }

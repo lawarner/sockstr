@@ -99,9 +99,11 @@ public:
 
     Message* createMessage(const std::string& msgName, PairIter& inStr);
 
-    bool getLine(PairIter& inStr, PairIter& outLine, bool trim = true) const;
-    void splitTokens(const std::string& str, std::vector<std::string>& strVec,
-        const char* seps = TOKEN_SEPERATORS) const;
+    static bool getLine(PairIter& inStr, PairIter& outLine, bool trim = true);
+    static void splitTokens(const std::string& str, std::vector<std::string>& strVec,
+        const char* seps = TOKEN_SEPERATORS);
+    static void splitDelimitedTokens(const std::string& str, std::vector<std::string>& strVec,
+        const char* seps = TOKEN_SEPERATORS);
     static void trimSpace(PairIter& pi, bool stripComments = true);
     static std::string trimSpace(const std::string& instr);
     static std::vector<std::string> splitString(const std::string& str);

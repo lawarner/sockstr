@@ -57,6 +57,8 @@ all: $(LIBIPCTEST)
 $(LIBIPCTEST): $(OBJS) $(LIBSOCKLIB)
 	$(AR) rsv $@ $(OBJS)
 
+test: $(LIBIPCTEST)
+	$(CC) -o tester main.cpp $(LIBIPCTEST)
 
 .PHONY: subdirs
 subdirs:

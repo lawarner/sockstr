@@ -22,16 +22,35 @@
 //
 
 #include <iostream>
+#include <vector>
 #include "Condition.h"
 #include "Params.h"
+#include "Parser.h"
 using namespace ipctest;
+using namespace std;
 
 const char* opName[] = { "==", "!=", "<", "<=", ">", ">=", "~==", "!~==" };
 
 
-Condition* Condition::createCondition(const std::string& strcond)
+Condition* Condition::createCondition(const std::string& strCond)
 {
-    return new ConditionFixed(false);
+    if (strCond.empty())
+        return new ConditionFixed(false);
+
+    vector<string> vCond;
+    Parser::splitDelimitedTokens(strCond, vCond, "()\",");
+
+    cout << "Condition:" << endl;
+    vector<string>::iterator it(vCond.begin());
+    for ( ; it != vCond.end(); ++it)
+    {
+        string scond = *it;
+//        if (scond == "param")
+        cout << scond << " ";
+    }
+    cout << "." << endl;
+    
+    return 0;
 }
 
 
