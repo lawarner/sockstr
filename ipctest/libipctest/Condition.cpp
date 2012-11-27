@@ -22,6 +22,7 @@
 //
 
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include "Condition.h"
 #include "Params.h"
@@ -30,6 +31,17 @@ using namespace ipctest;
 using namespace std;
 
 const char* opName[] = { "==", "!=", "<", "<=", ">", ">=", "~==", "!~==" };
+
+static void outputVector(const vector<string>& vCond)
+{
+    vector<string>::const_iterator it(vCond.begin());
+    for ( ; it != vCond.end(); ++it)
+    {
+        string scond = *it;
+        cout << scond << " ";
+    }
+    cout << "." << endl;
+}
 
 
 Condition* Condition::createCondition(const std::string& strCond)
@@ -40,17 +52,86 @@ Condition* Condition::createCondition(const std::string& strCond)
     vector<string> vCond;
     Parser::splitDelimitedTokens(strCond, vCond, "()\",");
 
-    cout << "Condition:" << endl;
+    return createCondition(vCond);
+}
+
+Condition* Condition::createCondition(vector<string>& vCond)
+{
+    cout << "Condition tokens:" << endl;
+    outputVector(vCond);
+    
+    if (vCond.empty())
+        return 0;
+
+    if (vCond[0] == "(")
+    {
+        vector<string> vNested(extractNested(vCond));
+        cout << "nest start." << endl;
+        Condition* condNested = createCondition(vNested);
+        cout << "nest end." << endl;
+        if (vCond.empty())
+            return condNested;
+    }
+
+    if (vCond[0] == "false")
+        return new ConditionFixed(false);
+    else if (vCond[0] == "true")
+        return new ConditionFixed(true);
+
+    if (vCond[0] == "and")
+    {
+        vector<string> vNested(extractNested(vCond));
+        cout << "-and nested: ";
+        outputVector(vNested);
+        if (vNested.size() == 3)	// simple case
+        {
+            Condition* left = new ConditionFixed(vNested[0]);
+            Condition* right = new ConditionFixed(vNested[2]);
+            Condition* condAnd = new ConditionAnd(*left, *right);
+
+            cout << "Created and condition: " << condAnd->toString() << endl;
+            return condAnd;
+        }
+    }
+
+    return 0;
+}
+
+
+vector<string> Condition::extractNested(vector<string> vCond)
+{
+    vector<string> vNested;
+
+    int level = 0;
     vector<string>::iterator it(vCond.begin());
-    for ( ; it != vCond.end(); ++it)
+    if (*it != "(") ++it;
+    for (++it ; it != vCond.end(); ++it)
     {
         string scond = *it;
-//        if (scond == "param")
-        cout << scond << " ";
+        if (scond == "(")
+            level++;
+        else if (scond == ")")
+        {
+            if (level == 0)
+                break;
+            else
+                level--;
+        }
+        vNested.push_back(scond);
     }
-    cout << "." << endl;
-    
-    return 0;
+
+    vCond.erase(vCond.begin(), it);
+    return vNested;
+}
+
+bool Condition::stringToBool(const string& str)
+{
+    bool val = false;
+
+    istringstream is(str);
+    is >> boolalpha >> val;
+
+    return val;
 }
 
 

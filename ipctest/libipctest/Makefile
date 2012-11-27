@@ -57,6 +57,7 @@ all: $(LIBIPCTEST)
 $(LIBIPCTEST): $(OBJS) $(LIBSOCKLIB)
 	$(AR) rsv $@ $(OBJS)
 
+.PHONY: test
 test: $(LIBIPCTEST)
 	$(CC) -o tester main.cpp $(LIBIPCTEST)
 

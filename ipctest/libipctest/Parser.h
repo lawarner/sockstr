@@ -87,6 +87,37 @@ private:
     std::string::const_iterator end_;
 };
 
+/*
+  (a)    t1
+       / |  \
+    d1(  a   )
+
+    t2  and(a,"b")
+    |  \
+   a,"b" )
+
+*/
+class PTNode
+{
+public:
+    void addChild(PTNode* child) { children_.push_back(child); }
+protected:
+    std::vector<PTNode*> children_;
+};
+class PTDelimiter : public PTNode
+{
+    std::string open_;
+    std::string close_;
+};
+class PTContent : public PTNode
+{
+    std::string content_;
+};
+class ParseTree : public PTNode
+{
+    
+};
+
 
 class Parser
 {
@@ -100,6 +131,7 @@ public:
     Message* createMessage(const std::string& msgName, PairIter& inStr);
 
     static bool getLine(PairIter& inStr, PairIter& outLine, bool trim = true);
+    static bool makeParseTree(const std::string& str, ParseTree& tree);
     static void splitTokens(const std::string& str, std::vector<std::string>& strVec,
         const char* seps = TOKEN_SEPERATORS);
     static void splitDelimitedTokens(const std::string& str, std::vector<std::string>& strVec,

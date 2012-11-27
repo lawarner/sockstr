@@ -26,6 +26,7 @@
 // INCLUDE FILES
 //
 #include <string>
+#include <vector>
 
 
 namespace ipctest
@@ -65,6 +66,9 @@ class Condition
 public:
     Condition() { }
     static Condition* createCondition(const std::string& strcond);
+    static Condition* createCondition(std::vector<std::string>& vCond);
+    static std::vector<std::string> extractNested(std::vector<std::string> vCond);
+    static bool stringToBool(const std::string& str);
 
     virtual ~Condition() { }
 
@@ -100,6 +104,8 @@ class ConditionFixed : public ConditionSingle
 public:
     ConditionFixed(bool cond)
         : condition_(cond) {  }
+    ConditionFixed(const std::string& cond)
+        : condition_(stringToBool(cond)) {  }
 
     virtual bool operator() () { return condition_; }
 

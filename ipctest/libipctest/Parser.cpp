@@ -139,6 +139,12 @@ bool Parser::getLine(PairIter& inStr, PairIter& outLine, bool trim)
     return false;
 }
 
+
+bool makeParseTree(const std::string& str, ParseTree& tree)
+{
+    return false;
+}
+
 void Parser::splitTokens(const std::string& str, vector<std::string>& strVec,
                          const char* seps)
 {
@@ -173,25 +179,31 @@ void Parser::splitDelimitedTokens(const std::string& str, vector<std::string>& s
     size_t curr = str.find_first_not_of(seps, 0);
     size_t next = 0;
 
-    if (curr > 0)
-        strVec.push_back(string(str, 0, curr));
+    for (size_t i = 0; i < curr; i++)	// string started with a delimiter
+        strVec.push_back(string(1, str[i]));
 
     while (curr != str.npos)
     {
         next = str.find_first_of(seps, curr);
-        if (next == str.npos)
-            break;
-        string strTok(str, curr, next - curr);
-//        cout << strTok << ", ";
-        strVec.push_back(strTok);
-        curr = str.find_first_not_of(seps, next);
-        if (curr != str.npos)
+        if (next != str.npos || curr != str.npos)
         {
-            string strDelim(str, next, curr - next);
-            strVec.push_back(strDelim);
+            size_t last = (next==str.npos) ? str.npos : (next - curr);
+            string strTok(str, curr, last);
+            strVec.push_back(strTok);
+        }
+        curr = str.find_first_not_of(seps, next);
+        if (next != str.npos || curr != str.npos)
+        {
+            size_t last = (curr==str.npos) ? str.npos : (curr - next);
+            string strDelim(str, next, last);
+//            strVec.push_back(strDelim);
+            string::iterator it(strDelim.begin());
+            for ( ; it != strDelim.end(); ++it)
+                strVec.push_back(string(1, *it));
         }
     }
 
+    cout << "(curr,next)=" << curr << "," << next << endl;
 }
 
 void Parser::trimSpace(PairIter& pi, bool stripComments)
