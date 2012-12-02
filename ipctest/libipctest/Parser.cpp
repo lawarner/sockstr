@@ -203,7 +203,8 @@ void Parser::splitDelimitedTokens(const std::string& str, vector<std::string>& s
         }
     }
 
-    cout << "(curr,next)=" << curr << "," << next << endl;
+    cout << "(curr,next)=" << (curr==str.npos?0:curr)
+         << "," << (next==str.npos?0:next) << endl;
 }
 
 void Parser::trimSpace(PairIter& pi, bool stripComments)

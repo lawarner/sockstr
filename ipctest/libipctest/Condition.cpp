@@ -30,7 +30,7 @@
 using namespace ipctest;
 using namespace std;
 
-const char* opName[] = { "==", "!=", "<", "<=", ">", ">=", "~==", "!~==" };
+static const char* opName[] = { "operr", "==", "!=", "<", "<=", ">", ">=", "~==", "!~==" };
 
 static void outputVector(const vector<string>& vCond)
 {
@@ -69,8 +69,12 @@ Condition* Condition::createCondition(vector<string>& vCond)
         cout << "nest start." << endl;
         Condition* condNested = createCondition(vNested);
         cout << "nest end." << endl;
-        if (vCond.empty())
-            return condNested;
+        if (!vCond.empty())
+        {
+            cout << "Ignore tokens after nest: ";
+            outputVector(vCond);
+        }
+        return condNested;
     }
 
     if (vCond[0] == "false")
@@ -78,33 +82,70 @@ Condition* Condition::createCondition(vector<string>& vCond)
     else if (vCond[0] == "true")
         return new ConditionFixed(true);
 
-    if (vCond[0] == "and")
+    Condition* retcond = 0;
+    if (vCond[0] == "and" || vCond[0] == "or")
+    {
+        bool isAnd = (vCond[0] == "and") ? true : false;
+
+        cout << " -" << vCond[0] << " nested: ";
+        vector<string> vNested(extractNested(vCond));
+        outputVector(vNested);
+        if (vNested.size() < 3)
+        {
+            cout << "Error, not enough parameters" << endl;
+        }
+        else
+        {
+            vector<string> vParam(extractParam(vNested));
+            Condition* left  = createCondition(vParam);
+            vParam = extractParam(vNested);
+            Condition* right = createCondition(vParam);
+            if (left && right)
+            {
+                if (isAnd)
+                    retcond = new ConditionAnd(*left, *right);
+                else
+                    retcond = new ConditionOr(*left, *right);
+            }
+        }
+    }
+    else if (vCond[0] == "paramvalue")
     {
         vector<string> vNested(extractNested(vCond));
-        cout << "-and nested: ";
-        outputVector(vNested);
-        if (vNested.size() == 3)	// simple case
+        if (vNested.size() != 5)	// includes 2 commas
         {
-            Condition* left = new ConditionFixed(vNested[0]);
-            Condition* right = new ConditionFixed(vNested[2]);
-            Condition* condAnd = new ConditionAnd(*left, *right);
-
-            cout << "Created and condition: " << condAnd->toString() << endl;
-            return condAnd;
+            cout << "Error: paramvalue needs exactly 3 parameters" << endl;
+        }
+        else if (vNested[1] != "," || vNested[3] != ",")
+        {
+            cout << "Error: malformed statement, missing commas." << endl;
+        }
+        else
+        {
+            ComparisionOp cop = getOp(vNested[2]);
+            if (cop == OpInvalid)
+                cout << "Error: invalid condition - " << vNested[2] << endl;
+            else
+                retcond = new ConditionParamValue(vNested[0], cop, vNested[4]);
         }
     }
 
-    return 0;
+    if (retcond)
+        cout << "Created condition: " << retcond->toString() << endl;
+
+    return retcond;
 }
 
 
-vector<string> Condition::extractNested(vector<string> vCond)
+vector<string> Condition::extractNested(vector<string>& vCond)
 {
     vector<string> vNested;
+    if (vCond.size() < 2)
+        return vNested;
 
     int level = 0;
     vector<string>::iterator it(vCond.begin());
-    if (*it != "(") ++it;
+    if (*it != "(") ++it;	// skip the word in front of nested expression
     for (++it ; it != vCond.end(); ++it)
     {
         string scond = *it;
@@ -124,6 +165,47 @@ vector<string> Condition::extractNested(vector<string> vCond)
     return vNested;
 }
 
+vector<string> Condition::extractParam(vector<string>& vCond)
+{
+    vector<string> vNested;
+
+    int level = 0;
+    vector<string>::iterator it(vCond.begin());
+    for ( ; it != vCond.end(); ++it)
+    {
+        string scond = *it;
+        if (scond == "," && level == 0)
+        {
+            ++it;
+            break;
+        }
+        else if (scond == "(")
+            level++;
+        else if (scond == ")")
+        {
+            if (level > 0)
+                level--;
+        }
+        vNested.push_back(scond);
+    }
+
+    vCond.erase(vCond.begin(), it);
+    return vNested;
+}
+
+
+ComparisionOp Condition::getOp(const string& str)
+{
+    for (unsigned int ix = 1; ix < (sizeof(opName) / sizeof(opName[0])); ix++)
+    {
+        if (str == opName[ix])
+            return ComparisionOp(ix);
+    }
+
+    return OpInvalid;
+}
+
+
 bool Condition::stringToBool(const string& str)
 {
     bool val = false;
@@ -136,20 +218,14 @@ bool Condition::stringToBool(const string& str)
 
 
 ConditionParamValue::ConditionParamValue(const std::string& name,
-                                          Operator op, const std::string& val)
+                                         ComparisionOp op, const std::string& val)
     : name_(name)
     , value_(val)
     , oper_(op)
-    , params_(0)
 {
 
 }
 
-
-void ConditionParamValue::setParams(Params* params)
-{
-    params_ = params;
-}
 
 bool ConditionParamValue::operator() ()
 {
@@ -160,6 +236,7 @@ bool ConditionParamValue::operator() ()
 
     std::string pvalue = params_->get(name_);
 
+    cout << " comparing " << pvalue << " to " << value_ << endl;
     switch (oper_)
     {
     case OpEqual:

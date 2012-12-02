@@ -238,21 +238,23 @@ void CommandIf::addCondition(Condition* condition)
 
 Command* CommandIf::createCommand(Params* params, Message* msg)
 {
-    params->set("Condition", params->get("_cdata"));
+    params->set("Condition", params->get("_condition"));
 
     return new CommandIf(params, msg);
 }
 
 bool CommandIf::execute(RunContext& context)
 {
-//    condition_ = false;
-//    params_->get("Condition", condition_);
+    condition_->setParams(params_);
+//    std::cout << "param is " << params_ << std::endl;
+
     std::cout << "exec if: " << condition_->toString() << std::endl;
 
     bool okStatus = true;
+    bool condResult = (*condition_)();
 
     // Execute embedded commands
-    if ((*condition_)())
+    if (condResult)
     {
         CommandIterator it = commands_.begin();
         for ( ; it != commands_.end(); ++it)
@@ -278,7 +280,7 @@ bool CommandIf::execute(RunContext& context)
             if (cmd->getLevel() <= level_)
                 break;
 
-            if ((*condition_)())
+            if (condResult)
             {
 //                std::cout << "-if command (exec) " << cmd->getName() << std::endl;
                 if (okStatus && !cmd->execute(context))
@@ -289,7 +291,7 @@ bool CommandIf::execute(RunContext& context)
         }
 
         // check for Else and skip past commands
-        if (cmd && cmd->getName() == "Else" && (*condition_)())
+        if (cmd && cmd->getName() == "Else" && condResult)
         {
             ij = it;
             for (++it ; it != cmdList->end(); ++it)

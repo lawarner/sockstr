@@ -147,6 +147,9 @@ void Serializer::startCommand(const char** attr)
         else
             commandMessage_ = 0;
     }
+    string strcond;
+    if (commandParams_.get("_condition", strcond))
+        cout << "  ==> Condition: " << strcond << endl;
 }
 
 

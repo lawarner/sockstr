@@ -46,8 +46,9 @@ class Params;
 //
 // TYPE DEFINITIONS
 //
-enum Operator
+enum ComparisionOp
 {
+    OpInvalid,
     OpEqual,
     OpNotEqual,
     OpLessThan,
@@ -64,11 +65,23 @@ enum Operator
 class Condition
 {
 public:
-    Condition() { }
+    Condition()
+        : params_(0) { }
+    /*! Factory method */
     static Condition* createCondition(const std::string& strcond);
     static Condition* createCondition(std::vector<std::string>& vCond);
-    static std::vector<std::string> extractNested(std::vector<std::string> vCond);
+    /*!
+     *  Extract a nested expression within parentheses and return as its own 
+     *  expression.  The nested portion is deleted from the original
+     *  expression (string vector).
+     */
+    static std::vector<std::string> extractNested(std::vector<std::string>& vCond);
+    /*! Extract an expression delimited by commas, considering nesting. */
+    static std::vector<std::string> extractParam(std::vector<std::string>& vCond);
+    static ComparisionOp getOp(const std::string& str);
     static bool stringToBool(const std::string& str);
+
+    void setParams(Params* params) { params_ = params; }
 
     virtual ~Condition() { }
 
@@ -76,6 +89,9 @@ public:
 
     virtual std::string toString() = 0;
     virtual std::string toXml(int indent) = 0;
+
+protected:
+    Params* params_;
 
 private:
     Condition& operator=(const Condition& rSource);	// disable assignment operator
@@ -125,9 +141,7 @@ private:
 class ConditionParamValue : public ConditionSingle
 {
 public:
-    ConditionParamValue(const std::string& name, Operator op, const std::string& val);
-
-    void setParams(Params* params);
+    ConditionParamValue(const std::string& name, ComparisionOp op, const std::string& val);
 
     virtual bool operator() ();
 
@@ -137,8 +151,7 @@ public:
 private:
     std::string name_;
     std::string value_;
-    Operator oper_;
-    Params* params_;
+    ComparisionOp oper_;
 };
 
 
