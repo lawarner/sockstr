@@ -21,12 +21,16 @@
 // Condition.cpp
 //
 
+#include <sys/types.h>
+#include <regex.h>
 #include <iostream>
 #include <sstream>
 #include <vector>
+
 #include "Condition.h"
 #include "Params.h"
 #include "Parser.h"
+#include "RunContext.h"
 using namespace ipctest;
 using namespace std;
 
@@ -217,6 +221,7 @@ bool Condition::stringToBool(const string& str)
 }
 
 
+// ParamValue
 ConditionParamValue::ConditionParamValue(const std::string& name,
                                          ComparisionOp op, const std::string& val)
     : name_(name)
@@ -226,16 +231,44 @@ ConditionParamValue::ConditionParamValue(const std::string& name,
 
 }
 
+bool ConditionParamValue::regexMatch(const std::string& str) const
+{
+    regex_t re;
+    if (regcomp(&re, value_.c_str(), REG_EXTENDED | REG_NOSUB))
+    {
+        cout << "Error: cannot compile regex: " << value_ << endl;
+        return false;
+    }
 
-bool ConditionParamValue::operator() ()
+    if (regexec(&re, str.c_str(), 0, 0, 0))
+    {
+        cout << "Did not match regex" << endl;
+        regfree(&re);
+        return false;
+    }
+
+    regfree(&re);
+    return true;
+}
+
+bool ConditionParamValue::operator() (RunContext& context)
 {
     bool ret = false;
 
+#if 1
+    Params fldParams;
+    Message* msg = context.getMessage();
+    if (!msg)
+        return ret;
+
+    msg->unpackParams(context.getFieldValues(), fldParams);
+    std::string pvalue = fldParams.get(name_);
+#else
     if (!params_)
         return ret;
 
     std::string pvalue = params_->get(name_);
-
+#endif
     cout << " comparing " << pvalue << " to " << value_ << endl;
     switch (oper_)
     {
@@ -258,8 +291,10 @@ bool ConditionParamValue::operator() ()
         ret = (pvalue >= value_);
         break;
     case OpMatches:
+        ret = regexMatch(pvalue);
         break;
     case OpNotMatches:
+        ret = !regexMatch(pvalue);
         break;
     default:
         std::cout << "Error: invalid operator value=" << oper_ << std::endl;
@@ -289,9 +324,9 @@ ConditionAnd::ConditionAnd(Condition& left, Condition& right)
 
 }
 
-bool ConditionAnd::operator() ()
+bool ConditionAnd::operator() (RunContext& context)
 {
-    return left_() && right_();
+    return left_(context) && right_(context);
 }
 
 
@@ -317,9 +352,9 @@ ConditionOr::ConditionOr(Condition& left, Condition& right)
 
 }
 
-bool ConditionOr::operator() ()
+bool ConditionOr::operator() (RunContext& context)
 {
-    return left_() || right_();
+    return left_(context) || right_(context);
 }
 
 std::string ConditionOr::toString()

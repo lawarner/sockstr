@@ -21,6 +21,7 @@
 // RunContext.cpp
 //
 #include <sockstr/Socket.h>
+#include <algorithm>
 
 #include "RunContext.h"
 using namespace ipctest;
@@ -56,6 +57,17 @@ CommandIterator RunContext::getCommandIterator() const
 void RunContext::setCommandIterator(const CommandIterator& cmdIter)
 {
     iter_ = cmdIter;
+}
+
+std::string RunContext::getFieldValue(const std::string& name)
+{
+    std::vector<std::string>::iterator it;
+
+    it = std::find(fieldValues_.begin(), fieldValues_.end(), name);
+    if (it == fieldValues_.end())
+        return "";
+
+    
 }
 
 std::vector<std::string>& RunContext::getFieldValues()

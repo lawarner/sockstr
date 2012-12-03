@@ -60,6 +60,7 @@ void TestBase::init()
     builtinCommands_.push_back("Noop");
     builtinCommands_.push_back("Receive");
     builtinCommands_.push_back("Send");
+    builtinCommands_.push_back("While");
 
     std::vector<std::string>::const_iterator it;
     for (it = builtinCommands_.begin(); it != builtinCommands_.end(); ++it)
@@ -97,6 +98,8 @@ Command* TestBase::createCommand(const std::string& cmdName,
         cmd = new CommandReceive(msg);
     else if (cmdName == "Send")
         cmd = new CommandSend(msg, msgData);
+    else if (cmdName == "While")
+        cmd = new CommandWhile(Condition::createCondition("false"));
 
     return cmd;
 }

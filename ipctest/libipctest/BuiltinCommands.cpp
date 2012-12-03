@@ -251,7 +251,7 @@ bool CommandIf::execute(RunContext& context)
     std::cout << "exec if: " << condition_->toString() << std::endl;
 
     bool okStatus = true;
-    bool condResult = (*condition_)();
+    bool condResult = (*condition_)(context);
 
     // Execute embedded commands
     if (condResult)
@@ -558,6 +558,7 @@ bool CommandReceive::execute(RunContext& context)
                 char* databuf = new char[szdata];
                 memcpy(databuf, reply.filler_, szdata);
                 setData(databuf);
+                context.setMessage(msg);
                 context.setFieldValues(fldValues);
             }
         }
@@ -653,3 +654,111 @@ std::string CommandSend::toXml(int indent)
 
     return str;
 }
+
+
+// While
+CommandWhile::CommandWhile(Condition* condition, Command* cmd)
+    : Command("While", "Condition", condition->toString())
+    , condition_(condition)
+{
+    if (cmd) 
+        commands_.push_back(cmd);
+}
+
+CommandWhile::CommandWhile(Params* params, Message* msg)
+    : Command("While", params, msg)
+    , condition_(Condition::createCondition(params->get("Condition")))
+{
+
+}
+
+void CommandWhile::addCondition(Condition* condition)
+{
+    condition_ = condition;
+}
+
+Command* CommandWhile::createCommand(Params* params, Message* msg)
+{
+    params->set("Condition", params->get("_condition"));
+
+    return new CommandWhile(params, msg);
+}
+
+bool CommandWhile::execute(RunContext& context)
+{
+    condition_->setParams(params_);
+//    std::cout << "param is " << params_ << std::endl;
+
+    std::cout << "exec if: " << condition_->toString() << std::endl;
+
+    bool okStatus = true;
+    bool condResult;
+
+    do
+    {
+        condResult = (*condition_)(context);
+
+        // Execute embedded commands
+        if (condResult)
+        {
+            CommandIterator it = commands_.begin();
+            for ( ; it != commands_.end(); ++it)
+                if (!(*it)->execute(context))
+                {
+                    okStatus = false;
+                    break;       // stop on first error
+                }
+        }
+
+        // Execute next commands in run context that are higher nesting level
+        CommandList* cmdList = context.getCommands();
+        if (cmdList)
+        {
+            Command* cmd = 0;
+            CommandIterator it;
+            CommandIterator ij;
+            it = context.getCommandIterator();	// cmdList->begin();
+            ij = it;
+            for (++it ; it != cmdList->end(); ++it)
+            {
+                cmd = *it;
+                if (cmd->getLevel() <= level_)
+                    break;
+
+                if (condResult)
+                {
+//                std::cout << "-if command (exec) " << cmd->getName() << std::endl;
+                    if (okStatus && !cmd->execute(context))
+                        okStatus = false;
+                }
+
+                ij = it;
+            }
+
+            if (!condResult)
+                context.setCommandIterator(ij);
+        }
+    } while (condResult);
+
+    return okStatus;
+}
+
+std::string CommandWhile::toString()
+{
+    std::string strcond;
+    params_->get("Condition", strcond);
+    return commandName_ + ": " + strcond;
+}
+
+std::string CommandWhile::toXml(int indent)
+{
+    std::string strcond;
+    params_->get("Condition", strcond);
+    if (strcond.empty())
+        strcond = "false";
+    strcond = " condition=\"" + strcond + "\"";
+    std::string str = getXmlPart(indent, strcond, true);
+    str += getXmlPart(indent, false);
+    return str;
+}
+

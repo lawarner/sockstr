@@ -4,16 +4,22 @@ sockstr
 Socket streams for C++
 
 The sockstr library provides a C++ wrapper around streaming with sockets.
+The main purpose of this library is to interface with iostream from the 
+standard C++ library.
 A number of I/O modes are supported and a Stream such as asynchronous, 
-polling, etc.  These can be changed at any time for an open Stream.
+polling, etc.  These can be used interchangably on an open Stream.
 
 Sample code
 ===========
-    $ #include <sockstr/Socket.h>
-    $ 
-    $ sockstr::Socket sock("localhost:8080", sockstr::Socket::modeReadWrite);
-    $ if (sock.good())
-    $     sock << "Hello, world!" << std::endl;
+     #include <sockstr/Socket.h>
+     
+     sockstr::Socket sock("localhost:8080", sockstr::Socket::modeReadWrite);
+     if (sock.good())
+         sock << "Hello, world!" << std::endl;
+
+There is also a test harness in the ipctest subdirectory.  This allows capturing test 
+scenarios and saving these for later playback.
+
 
 How to Build on Linux
 =====================

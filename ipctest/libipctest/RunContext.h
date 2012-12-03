@@ -72,6 +72,7 @@ public:
     void setCommands(CommandList* cmds);
     CommandIterator getCommandIterator() const;
     void setCommandIterator(const CommandIterator& cmdIter);
+    std::string getFieldValue(const std::string& name);
     std::vector<std::string>& getFieldValues();
     void setFieldValues(std::vector<std::string>& vals);
     Message* getMessage() const;

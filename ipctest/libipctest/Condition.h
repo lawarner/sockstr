@@ -35,6 +35,7 @@ namespace ipctest
 // FORWARD CLASS DECLARATIONS
 //
 class Params;
+class RunContext;
 
 //
 // MACRO DEFINITIONS
@@ -85,7 +86,7 @@ public:
 
     virtual ~Condition() { }
 
-    virtual bool operator() () = 0;
+    virtual bool operator() (RunContext& context) = 0;
 
     virtual std::string toString() = 0;
     virtual std::string toXml(int indent) = 0;
@@ -123,7 +124,7 @@ public:
     ConditionFixed(const std::string& cond)
         : condition_(stringToBool(cond)) {  }
 
-    virtual bool operator() () { return condition_; }
+    virtual bool operator() (RunContext& context) { return condition_; }
 
     virtual std::string toString() { return (condition_ ? "true" : "false"); }
     virtual std::string toXml(int indent)
@@ -143,7 +144,9 @@ class ConditionParamValue : public ConditionSingle
 public:
     ConditionParamValue(const std::string& name, ComparisionOp op, const std::string& val);
 
-    virtual bool operator() ();
+    bool regexMatch(const std::string& str) const;
+
+    virtual bool operator() (RunContext& context);
 
     virtual std::string toString();
     virtual std::string toXml(int indent);
@@ -159,7 +162,7 @@ class ConditionAnd : public ConditionBinary
 {
 public:
     ConditionAnd(Condition& left, Condition& right);
-    virtual bool operator() ();
+    virtual bool operator() (RunContext& context);
 
     virtual std::string toString();
     virtual std::string toXml(int indent);
@@ -170,7 +173,7 @@ class ConditionOr : public ConditionBinary
 {
 public:
     ConditionOr(Condition& left, Condition& right);
-    virtual bool operator() ();
+    virtual bool operator() (RunContext& context);
 
     virtual std::string toString();
     virtual std::string toXml(int indent);

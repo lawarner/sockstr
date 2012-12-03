@@ -213,6 +213,29 @@ public:
     virtual std::string toXml(int indent);
 };
 
+
+/** This command tests its condition and if true executes the contained
+ *  (nested) commands.  Commands following the "While" that are higher level
+ *  are executed.  After execution, this command repeats as long as the
+ *  condition holds true.
+ */
+class CommandWhile : public Command
+{
+public:
+    CommandWhile(Condition* condition, Command* cmd = 0);
+	CommandWhile(Params* params, Message* msg = 0);
+    void addCondition(Condition* condition);
+
+    virtual Command* createCommand(Params* params, Message* msg = 0);
+    virtual bool execute(RunContext& context);
+    virtual std::string toString();
+    virtual std::string toXml(int indent);
+
+private:
+    Condition* condition_;
+    CommandList commands_;
+};
+
 }  // namespace ipctest
 
 #endif
