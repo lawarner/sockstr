@@ -79,6 +79,9 @@ std::string Command::getXmlPart(int indent, bool header)
 
 std::string Command::getXmlPart(int indent, std::string& strAttr, bool header)
 {
+    if (!strAttr.empty() && strAttr[0] != ' ')
+        strAttr = " " + strAttr;
+
     std::string str(indent, ' ');
     if (header)
     {

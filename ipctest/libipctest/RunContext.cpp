@@ -23,8 +23,12 @@
 #include <sockstr/Socket.h>
 #include <algorithm>
 
+#include "Field.h"
+#include "Log.h"
+#include "Message.h"
 #include "RunContext.h"
 using namespace ipctest;
+using namespace std;
 
 
 RunContext::RunContext()
@@ -49,9 +53,22 @@ void RunContext::setCommands(CommandList* cmds)
 }
 
 
-CommandIterator RunContext::getCommandIterator() const
+CommandIterator RunContext::getCommandIterator(int level /*= -1*/) const
 {
-    return iter_;
+    if (level == -1 || iter_ == commands_->end())
+        return iter_;
+
+    CommandIterator it = iter_ + 1;
+    CommandIterator ij = iter_;
+    for ( ; it != commands_->end(); ++it)
+    {
+        Command* cmd = *it;
+        if (cmd->getLevel() <= level)
+            break;
+        ij = it;
+    }
+
+    return ij;	// the one before it
 }
 
 void RunContext::setCommandIterator(const CommandIterator& cmdIter)
@@ -61,13 +78,25 @@ void RunContext::setCommandIterator(const CommandIterator& cmdIter)
 
 std::string RunContext::getFieldValue(const std::string& name)
 {
-    std::vector<std::string>::iterator it;
-
-    it = std::find(fieldValues_.begin(), fieldValues_.end(), name);
-    if (it == fieldValues_.end())
+    if (!message_)
         return "";
 
-    
+    //TODO: a map could be built and cached for subsequent lookups for performance
+
+    const FieldsArray& fields = message_->getFields();
+    FieldsConstIterator it;
+    std::vector<std::string>::iterator itval = fieldValues_.begin();
+    for (it = fields.begin(); 
+         it != fields.end() && itval != fieldValues_.end(); ++it, ++itval)
+    {
+        Field* fld = *it;
+        if (fld->name() == name)
+            break;
+    }
+    if (it == fields.end() || itval == fieldValues_.end())
+        return "";
+
+    return *itval;
 }
 
 std::vector<std::string>& RunContext::getFieldValues()

@@ -256,20 +256,14 @@ bool ConditionParamValue::operator() (RunContext& context)
     bool ret = false;
 
 #if 1
-    Params fldParams;
-    Message* msg = context.getMessage();
-    if (!msg)
-        return ret;
-
-    msg->unpackParams(context.getFieldValues(), fldParams);
-    std::string pvalue = fldParams.get(name_);
+    std::string pvalue = context.getFieldValue(name_);
 #else
     if (!params_)
         return ret;
 
     std::string pvalue = params_->get(name_);
 #endif
-    cout << " comparing " << pvalue << " to " << value_ << endl;
+
     switch (oper_)
     {
     case OpEqual:
@@ -299,6 +293,9 @@ bool ConditionParamValue::operator() (RunContext& context)
     default:
         std::cout << "Error: invalid operator value=" << oper_ << std::endl;
     }
+
+    cout << " comparing " << pvalue << opName[oper_] << " to " << value_ 
+         << " returns " << boolalpha << ret << endl;
 
     return ret;
 }

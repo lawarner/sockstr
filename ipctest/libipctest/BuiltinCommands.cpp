@@ -25,13 +25,18 @@
 
 #include "BuiltinCommands.h"
 #include "Condition.h"
+#include "Log.h"
 #include "Message.h"
+#include "Parser.h"
 #include "RunContext.h"
 #include "Serializer.h"
-using namespace ipctest;
-
 #include <sstream>
+
 #include <string.h>
+#include <unistd.h>
+
+using namespace ipctest;
+using namespace std;
 
 
 // Comment
@@ -208,9 +213,9 @@ std::string CommandFunction::toString()
 
 std::string CommandFunction::toXml(int indent)
 {
-    std::string str(indent, ' ');
-    str += "<" + commandName_ + ">\n";
-    str += std::string(indent, ' ') + "</" + commandName_ + ">\n";
+    std::string str(getXmlPart(indent, true));
+    str += getXmlPart(indent, false);
+
     return str;
 }
 
@@ -323,7 +328,7 @@ std::string CommandIf::toXml(int indent)
     params_->get("Condition", strcond);
     if (strcond.empty())
         strcond = "false";
-    strcond = " condition=\"" + strcond + "\"";
+    strcond = "condition=\"" + strcond + "\"";
     std::string str = getXmlPart(indent, strcond, true);
     str += getXmlPart(indent, false);
     return str;
@@ -402,6 +407,70 @@ std::string CommandElse::toXml(int indent)
 {
     std::string str;
     str = getXmlPart(indent, true) + getXmlPart(indent, false);
+    return str;
+}
+
+
+// Exec
+CommandExec::CommandExec(const std::string& cmdLine, void* data, int delay)
+    : Command("Exec", "Command Line", cmdLine)
+    , commandLine_(cmdLine)
+    , pid_(-1)
+{
+
+}
+
+CommandExec::CommandExec(Params* params, Message* msg)
+    : Command("Exec", params, msg)
+    , pid_(-1)
+{
+
+}
+
+Command* CommandExec::createCommand(Params* params, Message* msg)
+{
+    params->set("Command Line", params->get("_cdata_line"));
+
+    return new CommandExec(params, msg);
+}
+
+bool CommandExec::execute(RunContext& context)
+{
+    pid_t pid = fork();
+    if (pid == -1)
+    {
+        LOG << "Error: could not fork child process." << std::endl;
+        return false;
+    }
+
+    if (pid > 0)
+    {
+        pid_ = pid;
+        return true;
+    }
+
+    std::string cmdline = params_->get("Command Line");
+    vector<string> cmdv;
+    Parser::splitTokens(cmdline, cmdv);
+
+    pid = 0;	// Mark as child
+    execlp(cmdv[0].c_str(), cmdv[0].c_str(), (char *)0);
+
+    // We only fall thru on error
+    return false;
+}
+
+std::string CommandExec::toString()
+{
+    return commandName_ + ": " + commandLine_;
+}
+
+std::string CommandExec::toXml(int indent)
+{
+    std::string str = getXmlPart(indent, true);
+    str += Serializer::encodeString(params_->get("Command Line")) + "\n";
+    str += getXmlPart(indent, false);
+
     return str;
 }
 
@@ -499,14 +568,13 @@ std::string CommandLoop::toString()
 
 std::string CommandLoop::toXml(int indent)
 {
-    std::string str(indent, ' ');
     std::string striter;
     params_->get("Iterations", striter);
     if (striter.empty())
         striter = "1";
+    striter = "iterations=\"" + striter + "\"";
 
-    str += "<" + commandName_ + " iterations=\"" + striter + "\">\n";
-    str += getXmlPart(indent, false);
+    std::string str = getXmlPart(indent, striter, true) + getXmlPart(indent, false);
     return str;
 }
 
@@ -575,11 +643,12 @@ std::string CommandReceive::toString()
 
 std::string CommandReceive::toXml(int indent)
 {
-    std::string str(indent, ' ');
-    str += "<" + commandName_ + " message=\"" + message_->getName() + "\">\n";
+    std::string strmsg = "message=\"" + message_->getName() + "\"";
+    std::string str = getXmlPart(indent, strmsg, true);
+
     // get message and field names/values
     str += message_->toXml(indent + 4, (const char *) getData());
-    str += std::string(indent, ' ') + "</" + commandName_ + ">\n";
+    str += getXmlPart(indent, false);
 
     return str;
 }
@@ -650,7 +719,7 @@ std::string CommandSend::toXml(int indent)
     str += "<" + commandName_ + " message=\"" + message_->getName() + "\">\n";
     // get message and field names/values
     str += message_->toXml(indent + 4, (const char*) getData());
-    str += std::string(indent, ' ') + "</" + commandName_ + ">\n";
+    str += getXmlPart(indent, false);
 
     return str;
 }
@@ -689,59 +758,48 @@ bool CommandWhile::execute(RunContext& context)
     condition_->setParams(params_);
 //    std::cout << "param is " << params_ << std::endl;
 
-    std::cout << "exec if: " << condition_->toString() << std::endl;
+    LOG << "exec while: " << condition_->toString() << std::endl;
 
     bool okStatus = true;
-    bool condResult;
 
-    do
+    while (okStatus && (*condition_)(context))
     {
-        condResult = (*condition_)(context);
-
         // Execute embedded commands
-        if (condResult)
-        {
-            CommandIterator it = commands_.begin();
-            for ( ; it != commands_.end(); ++it)
-                if (!(*it)->execute(context))
-                {
-                    okStatus = false;
-                    break;       // stop on first error
-                }
-        }
-
-        // Execute next commands in run context that are higher nesting level
-        CommandList* cmdList = context.getCommands();
-        if (cmdList)
-        {
-            Command* cmd = 0;
-            CommandIterator it;
-            CommandIterator ij;
-            it = context.getCommandIterator();	// cmdList->begin();
-            ij = it;
-            for (++it ; it != cmdList->end(); ++it)
+        CommandIterator it = commands_.begin();
+        for ( ; it != commands_.end(); ++it)
+            if (!(*it)->execute(context))
             {
-                cmd = *it;
-                if (cmd->getLevel() <= level_)
-                    break;
-
-                if (condResult)
-                {
-//                std::cout << "-if command (exec) " << cmd->getName() << std::endl;
-                    if (okStatus && !cmd->execute(context))
-                        okStatus = false;
-                }
-
-                ij = it;
+                okStatus = false;
+                break;       // stop on first error
             }
 
-            if (!condResult)
-                context.setCommandIterator(ij);
+        // Execute next commands in run context that are higher nesting level
+        if (okStatus)
+        {
+            CommandIterator it = context.getCommandIterator();
+            CommandIterator ij = context.getCommandIterator(level_);
+            for (++it, ++ij ; it != ij; ++it)
+            {
+                Command* cmd = *it;
+                // stop executing on first error, but still have to skip to end
+                LOG << "Executing from While:" << std::endl;
+                if (!cmd->execute(context))
+                {
+                    okStatus = false;
+                    break;
+                }
+            }
         }
-    } while (condResult);
+//        condStatus = (*condition_)(context);
+//        LOG << "condStatus is " << condStatus << " okStatus is " << okStatus << endl;
+    }
+
+    // Update command to run after our nested commands
+    context.setCommandIterator(context.getCommandIterator(level_));
 
     return okStatus;
 }
+
 
 std::string CommandWhile::toString()
 {

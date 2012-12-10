@@ -94,6 +94,25 @@ public:
     virtual bool execute(RunContext& context);
 };
 
+/** This command executes an external system command and captures its
+ *  output.
+ */
+class CommandExec : public Command
+{
+public:
+    CommandExec(const std::string& cmdLine, void* data = 0, int delay = 0);
+    CommandExec(Params* params, Message* msg = 0);
+
+    virtual Command* createCommand(Params* params, Message* msg = 0);
+    virtual bool execute(RunContext& context);
+    virtual std::string toString();
+    virtual std::string toXml(int indent);
+
+private:
+    std::string commandLine_;
+    int pid_;
+};
+
 /** This command is a container that holds a sequence of
  *  commands.  It is useful for executing (or running) a 
  *  sequence of commands, as in a test case.

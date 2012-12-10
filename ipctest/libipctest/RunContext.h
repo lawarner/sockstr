@@ -68,9 +68,8 @@ public:
     RunContext();
 
     CommandList* getCommands();
-
     void setCommands(CommandList* cmds);
-    CommandIterator getCommandIterator() const;
+    CommandIterator getCommandIterator(int level = -1) const;
     void setCommandIterator(const CommandIterator& cmdIter);
     std::string getFieldValue(const std::string& name);
     std::vector<std::string>& getFieldValues();

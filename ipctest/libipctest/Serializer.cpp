@@ -37,7 +37,7 @@ using namespace std;
 
 
 const char* ESCAPECHARS  = "<>&";
-const char* ESCAPESEQS[] = { "&lt;", "&gt;", "&amp;" };
+const char* ESCAPESEQS[] = { "&lt;", "&gt;", "&amp;"  };
 
 Serializer::Serializer(TestBase* testBase)
     : deserialData_(*new std::ostringstream)

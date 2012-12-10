@@ -26,9 +26,10 @@
 #include <sstream>
 
 #include "MainWindow.h"
-#include "Field.h"
 #include "HistoryList.h"
 #include "BuiltinCommands.h"
+#include "Field.h"
+#include "Log.h"
 #include "Parser.h"
 #include "RunContext.h"
 #include "TestBase.h"
@@ -527,10 +528,11 @@ void MainWindow::onRun()
     {
         context_.setCommands(commands);
         ipctest::CommandIterator it = context_.getCommandIterator();
-        for ( ; it != commands->end(); it++)
+        for ( ; it != commands->end(); ++it)
         {
             ipctest::Command* cmd = *it;
             context_.setCommandIterator(it);
+            LOG << "Execute from onRun:" << std::endl;
             cmd->execute(context_);
             it = context_.getCommandIterator();
         }
