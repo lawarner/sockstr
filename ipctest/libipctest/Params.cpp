@@ -170,6 +170,7 @@ bool Params::set(const std::string& name, const std::string& value)
     else
     {
         pv = new ParamValue;
+        pv->widget = 0;
         env_[name] = pv;
     }
     pv->strValue = value;

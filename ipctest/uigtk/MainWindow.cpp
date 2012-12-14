@@ -43,6 +43,8 @@ MainWindow::MainWindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
     , builder_(builder)
     , context_(*new ipctest::RunContext)
     , testBase_(new ipctest::TestBase)
+    , docModified_(false)
+    , programQuitting_(false)
 {
     initDialog();
 }
@@ -131,6 +133,8 @@ bool MainWindow::initDialog()
     commands_->signal_changed()
         .connect(sigc::mem_fun(*this, &MainWindow::onCommandChanged));
 
+    signal_unmap().connect(sigc::mem_fun(*this, &MainWindow::onQuit));
+
     Gtk::ImageMenuItem* menuit;
     builder_->get_widget("menuquit", menuit);
     menuit->signal_activate().connect(sigc::mem_fun(*this, &MainWindow::onQuit));
@@ -159,6 +163,7 @@ void MainWindow::log(ipctest::Command* cmd)
     std::cout << "LOG: " << cmd->toString() << std::endl;
     historyList_->add(cmd);
     testBase_->addCommand(cmd);
+    docModified_ = true;
 
     std::string fstr(testBase_->getFileName());
     if (fstr.empty())
@@ -180,11 +185,11 @@ void MainWindow::guiToParams(ipctest::Params* params)
     {
         ParamValue* pv = it->second;
         Gtk::Entry* inEntry = pv->widget;
-        std::cout << "+guiToParam=" << it->first << std::endl;
         if (inEntry)
         {
             std::string str = inEntry->get_text();
-            std::cout << "     ++ got widget value=" << str << std::endl;
+            std::cout << "+guiToParam=" << it->first << " widget=" << inEntry 
+                      << "  value=" << str << std::endl;
             pv->strValue = str;
         }
     }
@@ -212,7 +217,6 @@ void MainWindow::paramsToGui(ipctest::Params* params)
     ParamMap::const_iterator it;
     for (it = pm.begin(); it != pm.end(); ++it)
     {
-        std::cout << "+paramsToGui param=" << it->first << std::endl;
         if (it->first[0] == '_')
             continue;
         Gtk::Label* inLabel = new Gtk::Label(it->first + ":");
@@ -226,6 +230,7 @@ void MainWindow::paramsToGui(ipctest::Params* params)
         inputWidgets_.push(inEntry);
         it->second->widget = inEntry;
 //        params->setWidget(it->first, inEntry);
+        std::cout << "+paramsToGui param=" << it->first << " widget=" << inEntry << std::endl;
 
         endLabel = inLabel;
     }
@@ -238,6 +243,8 @@ void MainWindow::setCommand(ipctest::Command* cmd)
     Glib::RefPtr<Gtk::TreeModel> cmdModel = commands_->get_model();
     Gtk::TreeModel::iterator iter = cmdModel->children().begin();
 
+    testBase_->setWorkCommand(cmd);
+
     for ( ; iter != cmdModel->children().end(); ++iter)
     {
         Gtk::TreeModel::Row row = *iter;
@@ -248,8 +255,6 @@ void MainWindow::setCommand(ipctest::Command* cmd)
             break;
         }
     }
-
-    paramsToGui(cmd->getParams());
 
     // copy fields
     Message* msg = cmd->getMessage();
@@ -307,6 +312,7 @@ bool MainWindow::setup(const std::string& defFilename, const std::string& testFi
         CommandIterator it = commandList.begin();
         for ( ; it != commandList.end(); ++it)
             historyList_->add(*it);
+//        docModified_ = false;
     }
 
     return true;
@@ -394,6 +400,7 @@ void MainWindow::onExecute()
         return;
 
     guiToParams(cmd->getParams());
+    cmd->initParams();
     
     // Make a string array based on the message's field values.
     // This only needs to be done if command is going to use these values,
@@ -513,6 +520,7 @@ void MainWindow::onOpen()
                 for ( ; it != commandList.end(); ++it)
                     historyList_->add(*it);
 
+                docModified_ = false;
                 set_title(filename);
             }
         }
@@ -561,7 +569,18 @@ void MainWindow::onMoveUp()
 
 void MainWindow::onQuit()
 {
-    //TODO: check to save testcase before quitting.
+    programQuitting_ = true;
+
+    // check to save testcase before quitting.
+    if (docModified_)
+    {
+            Gtk::MessageDialog dlg(*this, "Document has been modified.  "
+                                   "Do you you want to save changes before exiting?",
+                                   false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_OK_CANCEL);
+        
+            if (dlg.run() == Gtk::RESPONSE_OK)
+                onSave();
+    }
 
     hide();
 }
@@ -584,14 +603,17 @@ void MainWindow::onSave()
     if (fi.is_open())
     {
         fi.close();
-        Gtk::MessageDialog dlg(*this, "File already exists.  "
-                               "Are you sure you want to overwrite this file?",
-                               false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_OK_CANCEL);
-        
-        if (dlg.run() != Gtk::RESPONSE_OK)
+        if (!programQuitting_)
         {
-            testBase_->setFileName("");
-            return;
+            Gtk::MessageDialog dlg(*this, "File already exists.  "
+                                   "Are you sure you want to overwrite this file?",
+                                   false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_OK_CANCEL);
+        
+            if (dlg.run() != Gtk::RESPONSE_OK)
+            {
+                testBase_->setFileName("");
+                return;
+            }
         }
     }
 

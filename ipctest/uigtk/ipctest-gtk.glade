@@ -9,7 +9,7 @@
   </object>
   <object class="GtkWindow" id="IpcTestMainWindow">
     <property name="can_focus">False</property>
-    <property name="default_width">990</property>
+    <property name="default_width">994</property>
     <property name="default_height">710</property>
     <child>
       <object class="GtkBox" id="box1">
@@ -23,7 +23,6 @@
             <property name="can_focus">False</property>
             <child>
               <object class="GtkMenuItem" id="menuitem1">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_File</property>
@@ -35,7 +34,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem1">
                         <property name="label">gtk-new</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -45,7 +43,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="menuopen">
                         <property name="label">gtk-open</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -55,7 +52,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="menusave">
                         <property name="label">gtk-save</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -65,7 +61,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="menusaveas">
                         <property name="label">gtk-save-as</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -74,7 +69,6 @@
                     </child>
                     <child>
                       <object class="GtkSeparatorMenuItem" id="separatormenuitem1">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                       </object>
@@ -82,7 +76,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="menuquit">
                         <property name="label">gtk-quit</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -95,7 +88,6 @@
             </child>
             <child>
               <object class="GtkMenuItem" id="menuitem2">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Edit</property>
@@ -107,7 +99,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="menudemote">
                         <property name="label">Demote</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -117,7 +108,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="menupromote">
                         <property name="label">Promote</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -127,7 +117,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem6">
                         <property name="label">gtk-cut</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -137,7 +126,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem7">
                         <property name="label">gtk-copy</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -147,7 +135,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem8">
                         <property name="label">gtk-paste</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -157,7 +144,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem9">
                         <property name="label">gtk-delete</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -170,7 +156,6 @@
             </child>
             <child>
               <object class="GtkMenuItem" id="menuitemrun">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Run</property>
@@ -182,7 +167,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="menurun">
                         <property name="label">Run history</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -195,7 +179,6 @@
             </child>
             <child>
               <object class="GtkMenuItem" id="menuitem3">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_View</property>
@@ -204,7 +187,6 @@
             </child>
             <child>
               <object class="GtkMenuItem" id="menuitem4">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Help</property>
@@ -216,7 +198,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem10">
                         <property name="label">gtk-about</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -300,11 +281,9 @@
             <child>
               <object class="GtkButton" id="connect_button">
                 <property name="label" translatable="yes">Connect</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
               </object>
               <packing>
                 <property name="left_attach">4</property>
@@ -370,11 +349,9 @@
             <child>
               <object class="GtkButton" id="execute_button">
                 <property name="label" translatable="yes">Execute</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
               </object>
               <packing>
                 <property name="left_attach">4</property>

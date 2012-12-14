@@ -34,6 +34,8 @@
 
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 using namespace ipctest;
 using namespace std;
@@ -412,24 +414,27 @@ std::string CommandElse::toXml(int indent)
 
 
 // Exec
-CommandExec::CommandExec(const std::string& cmdLine, void* data, int delay)
+CommandExec::CommandExec(const std::string& cmdLine, bool waitFor, void* data, int delay)
     : Command("Exec", "Command Line", cmdLine)
     , commandLine_(cmdLine)
+    , waitFor_(waitFor)
     , pid_(-1)
 {
-
+    params_->set("Wait for command", waitFor_);
 }
 
 CommandExec::CommandExec(Params* params, Message* msg)
     : Command("Exec", params, msg)
+    , waitFor_(false)
     , pid_(-1)
 {
-
+    initParams();
 }
 
 Command* CommandExec::createCommand(Params* params, Message* msg)
 {
     params->set("Command Line", params->get("_cdata_line"));
+    params->set("Wait for command", params->get("_wait"));
 
     return new CommandExec(params, msg);
 }
@@ -446,18 +451,41 @@ bool CommandExec::execute(RunContext& context)
     if (pid > 0)
     {
         pid_ = pid;
+        if (waitFor_)
+        {
+            LOG << "Waiting for child pid=" << pid_ << endl;
+            int child_stat;
+            waitpid(pid_, &child_stat, 0);
+        }
         return true;
     }
 
     std::string cmdline = params_->get("Command Line");
     vector<string> cmdv;
-    Parser::splitTokens(cmdline, cmdv);
+    Parser::splitTokens(cmdline, cmdv, " \t\n\r");
+
+    vector<const char*> cmdpv;
+    vector<string>::iterator it = cmdv.begin();
+    for ( ; it != cmdv.end(); ++it)
+    {
+        cmdpv.push_back((*it).c_str());
+    }
+    cmdpv.push_back(0);
 
     pid = 0;	// Mark as child
-    execlp(cmdv[0].c_str(), cmdv[0].c_str(), (char *)0);
+//    execlp(cmdv[0].c_str(), cmdv[0].c_str(), (char *)0);
+    execvp(cmdpv[0], (char* const *)cmdpv.data());
 
     // We only fall thru on error
-    return false;
+    LOG << "Could not exec: " << cmdv[0] << endl;
+    _exit(1);
+    return false;	// NOT REACHED
+}
+
+void CommandExec::initParams()
+{
+    params_->get("Command Line", commandLine_);
+    params_->get("Wait for command", waitFor_);
 }
 
 std::string CommandExec::toString()
@@ -467,7 +495,8 @@ std::string CommandExec::toString()
 
 std::string CommandExec::toXml(int indent)
 {
-    std::string str = getXmlPart(indent, true);
+    std::string strattr = " wait=\"" + (waitFor_ ? string("true") : string("false")) + "\"";
+    std::string str = getXmlPart(indent, strattr, true);
     str += Serializer::encodeString(params_->get("Command Line")) + "\n";
     str += getXmlPart(indent, false);
 

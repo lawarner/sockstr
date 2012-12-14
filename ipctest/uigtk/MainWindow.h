@@ -171,6 +171,9 @@ private:
     ipctest::TestBase*  testBase_;
 
     std::stack<Gtk::Widget*> inputWidgets_;
+
+    bool docModified_;
+    bool programQuitting_;
 };
 
 }  // namespace uigtk

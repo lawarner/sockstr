@@ -100,16 +100,19 @@ public:
 class CommandExec : public Command
 {
 public:
-    CommandExec(const std::string& cmdLine, void* data = 0, int delay = 0);
+    CommandExec(const std::string& cmdLine, bool waitFor = false, 
+                void* data = 0, int delay = 0);
     CommandExec(Params* params, Message* msg = 0);
 
     virtual Command* createCommand(Params* params, Message* msg = 0);
     virtual bool execute(RunContext& context);
+    virtual void initParams();
     virtual std::string toString();
     virtual std::string toXml(int indent);
 
 private:
     std::string commandLine_;
+    bool waitFor_;
     int pid_;
 };
 

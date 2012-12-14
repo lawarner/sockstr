@@ -98,6 +98,8 @@ public:
     std::string getXmlPart(int indent, bool header);
     std::string getXmlPart(int indent, std::string& strAttr, bool header);
 
+    virtual void initParams() { }
+
     virtual std::string toString() { return commandName_; }
     virtual std::string toXml(int indent);
 
