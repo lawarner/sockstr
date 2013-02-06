@@ -115,46 +115,55 @@ IPAddress::IPAddress(void)
 
 
 IPAddress::IPAddress(const char* lpszName)
-:	m_dwAddress(INADDR_ANY)
+    : m_dwAddress(INADDR_ANY)
 {
-	initialize();
+    initialize();
 
-	if (lpszName == 0)
-	{
-		return;		// must be a server socket
-	}
+    if (lpszName == 0)
+    {
+        return;		// must be a server socket
+    }
 
-	// First check to see if the name is in valid dot notation
-	if ((m_dwAddress = ::inet_addr(lpszName)) != INADDR_NONE)
-	{
-		return;			// Dot address OK -- use it.
-	}
+    // First check to see if the name is in valid dot notation
+    if ((m_dwAddress = ::inet_addr(lpszName)) != INADDR_NONE)
+    {
+        return;			// Dot address OK -- use it.
+    }
+
+    struct in_addr inad;
+    struct in6_addr in6ad;
+    if (::inet_pton(AF_INET, lpszName, &inad))
+        ;	// IPv4 address
+    else if (::inet_pton(AF_INET6, lpszName, &in6ad))
+        ;	// IPV6
+    else
+        return;
 
 //	struct hostent* pHostEntry = ::gethostbyname(lpszName);
 //	if (pHostEntry == 0)
 
-	struct addrinfo aiHints = {
+    struct addrinfo aiHints = {
         AI_CANONNAME,	// ai_flags
-        PF_INET,		// ai_family
-		SOCK_STREAM,	// ai_socktype
+        PF_INET,	// ai_family
+        SOCK_STREAM,	// ai_socktype
         0,				
-		// ai_protocol
+        // ai_protocol
         // ai_addrlen
         // ai_canonname (char*)
-		// ai_next
+        // ai_next
     };
     struct addrinfo* pAddrInfo = 0;
     if (::getaddrinfo(lpszName, 0, &aiHints, &pAddrInfo) || !pAddrInfo)
-		return;			// Host name cannot be resolved or nothing returned
+        return;			// Host name cannot be resolved or nothing returned
 
     if (pAddrInfo->ai_addr->sa_family == AF_INET)
     {
 #ifdef TARGET_LINUX
-		m_dwAddress = (in_addr_t)((sockaddr_in *)pAddrInfo->ai_addr)->sin_addr.s_addr;
+        m_dwAddress = (in_addr_t)((sockaddr_in *)pAddrInfo->ai_addr)->sin_addr.s_addr;
 #else
-		m_dwAddress = ((sockaddr_in *)pAddrInfo->ai_addr)->sin_addr.s_addr;
+        m_dwAddress = ((sockaddr_in *)pAddrInfo->ai_addr)->sin_addr.s_addr;
 #endif
-	}
+    }
     ::freeaddrinfo(pAddrInfo);
 }
 

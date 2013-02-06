@@ -40,9 +40,9 @@ using namespace sockstr;
 int main(int argc, char *argv[])
 {
 #if 0	// for debugging in vs2010
-	std::string hostname = "stackoverflow.com";
+    std::string hostname = "stackoverflow.com";
     std::string filename = "/index.html";
-	bool isSummary = false;
+    bool isSummary = false;
 #else
     if (argc < 3)
     {
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 
     std::string http_get = "GET " + filename;
 #if 1							// Add HTTP headers
-	http_get += "HTTP/1.1\r\nHost: " + hostname + "\r\n";
+    http_get += " HTTP/1.1\r\nHost: " + hostname + "\r\n";
     http_get += "Accept: */*\r\n";
 #endif
 
