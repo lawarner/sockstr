@@ -587,7 +587,7 @@ Socket::listen(const int nBacklog)
 //            The network address of rSockAddr is tested and depending on its
 //            value:
 //            - If the network address is equal to INADDR_NONE, then the socket
-//              remains closed, m_Status is set to SC_FAILED, and FALSE is
+//              remains closed, m_Status is set to SC_FAILED, and false is
 //              returned.
 //            - If the network address is equal is INADDR_ANY or the uOpenFlags
 //              included modeCreate then the state is changed to 
@@ -597,72 +597,81 @@ Socket::listen(const int nBacklog)
 //              is changed to SSOpenedClient and an attempt is made to open
 //              a client-side socket.
 //            If the state-dependent open fails then m_State is set to SC_FAILED
-//            and Open returns FALSE.
+//            and Open returns false.
 //            Otherwise (open succeded), m_PeerAddr is filled with a textual
 //            representation of the peer's address, the status is set to SC_OK
-//            and TRUE is returned.
+//            and true is returned.
 //
 // Remarks  :
 //
 bool
 Socket::open(const char* lpszFileName, UINT uOpenFlags)
 {
-	WORD wPort = 0;
-	size_t nColon;
+    WORD wPort = 0;
+    size_t nColon;
     std::string Name;
     std::string Host;
 
-	if (lpszFileName != 0 && strlen(lpszFileName) != 0)
-	{
-		// Parse the file name into a socket address object.  Then
-		// call the common state-dependent Open().
-		Name = lpszFileName;
-		size_t nBegin = 0;
-		nColon = Name.find_last_of(':');
+    if (lpszFileName != 0 && strlen(lpszFileName) != 0)
+    {
+        // Parse the file name into a socket address object.  Then
+        // call the common state-dependent Open().
+        Name = lpszFileName;
+        size_t nBegin = 0;
+        nColon = Name.find_last_of(':');
 
-		nBegin = Name.find("//");
-		if (nBegin == std::string::npos)
-			nBegin = 0;
+        nBegin = Name.find("//");
+        if (nBegin == std::string::npos)
+            nBegin = 0;
         else
             nBegin += 2;
 
-		if (nColon == std::string::npos)
-		{
-			Host = Name.substr(nBegin);
-			if (Host.length())
-			{	// Error: Hostname specified but no port number.  This would
-				//        indicate a desire to connect to ANY port as client.
-				m_Status = SC_FAILED;
-				return false;
-			}
-		}
-		else
-		{
-			if (nColon == 0)	// Line begins with colon
-			{
-				Host = "";
-			}
-			else
-			{
-				Host  = Name.substr(nBegin, nColon - nBegin);
-			}
-			wPort = atoi(Name.substr(nColon + 1).c_str());
-		}
-	}
+        if (nColon == std::string::npos)
+        {
+            Host = Name.substr(nBegin);
+            if (Host.length())
+            {	// Error: Hostname specified but no port number.  This would
+                //        indicate a desire to connect to ANY port as client.
+                m_Status = SC_FAILED;
+                return false;
+            }
+        }
+        else
+        {
+            size_t fColon = Name.substr(nBegin).find_first_of(':');
+            if (nColon == fColon)
+            {
+                if (nColon == 0)	// Line begins with colon
+                {
+                    Host = "";
+                }
+                else
+                {
+                    Host  = Name.substr(nBegin, nColon - nBegin);
+                }
+                wPort = atoi(Name.substr(nColon + 1).c_str());
+            }
+            else	// multiple colons, maybe IPv6
+            {
+                nColon = std::string::npos;
+                Host  = Name.substr(nBegin);
+            }
+        }
+    }
 
     if (wPort == 0 && Name.substr(0,5) == "http:")
         wPort = 80;
         
-	if (wPort == 0 && nColon != std::string::npos)
-	{
-		SocketAddr SockAddr(Host.c_str(), Name.substr(nColon + 1).c_str());
+    if (wPort == 0 && nColon != std::string::npos)
+    {
+        SocketAddr SockAddr(Host.c_str(), Name.substr(nColon + 1).c_str());
         return open(SockAddr, uOpenFlags);
-	}
-	else
-	{
-		SocketAddr SockAddr(Host.c_str(), wPort);
+    }
+    else
+    {
+        SocketAddr SockAddr(Host.c_str(), wPort);
         return open(SockAddr, uOpenFlags);
-	}
+    }
 }
 
 

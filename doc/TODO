@@ -1,0 +1,16 @@
+Some planned enhancements to sockstr        Updated: 2/6/2013
+------------------------------------        -----------------
+Support IPv6 address resolution (Work in progress)
+
+Provide subclasses of Socket class for common protocols like http:
+
+Improve ipctest UI so there is clear if test cases are being created, edited or
+run.  Allow drag-n-drop editting.  Add ability to group/ungroup function commands.
+
+Implement ipctest client with Qt UI and a webappserver UI.
+
+Add extensible commands via plugin in ipctest.
+
+Make it easier to create new commands; maybe using class templates, helpers, etc.
+
+Port to Android, iOS.
