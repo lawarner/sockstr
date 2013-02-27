@@ -47,13 +47,13 @@ class DllExport IPAddress
 {
 public:
     //! Constructs an IPAddress object
-	IPAddress(void);
+    IPAddress(void);
     /**
-	 * Constructs an IPAddress object.
+     * Constructs an IPAddress object.
      *
-	 * @param  lpszName Host name or dot address
+     * @param  lpszName Host name or dot address
      */
-	IPAddress(const char* lpszName);
+    IPAddress(const char* lpszName);
     /**
 	 * Copy constructor for IPAddress object.
      *
@@ -81,12 +81,14 @@ private:
 	IPAddress& operator=(const IPAddress&);
 
 private:
-	// Network address in internal format (network byte order).
-	UINT m_dwAddress;
-	// Peer host name cache
-	char m_szHostName[108];
+    // Network address in internal format (network byte order).
+    UINT m_dwAddress;
+    //struct in_addr m_inAddress;
+        
+    // Peer host name cache
+    char m_szHostName[108];
 #ifdef WIN32
-	static unsigned int m_uInstances;
+    static unsigned int m_uInstances;
 #endif
 };
 

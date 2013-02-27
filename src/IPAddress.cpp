@@ -84,7 +84,7 @@ unsigned int IPAddress::m_uInstances = 0;
 //
 // Returns  : -
 // Params   :
-//   lpszName                  Host name or dot address
+//   lpszName                  Host name, dot address or IPv6 address
 //   rInAddr                   Reference to existing IP address for copy
 //                             constructor
 //
@@ -93,7 +93,7 @@ unsigned int IPAddress::m_uInstances = 0;
 //            function that does common initialization (see initialize below).
 //            After construction, this object will contain an IP address in
 //            the m_dwAddress member variable.
-//            A IPAddress object is made and depending on the consructor:
+//            An IPAddress object is made and depending on the consructor:
 //            1. an IP address that is not bound to any specific address
 //               if the default constructor or IPAddress("") is called.  In
 //               this case, the IP address is defined as INADDR_ANY.
@@ -160,7 +160,8 @@ IPAddress::IPAddress(const char* lpszName)
     if (::getaddrinfo(lpszName, 0, &aiHints, &pAddrInfo) || !pAddrInfo)
         return;			// Host name cannot be resolved or nothing returned
 
-    if (pAddrInfo->ai_addr->sa_family == AF_INET)
+    if (pAddrInfo->ai_addr->sa_family == AF_INET ||
+        pAddrInfo->ai_addr->sa_family == AF_INET6)
     {
 #ifdef TARGET_LINUX
         m_dwAddress = (in_addr_t)((sockaddr_in *)pAddrInfo->ai_addr)->sin_addr.s_addr;

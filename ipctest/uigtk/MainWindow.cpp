@@ -460,7 +460,7 @@ void MainWindow::onMessageActivated(const Gtk::TreeModel::Path& path,
 
 void MainWindow::onMessageSelection()
 {
-    std::cout << "Messaetge selection changed" << std::endl;
+    std::cout << "Message selection changed" << std::endl;
     Glib::RefPtr<Gtk::TreeSelection> selection = messageListView_->get_selection();
     Gtk::TreeModel::Row row = *(selection->get_selected());
     Glib::ustring msgName = row[mlColumns_.colName_];

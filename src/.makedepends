@@ -17,3 +17,8 @@ SocketState.o: SocketState.cpp ../config.h ../include/sockstr/sstypes.h \
  ../include/sockstr/SocketState.h
 Stream.o: Stream.cpp ../config.h ../include/sockstr/sstypes.h \
  ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
+HttpStream.o: HttpStream.cpp ../include/sockstr/HttpStream.h \
+ ../include/sockstr/Socket.h ../include/sockstr/sstypes.h \
+ ../include/sockstr/SocketAddr.h ../include/sockstr/IPAddress.h \
+ ../include/sockstr/sstypes.h ../include/sockstr/Stream.h \
+ ../include/sockstr/StreamBuf.h
