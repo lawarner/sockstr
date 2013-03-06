@@ -14,3 +14,10 @@ Add extensible commands via plugin in ipctest.
 Make it easier to create new commands; maybe using class templates, helpers, etc.
 
 Port to Android, iOS.
+
+Add more protocols besides Http.
+
+Split sockstr and ipctest to 2 projects
+
+ipctest:  Add SendFile, ReceiveFile commands
+ipctest:  Support server-side testing

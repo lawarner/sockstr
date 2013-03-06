@@ -3,4 +3,5 @@ echoserver.o: echoserver.cpp
 filecopy.o: filecopy.cpp
 fbread.o: fbread.cpp
 fb2read.o: fb2read.cpp
+httptest.o: httptest.cpp
 testsockstr.o: testsockstr.cpp

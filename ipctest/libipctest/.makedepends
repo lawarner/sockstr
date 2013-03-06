@@ -1,14 +1,16 @@
 BuiltinCommands.o: BuiltinCommands.cpp BuiltinCommands.h Command.h \
- Params.h Message.h RunContext.h Serializer.h
+ Params.h Condition.h Log.h Message.h Parser.h RunContext.h Serializer.h
 Command.o: Command.cpp Command.h Params.h Message.h RunContext.h
-Condition.o: Condition.cpp Condition.h Params.h
+Condition.o: Condition.cpp Condition.h Params.h Parser.h Message.h \
+ RunContext.h Command.h
 Field.o: Field.cpp Field.h FieldType.h
 FieldType.o: FieldType.cpp FieldType.h
 Message.o: Message.cpp Field.h FieldType.h Message.h Params.h
 Params.o: Params.cpp Params.h
 Parser.o: Parser.cpp Field.h FieldType.h Message.h Parser.h
-RunContext.o: RunContext.cpp RunContext.h Command.h Params.h
+RunContext.o: RunContext.cpp Field.h FieldType.h Log.h Message.h \
+ RunContext.h Command.h Params.h
 Serializer.o: Serializer.cpp Command.h Params.h Parser.h Message.h \
  Serializer.h TestBase.h
-TestBase.o: TestBase.cpp BuiltinCommands.h Command.h Params.h Parser.h \
- Message.h Serializer.h TestBase.h
+TestBase.o: TestBase.cpp BuiltinCommands.h Command.h Params.h Condition.h \
+ Parser.h Message.h Serializer.h TestBase.h

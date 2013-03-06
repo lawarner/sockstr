@@ -678,11 +678,7 @@ Socket::open(const char* lpszFileName, UINT uOpenFlags)
 bool
 Socket::open(SocketAddr& rSockAddr, UINT uOpenFlags)
 {
-#ifdef TARGET_WINDOWS
-	if (rSockAddr.m_pProtocol != 0 && _stricmp(rSockAddr.m_pProtocol, "udp") == 0)
-#else
 	if (rSockAddr.m_pProtocol != 0 && strcasecmp(rSockAddr.m_pProtocol, "udp") == 0)
-#endif
 		m_nProtocol = SOCK_DGRAM;
 	else
 		m_nProtocol = SOCK_STREAM;

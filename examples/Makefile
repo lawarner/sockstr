@@ -26,11 +26,12 @@ INCDIR = $(TOP)/include
 CC = g++
 #CFLAGS = -Wall -O2 -I..
 CCFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
-LDFLAGS = -pthread $(LIBSOCKLIB)
+LDFLAGS = -pthread
+LDLIBS = $(LIBSOCKLIB)
 
 #COMPILE = $(CC) $(CFLAGS) -c
 
-OBJS := simplest.o echoserver.o filecopy.o fbread.o fb2read.o testsockstr.o
+OBJS := simplest.o echoserver.o filecopy.o fbread.o fb2read.o httptest.o testsockstr.o
 
 SRCS := $(OBJS:.o=.cpp)
 
@@ -38,25 +39,13 @@ INCS =
 
 LIBSOCKLIB = $(TOP)/src/libsockstr.a
 
-PROGRAMS = simplest echoserver filecopy fbread fb2read testsockstr
+PROGRAMS = simplest echoserver filecopy fbread fb2read httptest testsockstr
 
 
 .cpp.o: ; $(CC) $(CCFLAGS) -c $<
 
 
 all: $(PROGRAMS)
-
-simplest: simplest.o $(LIBSOCKLIB)
-
-echoserver: echoserver.o $(LIBSOCKLIB)
-
-filecopy: filecopy.o $(LIBSOCKLIB)
-
-fbread: fbread.o $(LIBSOCKLIB)
-
-fb2read: fb2read.o $(LIBSOCKLIB)
-
-testsockstr: testsockstr.o $(LIBSOCKLIB)
 
 
 

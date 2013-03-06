@@ -28,6 +28,7 @@
 // INCLUDE FILES
 //
 #include <sockstr/Socket.h>
+#include <map>
 
 
 namespace sockstr
@@ -60,7 +61,26 @@ public:
 
     ~HttpStream();
 
-    UINT get(const std::string& uri, const char* buffer);
+    UINT get(const std::string& uri, char* buffer, UINT uCount);
+    UINT head(const std::string& uri);
+    UINT post(const std::string& uri, char* buffer);
+    UINT put(const std::string& uri, char* buffer);
+    UINT deleter(const std::string& uri);
+
+    void addHeader(const std::string& header, const std::string& value);
+    void clearHeaders(void);
+    void expandHeaders(std::string& str);
+    void loadDefaultHeaders(void);
+
+protected:
+    struct HttpHeader
+    {
+        std::string value;
+        bool encoded;
+    };
+    typedef std::map<std::string, HttpHeader*> HeaderMap;
+
+    HeaderMap headers;
 
 private:
     HttpStream(const HttpStream&);	// disable copy constructor

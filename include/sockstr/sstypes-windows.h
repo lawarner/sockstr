@@ -35,4 +35,8 @@
 
 #define IOCTLSOCK ::ioctlsocket
 
+#ifndef strcasecmp
+#define strcasecmp _stricmp
+#endif
+
 #endif
