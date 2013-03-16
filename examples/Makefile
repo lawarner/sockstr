@@ -26,6 +26,7 @@ INCDIR = $(TOP)/include
 CC = g++
 #CFLAGS = -Wall -O2 -I..
 CCFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
+DEPCPPFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
 LDFLAGS = -pthread
 LDLIBS = $(LIBSOCKLIB)
 
@@ -55,7 +56,7 @@ clean:
 
 .PHONY: depends
 depends: $(SRCS) $(INCS)
-	$(CC) -I. -MM $(SRCS) > .makedepends
+	$(CC) -I. $(DEPCPPFLAGS) -MM $(SRCS) > .makedepends
 	touch .mkdep-timestamp
 
 .makedepends:

@@ -60,16 +60,16 @@ int main(int argc, const char *argv[])
     strhost = strhost.substr(0, strhost.find_first_of(':'));
     cout << "Client socket open at " << strhost << endl;
 
-    char buf[512] = "";
-
+    TimestampEncoder dateTime;
     http.loadDefaultHeaders();
     http.addHeader("Host", strhost);
-//    http.addHeader("Content-Type", "application/xml");
-/**        + "Host: www.facebook.com\r\n"
-		+ "Authorization: Plaintext realm=\"http://facebook.com/\"\r\n"
-        + "Content-Type: application/x-www-form-urlencoded\r\n"
+    http.addHeader("Date", dateTime.toString());
+/**
+		+ "Authorization: Plaintext realm=\"http://domain.com/\"\r\n"
+        + "Content-Type: application/x-www-form-urlencoded  application/xml"
 **/
 
+    char buf[512] = "";
     string strbuf;
     string headerbuf;
     string contentbuf;

@@ -23,6 +23,8 @@
 //
 
 #include <sockstr/HttpStream.h>
+#include <string.h>
+#include <time.h>
 using namespace sockstr;
 
 
@@ -31,6 +33,27 @@ static const char* defaultHeaderFields[] =
     "Accept", "*/*",
     0, 0
 };
+
+
+TimestampEncoder::TimestampEncoder(time_t timeSecs)
+    : timeSecs_(timeSecs)
+{
+
+}
+
+std::string TimestampEncoder::toString()
+{
+    char outstr[200];
+//    time_t tt;
+    struct tm* tmp;
+//    tt = time(0);
+//    tmp = localtime(&tt);
+    tmp = localtime(&timeSecs_);
+
+    strftime(outstr, sizeof(outstr), "%a, %d %b %Y %T %Z", tmp);
+    return std::string(outstr);
+}
+
 
 
 HttpStream::HttpStream()
@@ -73,9 +96,19 @@ UINT HttpStream::head(const std::string& uri)
     return 0;
 }
 
-UINT HttpStream::post(const std::string& uri, char* buffer)
+UINT HttpStream::post(const std::string& uri, char* message, char* buffer, UINT uCount)
 {
-    return 0;
+    std::string httpreq = "POST " + uri + " HTTP/1.1\r\n";
+    expandHeaders(httpreq);
+    write(httpreq);
+    if (message)
+        write(message, strlen(message));
+
+    UINT ret = read(buffer, uCount);	//TODO loop for 1024 and fill string param
+    std::cout << "header:" << std::endl << httpreq << std::endl
+              << "read=" << ret << std::endl;
+
+    return ret;
 }
 
 UINT HttpStream::put(const std::string& uri, char* buffer)
@@ -85,7 +118,15 @@ UINT HttpStream::put(const std::string& uri, char* buffer)
 
 UINT HttpStream::deleter(const std::string& uri)
 {
-    return 0;
+    std::string httpreq = "DELETE " + uri + " HTTP/1.1\r\n";
+    expandHeaders(httpreq);
+    write(httpreq);
+    char buffer[1024];
+    UINT ret = read(buffer, sizeof(buffer));
+    std::cout << "header:" << std::endl << httpreq << std::endl
+              << "read=" << ret << std::endl;
+
+    return ret;
 }
 
 void HttpStream::addHeader(const std::string& header, const std::string& value)
@@ -93,9 +134,20 @@ void HttpStream::addHeader(const std::string& header, const std::string& value)
     std::string hdrstr = header;
     HttpHeader* hdr = new HttpHeader;
     hdr->value   = value;
-    hdr->encoded = false;
+    hdr->encoder = 0;
     headers[hdrstr] = hdr;
 }
+
+void HttpStream::addHeader(const std::string& header, HttpParamEncoder* encoder,
+                           const std::string& value)
+{
+    std::string hdrstr = header;
+    HttpHeader* hdr = new HttpHeader;
+    hdr->value   = value;
+    hdr->encoder = encoder;
+    headers[hdrstr] = hdr;
+}
+
 
 void HttpStream::clearHeaders(void)
 {
@@ -107,7 +159,14 @@ void HttpStream::expandHeaders(std::string& str)
     HeaderMap::iterator it;
     for (it = headers.begin(); it != headers.end(); ++it)
     {
-        str += it->first + ": " + it->second->value + "\r\n";
+        HttpHeader* hdr = it->second;
+        std::string param;
+        if (hdr->encoder)
+            param = hdr->encoder->toString();
+        else
+            param = hdr->value;
+
+        str += it->first + ": " + param + "\r\n";
     }
     str += "\r\n";
 }

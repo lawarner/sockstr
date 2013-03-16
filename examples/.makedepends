@@ -1,7 +1,29 @@
-simplest.o: simplest.cpp
-echoserver.o: echoserver.cpp
-filecopy.o: filecopy.cpp
-fbread.o: fbread.cpp
-fb2read.o: fb2read.cpp
-httptest.o: httptest.cpp
-testsockstr.o: testsockstr.cpp
+simplest.o: simplest.cpp ../include/sockstr/sstypes.h \
+ ../include/sockstr/Socket.h ../include/sockstr/SocketAddr.h \
+ ../include/sockstr/IPAddress.h ../include/sockstr/sstypes.h \
+ ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
+echoserver.o: echoserver.cpp ../include/sockstr/Socket.h \
+ ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
+ ../include/sockstr/IPAddress.h ../include/sockstr/sstypes.h \
+ ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
+filecopy.o: filecopy.cpp ../include/sockstr/sstypes.h \
+ ../include/sockstr/Socket.h ../include/sockstr/SocketAddr.h \
+ ../include/sockstr/IPAddress.h ../include/sockstr/sstypes.h \
+ ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
+fbread.o: fbread.cpp ../include/sockstr/IPAddress.h \
+ ../include/sockstr/sstypes.h ../include/sockstr/Socket.h \
+ ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
+ ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
+fb2read.o: fb2read.cpp ../include/sockstr/IPAddress.h \
+ ../include/sockstr/sstypes.h ../include/sockstr/Socket.h \
+ ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
+ ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
+httptest.o: httptest.cpp ../include/sockstr/IPAddress.h \
+ ../include/sockstr/sstypes.h ../include/sockstr/HttpStream.h \
+ ../include/sockstr/Socket.h ../include/sockstr/sstypes.h \
+ ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \
+ ../include/sockstr/StreamBuf.h
+testsockstr.o: testsockstr.cpp ../include/sockstr/IPAddress.h \
+ ../include/sockstr/sstypes.h ../include/sockstr/Socket.h \
+ ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
+ ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h

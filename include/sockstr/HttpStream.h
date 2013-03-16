@@ -30,6 +30,8 @@
 #include <sockstr/Socket.h>
 #include <map>
 
+#include <time.h>
+
 
 namespace sockstr
 {
@@ -52,6 +54,23 @@ namespace sockstr
 //
 // CLASS DEFINITIONS
 //
+class DllExport HttpParamEncoder
+{
+public:
+    virtual void set(const std::string& value) { }
+    virtual std::string toString() = 0;
+};
+
+class DllExport TimestampEncoder : public HttpParamEncoder
+{
+public:
+    TimestampEncoder(time_t timeSecs = time(0));
+    virtual std::string toString();
+private:
+    time_t timeSecs_;
+};
+
+
 class DllExport HttpStream : public Socket
 {
 public:
@@ -63,11 +82,13 @@ public:
 
     UINT get(const std::string& uri, char* buffer, UINT uCount);
     UINT head(const std::string& uri);
-    UINT post(const std::string& uri, char* buffer);
+    UINT post(const std::string& uri, char* message, char* buffer, UINT uCount);
     UINT put(const std::string& uri, char* buffer);
     UINT deleter(const std::string& uri);
 
     void addHeader(const std::string& header, const std::string& value);
+    void addHeader(const std::string& header, HttpParamEncoder* encoder,
+                   const std::string& value = "");
     void clearHeaders(void);
     void expandHeaders(std::string& str);
     void loadDefaultHeaders(void);
@@ -76,7 +97,7 @@ protected:
     struct HttpHeader
     {
         std::string value;
-        bool encoded;
+        HttpParamEncoder* encoder;
     };
     typedef std::map<std::string, HttpHeader*> HeaderMap;
 
