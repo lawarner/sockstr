@@ -1,5 +1,0 @@
-ipctest-tui.o: ipctest-tui.cpp ../../include/sockstr/sstypes.h \
- ../../include/sockstr/Socket.h ../../include/sockstr/SocketAddr.h \
- ../../include/sockstr/IPAddress.h ../../include/sockstr/sstypes.h \
- ../../include/sockstr/Stream.h ../../include/sockstr/StreamBuf.h \
- ../libipctest/Parser.h ../libipctest/Message.h

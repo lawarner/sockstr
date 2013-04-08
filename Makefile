@@ -25,8 +25,7 @@ BACKUPFILE = ~/Downloads/srcrepo/sockstr-src-`date +%Y%j`.tar.bz2
 
 LIBSOCKSTR = libsockstr.a
 
-SUBDIRS = src examples ipctest
-#SUBDIRS = src examples
+SUBDIRS = src examples
 
 
 all: subdirs

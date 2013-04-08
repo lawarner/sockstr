@@ -17,8 +17,9 @@ Sample code
      if (sock.good())
          sock << "Hello, world!" << std::endl;
 
-There is also a test harness in the ipctest subdirectory.  This allows capturing test 
-scenarios and saving these for later playback.
+
+Note: The test harness tool that was in ipctest subdirectory has been moved to its
+      own project.
 
 
 How to Build on Linux
@@ -35,12 +36,6 @@ in a future version.
 
 ## Building
 Simply type 'make'.  This will build the sockstr library and example programs.
-
-To build the ipctest library and tools, type 'make ipctest'.  Additional prerequites 
-are required to build ipctest, such as:
-
-- expat
-- gtkmm
 
 
 How to Build on Windows
