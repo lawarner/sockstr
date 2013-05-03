@@ -553,8 +553,10 @@ Socket::listen(const int nBacklog)
 
 	if (ClientSocket == INVALID_SOCKET)
 	{
-		pClient->m_pState = SSClosed::instance();
-		pClient->m_Status  = SC_FAILED;
+		//pClient->m_pState = SSClosed::instance();
+		//pClient->m_Status  = SC_FAILED;
+        delete pClient;
+        pClient = 0;
 	}
 	else
 	{

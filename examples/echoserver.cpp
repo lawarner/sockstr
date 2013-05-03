@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012
+   Copyright (C) 2012, 2013
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -21,12 +21,16 @@
 // echoserver.cpp
 //
 // This example spawns a server socket thread that accepts client connections.
-// Then it reads messages from client and echoes them back.
+// Then it reads messages from client and optionally echoes them back.
+//
+// This program relies on posix threads and is only known to work on 
+// linux for now.
 
 #include <cerrno>
 #include <fstream>
 #include <iostream>
 #include <pthread.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -36,30 +40,45 @@ using namespace std;
 
 
 bool exit_server = false;
+Socket serverSock;
 
+// Params is the structure passed between threads
 struct Params
 {
+    Params(int _port, bool _binary, bool _echo, Stream* _sock = 0)
+        : port(_port), binary(_binary), clientSock(_sock) { }
+    Params(Params* p) : port(p->port), binary(p->binary), echo(p->echo), 
+                        clientSock(p->clientSock) { }
+
     int port;
     bool binary;
+    bool echo;
     Stream* clientSock;
 };
 
 
 void* client_process(void* args)
 {
-    Params* params = (Params*) args;
-    Stream* clientSock = params->clientSock;
     cout << "Client process started." << endl;
-    while (!exit_server && clientSock->queryStatus() == SC_OK)
+    Params* params = static_cast<Params*>(args);
+    Stream* clientSock = params->clientSock;
+    int totalRead = 0;
+
+    while (!exit_server && clientSock->good())
     {
         if (params->binary)
         {
-            char buf[256];
+            char buf[512];
             int sz = clientSock->read(buf, sizeof(buf));
             if (sz > 0)
             {
-                cout << "Echo " << sz << " bytes." << endl;
+                if (params->echo)
+                    cout << string(buf, sz) << endl;
+                else
+                    cout << "Echoing " << sz << " bytes." << endl;
+
                 clientSock->write(buf, sz);
+                totalRead += sz;
             }
         }
         else
@@ -70,10 +89,12 @@ void* client_process(void* args)
         }
     }
 
-    clientSock->close();
+    if (clientSock->good())
+        clientSock->close();
     delete clientSock;
+    delete params;
 
-    cout << "Client exiting..." << endl;
+    cout << "Client exiting... total bytes read=" << totalRead << endl;
     return 0;
 }
 
@@ -84,57 +105,75 @@ void* server_process(void* args)
     Params* params = (Params*) args;
     cout << "Server connecting to port " << params->port << endl;
 
-    Socket sock;
     SocketAddr saddr(0, params->port);
-    if (!sock.open(saddr, Socket::modeReadWrite))
+    if (!serverSock.open(saddr, Socket::modeReadWrite))
     {
         cout << "Error opening server socket: " << errno << endl;
         return ret;
     }
 
-    while (sock.queryStatus() == SC_OK)
+    while (!exit_server && serverSock.good())
     {
-        Stream* clientSock = sock.listen();
-        if (clientSock)
+        Stream* clientSock = serverSock.listen();
+        if (clientSock && clientSock->good())
         {
-            Params clientParams = *params;
-            clientParams.clientSock = clientSock;
+            Params *clientParams = new Params(params);
+            clientParams->clientSock = clientSock;
             
             pthread_t tid;
-            pthread_create(&tid, NULL, client_process, &clientParams);
+            pthread_create(&tid, NULL, client_process, clientParams);
         }
     }
 
-    sock.close();
+    if (serverSock.good())
+        serverSock.close();
     return 0;
 }
+
+// Signal handler
+void quitit(int sig)
+{
+    cout << endl << "Exiting...";
+    // Exit as cleanly as possible
+    exit_server = true;
+    serverSock.close();
+    cout << endl;
+}
+
 
 
 int main(int argc, char* argv[])
 {
-    Params params = {
-        4321,
-        true,
-        0
-    };
+    Params params(4321, true, true);
 
     int opt;
-    while ((opt = getopt(argc, argv, "b")) != -1)
+    while ((opt = getopt(argc, argv, "as")) != -1)
     {
         switch (opt)
         {
-        case 'b':
-            cout << "Using block copy" << endl;
-            params.binary = true;
+        case 'a':
+            params.binary = false;
+            break;
+        case 's':
+            params.echo = false;
             break;
         default:
-            cout << "Usage:  echoserver [ -b ] <port>" << endl;
+            cout << "Usage:  echoserver [ -as ] <port>" << endl
+                 << "          -a for string reads on socket" << endl
+                 << "          -s = only display summary on stdout" << endl;
             return 1;
         }
     }
 
     if (optind < argc)
         params.port = atoi(argv[optind]);
+
+    
+    cout << "Using " << (params.binary ? "block" : "string") << " copy, "
+         << (params.echo ? "echoing" : "not echoing") << " contents." << endl;
+
+    signal(SIGINT, quitit);
+    signal(SIGQUIT, quitit);
 
     server_process(&params);
 
