@@ -23,6 +23,7 @@
 //
 
 #include <sockstr/HttpStream.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 using namespace sockstr;
@@ -35,6 +36,29 @@ static const char* defaultHeaderFields[] =
 };
 
 
+
+CompoundEncoder::CompoundEncoder()
+{
+
+}
+
+std::string CompoundEncoder::toString()
+{
+    std::string str;
+    std::vector<HttpParamEncoder*>::iterator it;
+    for (it = encoders_.begin(); it != encoders_.end(); ++it)
+    {
+        str += (*it)->getName() + "=\"" + (*it)->toString() + "\", ";
+    }
+    return str;
+}
+
+void CompoundEncoder::addElement(HttpParamEncoder* encoder)
+{
+    encoders_.push_back(encoder);
+}
+
+
 TimestampEncoder::TimestampEncoder(time_t timeSecs)
     : timeSecs_(timeSecs)
 {
@@ -44,16 +68,12 @@ TimestampEncoder::TimestampEncoder(time_t timeSecs)
 std::string TimestampEncoder::toString()
 {
     char outstr[200];
-//    time_t tt;
     struct tm* tmp;
-//    tt = time(0);
-//    tmp = localtime(&tt);
     tmp = localtime(&timeSecs_);
 
     strftime(outstr, sizeof(outstr), "%a, %d %b %Y %T %Z", tmp);
     return std::string(outstr);
 }
-
 
 
 HttpStream::HttpStream()

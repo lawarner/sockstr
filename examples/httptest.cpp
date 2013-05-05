@@ -32,7 +32,7 @@
 #include <cstring>
 
 #include <sockstr/IPAddress.h>
-#include <sockstr/HttpStream.h>
+#include <sockstr/OAuth.h>
 
 using namespace sockstr;
 using namespace std;
@@ -61,9 +61,16 @@ int main(int argc, const char *argv[])
     cout << "Client socket open at " << strhost << endl;
 
     TimestampEncoder dateTime;
+    OauthNonceEncoder nonce1;
+    OauthNonceEncoder nonce2;
+    CompoundEncoder cme;
+    cme.addElement(&nonce1);
+    cme.addElement(&nonce2);
+
     http.loadDefaultHeaders();
     http.addHeader("Host", strhost);
     http.addHeader("Date", dateTime.toString());
+    http.addHeader("X-Compound", cme.toString());
 /**
 		+ "Authorization: Plaintext realm=\"http://domain.com/\"\r\n"
         + "Content-Type: application/x-www-form-urlencoded  application/xml"

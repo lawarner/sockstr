@@ -29,6 +29,7 @@
 //
 #include <sockstr/Socket.h>
 #include <map>
+#include <vector>
 
 #include <time.h>
 
@@ -54,12 +55,41 @@ namespace sockstr
 //
 // CLASS DEFINITIONS
 //
+/**
+ * The HTTP header contains parameters that are the form "Name: Value"
+ * The "Value" portion can be a fixed string, but often it is a computed
+ * value, for example the Date parameter.  The HttpParamEncoder class can be
+ * subclassed to handle these special computed, encoded parameter values.
+ */
 class DllExport HttpParamEncoder
 {
 public:
+    HttpParamEncoder() { }
+    HttpParamEncoder(const std::string& name, const std::string& value = std::string())
+        : name_(name) { }
+
     virtual void set(const std::string& value) { }
     virtual std::string toString() = 0;
+
+    void setName(const std::string& name) { name_ = name; }
+    const std::string& getName() const { return name_; }
+
+private:
+    std::string name_;	// optional name
 };
+
+class DllExport CompoundEncoder : public HttpParamEncoder
+{
+public:
+    CompoundEncoder();
+    virtual std::string toString();
+
+    void addElement(HttpParamEncoder* encoder);
+
+private:
+    std::vector<HttpParamEncoder*> encoders_;
+};
+
 
 class DllExport TimestampEncoder : public HttpParamEncoder
 {
@@ -71,6 +101,9 @@ private:
 };
 
 
+/**
+ * Class to handle HTTP protocol over a socket connection.
+ */
 class DllExport HttpStream : public Socket
 {
 public:
@@ -78,7 +111,7 @@ public:
 	HttpStream(const char* lpszFileName, UINT uOpenFlags);
 	HttpStream(SocketAddr& rSockAddr, UINT uOpenFlags);
 
-    ~HttpStream();
+    virtual ~HttpStream();
 
     UINT get(const std::string& uri, char* buffer, UINT uCount);
     UINT head(const std::string& uri);

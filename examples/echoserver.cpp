@@ -46,7 +46,7 @@ Socket serverSock;
 struct Params
 {
     Params(int _port, bool _binary, bool _echo, Stream* _sock = 0)
-        : port(_port), binary(_binary), clientSock(_sock) { }
+        : port(_port), binary(_binary), echo(_echo), clientSock(_sock) { }
     Params(Params* p) : port(p->port), binary(p->binary), echo(p->echo), 
                         clientSock(p->clientSock) { }
 

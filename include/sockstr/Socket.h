@@ -115,7 +115,7 @@ public:
 	/*!
 	 *   Destruct a Socket object and close socket
      */
-	~Socket(void);
+	virtual ~Socket(void);
 	/*!
 	     Return socket handle of the connection.
 	*/

@@ -29,12 +29,13 @@ CC = g++
 CCFLAGS = -Wall -g -O2 -I$(TOP) -I$(INCDIR)
 
 OBJS := IPAddress.o Socket.o SocketAddr.o StreamBuf.o SocketState.o Stream.o \
-        HttpStream.o
+        HttpStream.o OAuth.o
 
 SRCS := $(OBJS:.o=.cpp)
 
 INCS = $(IDIR2)/IPAddress.h $(IDIR2)/IPC.h $(IDIR2)/SocketAddr.h $(IDIR2)/StreamBuf.h \
        $(IDIR2)/Socket.h $(IDIR2)/Stream.h $(IDIR2)/SocketState.h $(IDIR2)/HttpStream.h \
+       $(IDIR2)/OAuth.h \
        $(IDIR2)/sstypes.h $(TOP)/config.h
 
 LIBSOCKSTR = libsockstr.a

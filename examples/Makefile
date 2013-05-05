@@ -1,5 +1,5 @@
 #
-#   Copyright (C) 2012
+#   Copyright (C) 2012, 2013
 #   Andy Warner
 #   This file is part of the sockstr class library.
 #
@@ -28,12 +28,9 @@ CC = g++
 CCFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
 DEPCPPFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
 LDFLAGS = -pthread
-LDLIBS = $(LIBSOCKLIB)
-
-#COMPILE = $(CC) $(CFLAGS) -c
+LDLIBS = 
 
 OBJS := simplest.o echoserver.o filecopy.o fbread.o fb2read.o httptest.o testsockstr.o
-
 SRCS := $(OBJS:.o=.cpp)
 
 INCS = 
@@ -48,7 +45,7 @@ PROGRAMS = simplest echoserver filecopy fbread fb2read httptest testsockstr
 
 all: $(PROGRAMS)
 
-
+$(PROGRAMS): $(LIBSOCKLIB)
 
 .PHONY: clean
 clean:
