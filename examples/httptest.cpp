@@ -60,17 +60,19 @@ int main(int argc, const char *argv[])
     strhost = strhost.substr(0, strhost.find_first_of(':'));
     cout << "Client socket open at " << strhost << endl;
 
-    TimestampEncoder dateTime;
-    OauthNonceEncoder nonce1;
-    OauthNonceEncoder nonce2;
+    TimestampEncoder dateTime(true);
+    OAuthNonceEncoder *nonce1 = new OAuthNonceEncoder(time(0)+1);
+    OAuthNonceEncoder *nonce2 = new OAuthNonceEncoder(time(0)+7);
     CompoundEncoder cme;
-    cme.addElement(&nonce1);
-    cme.addElement(&nonce2);
+    cme.addElement(nonce1);
+    cme.addElement(nonce2);
+    OAuthParamEncoder oauth;
 
     http.loadDefaultHeaders();
     http.addHeader("Host", strhost);
     http.addHeader("Date", dateTime.toString());
     http.addHeader("X-Compound", cme.toString());
+    http.addHeader("X-Authorize", oauth.toString());
 /**
 		+ "Authorization: Plaintext realm=\"http://domain.com/\"\r\n"
         + "Content-Type: application/x-www-form-urlencoded  application/xml"

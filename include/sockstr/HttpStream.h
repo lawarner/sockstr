@@ -66,38 +66,85 @@ class DllExport HttpParamEncoder
 public:
     HttpParamEncoder() { }
     HttpParamEncoder(const std::string& name, const std::string& value = std::string())
-        : name_(name) { }
+        : name_(name), value_(value) { }
+    virtual ~HttpParamEncoder() { }
 
-    virtual void set(const std::string& value) { }
-    virtual std::string toString() = 0;
+    virtual void set(const std::string& value) { value_ = value; }
+    virtual std::string toString() { return value_; }
+    virtual std::string getNameValue()
+    {
+        return getName() + "\"" + toString() + "\"";
+    }
 
     void setName(const std::string& name) { name_ = name; }
     const std::string& getName() const { return name_; }
 
 private:
     std::string name_;	// optional name
+    std::string value_;	// optional value
 };
 
+/**
+ * The CompoundEncoder is simply a list of other encoders.
+ * This is useful when a parameter contains multiple parts.  For
+ * example, an Authorization header containing values for OAuth.
+ */
 class DllExport CompoundEncoder : public HttpParamEncoder
 {
 public:
-    CompoundEncoder();
+    CompoundEncoder(const char* separator = ", ");
+    virtual ~CompoundEncoder();
     virtual std::string toString();
 
+    /**
+     * Add encoder to this compound encoder.
+     * @param encoder Pointer to an http encoder.  Ownership of the memory 
+     *                pointed to by encoder is transferred to this object
+     *                and will be freed when this object is destroyed.
+     */
     void addElement(HttpParamEncoder* encoder);
 
 private:
     std::vector<HttpParamEncoder*> encoders_;
+    const char* separator_;
 };
 
 
+class DllExport FixedStringEncoder : public HttpParamEncoder
+{
+public:
+    /** Construct a FixedStringEncoder. */
+    FixedStringEncoder(const std::string& value = std::string())
+        : HttpParamEncoder(std::string(), value) { }
+    FixedStringEncoder(const std::string& name, const std::string& value)
+        : HttpParamEncoder(name, value) { }
+
+};
+
+
+/**
+ * Encodes Date/time into acceptable W3C format.
+ * Example of format: "Sun, 05 May 2013 19:51:06 PDT".
+ * Defaults to current time, but can be initialized with any epoch time
+ * in seconds.
+ */
 class DllExport TimestampEncoder : public HttpParamEncoder
 {
 public:
+    /** Construct a TimestampEncoder.
+     *  @param timeSecs Number of seconds since epoch to set this timestamp to.
+     *                  Defaults to current date/time.
+     */
     TimestampEncoder(time_t timeSecs = time(0));
+    /** Construct a TimestampEncoder.
+     *  @param refresh If true, regenerate timestamp get time toString() is called.
+     */
+    TimestampEncoder(bool refresh);
+
     virtual std::string toString();
 private:
     time_t timeSecs_;
+    bool refresh_;
 };
 
 
@@ -127,12 +174,7 @@ public:
     void loadDefaultHeaders(void);
 
 protected:
-    struct HttpHeader
-    {
-        std::string value;
-        HttpParamEncoder* encoder;
-    };
-    typedef std::map<std::string, HttpHeader*> HeaderMap;
+    typedef std::map<std::string, HttpParamEncoder*> HeaderMap;
 
     HeaderMap headers;
 

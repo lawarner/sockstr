@@ -25,16 +25,11 @@
 #include <string>
 #include <sockstr/StreamBuf.h>
 
+/*
+ * Socket class library.
+ */
 namespace sockstr
 {
-/*!
-  @class Stream
-  The Stream class provides a transport-independent
-      interface for IPC.  It is the abstract base class for
-	  transport-specific classes such as Socket.
-*/
-
-
 //
 // MACRO DEFINITIONS
 //
@@ -54,12 +49,12 @@ enum STATUSCODE
 };
 
 
-/*!
-  @typedef Callback
-  Definition of the asynchronous callback routines
-  @param id  Corresponding request ID
-  @param ptr Pointer to user data
-*/
+/**!
+ *  @typedef Callback
+ *  Definition of the asynchronous callback routines
+ *  @param id  Corresponding request ID
+ *  @param ptr Pointer to user data
+ */
 typedef void (*Callback)(DWORD id, void* ptr);
 
 //
@@ -69,28 +64,32 @@ class State;
 class IpcStruct;
 class IpcReplyStruct;
 
-/*!
-  Stream base class.
-  The Stream class provides a transport-independent
-      interface for IPC.  It is the abstract base class for
-	  transport-specific classes such as Socket.
-*/
+/**
+ *  Stream base class.
+ *
+ *  The Stream class provides an abstract interface for the various
+ *  transport-specific classes (see Socket for example).  This class
+ *  is not specific to any particular transport mechanism.
+ */
 class DllExport Stream : public std::iostream
 {
 public:
-	virtual ~Stream(void);
+	virtual ~Stream(void);	//!< Destructor
 
-	/*!  Returns the current status of the stream.
+	/**  Returns the current status of the stream.
      *   @deprecated Use good(), bad() and such functions from the 
      *       std::ios base class.
      */
     STATUSCODE  queryStatus     (void) const;
-	/*!
-	     Register a user-defined callback function.
-	     Register a user-defined function as the default routine for 
-         this stream that will be called upon completion of asynchronous I/O.
-         @param pCallback Address of the callback function
-	*/
+
+	/**  Register a user-defined callback function.
+     *
+	 *   Register a user-defined function as the default routine for 
+     *   this stream that will be called upon completion of asynchronous I/O.
+     *   @param pCallback Address of the callback function
+     *   @return the address of the previous callback is returned, or 0 if 
+     *           none was registered.
+     */
 	Callback    registerCallback(Callback pCallback = 0);
 
     // Interfaces that are implemented by derived classes
@@ -108,13 +107,19 @@ public:
     virtual UINT    read            (void* pBuf, UINT uCount) = 0;
 	//!  Read a string from the stream (state-dependent).
     virtual UINT    read            (std::string& str, int delimiter='\n') = 0;
-	//!  Indicates if stream can be reopened after a close (state-dependent).
+	/**  Indicates if stream can be reopened after a close (state-dependent).
+     *
+     *  This function may optionally be implemented by sub-classes that are
+     *  able to reuse its instances for subsequent connections.  The Stream
+     *  class implements this function by always returning false
+     */
     virtual bool    reconnect       (void);
 	//!  Perform a remote procedure call over the stream (state-dependent).
 	virtual int     remoteProcedure (IpcStruct* pData,
 								 	 Callback pCallback = 0) = 0;
-	//!  Receive either a remote procedure or a remote reply from the
-	//!    stream (state-dependent).
+	/**  Receive either a remote procedure or a remote reply from the
+	 *   stream (state-dependent).
+     */
 	virtual int     remoteReadData  (IpcStruct* pData, 
 				 					UINT uMaxLength = 0) = 0;
 	//!  Send a reply to a remote procedure call (state-dependent).
@@ -130,7 +135,13 @@ public:
 	virtual operator char* (void) const = 0;
 
 protected:
+    //! Constructs a Stream objects.
+    //! This abstract class can only be instanciated from a sub-class.
     Stream(void);
+    //! Constructs a Stream objects.
+    //! This abstract class can only be instanciated from a sub-class.
+    //! @param hFile an already opened stream handle that will be used
+    //!              by this Stream.
     Stream(const UINT hFile);
 
 private:
@@ -139,7 +150,7 @@ private:
 	Stream& operator=(const Stream&);
 
 protected:
-    SOCKET m_hFile;
+    SOCKET m_hFile;		//!< Handle to stream
 
 	//! Pointer to the current state of the stream
     State*     m_pState;
@@ -148,6 +159,7 @@ protected:
 	//! Address of the user's default callback routine for this stream
 	Callback    m_pDefCallback;
 
+    //! Implements std::streambuf interface for this class.
     StreamBuf strbuf;
 };
 

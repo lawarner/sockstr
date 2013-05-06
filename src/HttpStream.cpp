@@ -37,10 +37,21 @@ static const char* defaultHeaderFields[] =
 
 
 
-CompoundEncoder::CompoundEncoder()
+CompoundEncoder::CompoundEncoder(const char* separator)
+    : separator_(separator)
 {
 
 }
+
+CompoundEncoder::~CompoundEncoder()
+{
+    std::vector<HttpParamEncoder*>::iterator it;
+    for (it = encoders_.begin(); it != encoders_.end(); ++it)
+    {
+        delete *it;
+    }
+}
+
 
 std::string CompoundEncoder::toString()
 {
@@ -48,7 +59,13 @@ std::string CompoundEncoder::toString()
     std::vector<HttpParamEncoder*>::iterator it;
     for (it = encoders_.begin(); it != encoders_.end(); ++it)
     {
-        str += (*it)->getName() + "=\"" + (*it)->toString() + "\", ";
+        std::string name = (*it)->getName();
+        if (name.empty())
+            str += (*it)->toString();
+        else
+            str += (*it)->getName() + "=\"" + (*it)->toString() + "\"";
+        if (*it != encoders_.back())
+            str += separator_;
     }
     return str;
 }
@@ -61,6 +78,14 @@ void CompoundEncoder::addElement(HttpParamEncoder* encoder)
 
 TimestampEncoder::TimestampEncoder(time_t timeSecs)
     : timeSecs_(timeSecs)
+    , refresh_(false)
+{
+
+}
+
+TimestampEncoder::TimestampEncoder(bool refresh)
+    : timeSecs_(time(0))
+    , refresh_(refresh)
 {
 
 }
@@ -69,11 +94,14 @@ std::string TimestampEncoder::toString()
 {
     char outstr[200];
     struct tm* tmp;
+    if (refresh_)
+        timeSecs_ = time(0);
     tmp = localtime(&timeSecs_);
 
     strftime(outstr, sizeof(outstr), "%a, %d %b %Y %T %Z", tmp);
     return std::string(outstr);
 }
+
 
 
 HttpStream::HttpStream()
@@ -152,20 +180,15 @@ UINT HttpStream::deleter(const std::string& uri)
 void HttpStream::addHeader(const std::string& header, const std::string& value)
 {
     std::string hdrstr = header;
-    HttpHeader* hdr = new HttpHeader;
-    hdr->value   = value;
-    hdr->encoder = 0;
-    headers[hdrstr] = hdr;
+    HttpParamEncoder* encoder = new FixedStringEncoder(value);
+    headers[hdrstr] = encoder;
 }
 
 void HttpStream::addHeader(const std::string& header, HttpParamEncoder* encoder,
                            const std::string& value)
 {
     std::string hdrstr = header;
-    HttpHeader* hdr = new HttpHeader;
-    hdr->value   = value;
-    hdr->encoder = encoder;
-    headers[hdrstr] = hdr;
+    headers[hdrstr] = encoder;
 }
 
 
@@ -179,13 +202,8 @@ void HttpStream::expandHeaders(std::string& str)
     HeaderMap::iterator it;
     for (it = headers.begin(); it != headers.end(); ++it)
     {
-        HttpHeader* hdr = it->second;
-        std::string param;
-        if (hdr->encoder)
-            param = hdr->encoder->toString();
-        else
-            param = hdr->value;
-
+        HttpParamEncoder* encoder = it->second;
+        std::string param = encoder->toString();
         str += it->first + ": " + param + "\r\n";
     }
     str += "\r\n";

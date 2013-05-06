@@ -52,10 +52,10 @@ namespace sockstr
 // CLASS DEFINITIONS
 //
 
-class DllExport OauthNonceEncoder : public HttpParamEncoder
+class DllExport OAuthNonceEncoder : public HttpParamEncoder
 {
 public:
-    OauthNonceEncoder(unsigned int seed = time(0));
+    OAuthNonceEncoder(unsigned int seed = time(0));
     virtual std::string toString();
 
     const char* getValidCharacters();
@@ -67,6 +67,12 @@ private:
     static const char* validChars_;
 };
 
+
+class DllExport OAuthParamEncoder : public CompoundEncoder
+{
+public:
+    OAuthParamEncoder(const char* separator = ", \n    ");
+};
 
 }  // namespace sockstr
 

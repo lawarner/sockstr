@@ -25,7 +25,6 @@ INCDIR = $(TOP)/include
 IDIR2 = $(INCDIR)/sockstr
 
 CC = g++
-#CFLAGS = -Wall -O2 -I.
 CCFLAGS = -Wall -g -O2 -I$(TOP) -I$(INCDIR)
 
 
@@ -35,4 +34,4 @@ all:
 
 .PHONY: clean
 clean:
-	rm -f html
+	rm -rf html

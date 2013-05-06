@@ -40,19 +40,19 @@
 using namespace sockstr;
 
 
-const char* OauthNonceEncoder::validChars_ = "abcdefghijklmnopqrstuvwxyz"
+const char* OAuthNonceEncoder::validChars_ = "abcdefghijklmnopqrstuvwxyz"
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "0123456789_";
 
 
 
-OauthNonceEncoder::OauthNonceEncoder(unsigned int seed)
+OAuthNonceEncoder::OAuthNonceEncoder(unsigned int seed)
     : HttpParamEncoder("oauth_nonce")
     , seed_(seed)
 {
 
 }
 
-std::string OauthNonceEncoder::toString()
+std::string OAuthNonceEncoder::toString()
 {
     static int szValid = strlen(validChars_);
     int olen = 15 + (rand_r(&seed_) & 0xf);
@@ -67,8 +67,23 @@ std::string OauthNonceEncoder::toString()
     return std::string(nonce_);
 }
 
-const char* OauthNonceEncoder::getValidCharacters()
+const char* OAuthNonceEncoder::getValidCharacters()
 {
     return validChars_;
 }
+
+
+OAuthParamEncoder::OAuthParamEncoder(const char* separator)
+    : CompoundEncoder(separator)
+{
+    addElement(new FixedStringEncoder("OAuth realm", "www.myrealm.com/auth"));
+    addElement(new FixedStringEncoder("oauth_consumer_key", "consumer key"));
+    addElement(new FixedStringEncoder("oauth_token", "token"));
+    addElement(new OAuthNonceEncoder);
+    addElement(new FixedStringEncoder("oauth_timestamp", "timestamp"));
+    addElement(new FixedStringEncoder("oauth_signature_method", "HMAC-SHA1"));
+    addElement(new FixedStringEncoder("oauth_version", "1.0"));
+    addElement(new FixedStringEncoder("oauth_signaure", "signaure"));
+}
+
 
