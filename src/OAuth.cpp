@@ -73,17 +73,59 @@ const char* OAuthNonceEncoder::getValidCharacters()
 }
 
 
-OAuthParamEncoder::OAuthParamEncoder(const char* separator)
-    : CompoundEncoder(separator)
+OAuthSignatureEncoder::OAuthSignatureEncoder()
+    : HttpParamEncoder("oauth_signature", "NOT YET COMPUTED")
 {
-    addElement(new FixedStringEncoder("OAuth realm", "www.myrealm.com/auth"));
-    addElement(new FixedStringEncoder("oauth_consumer_key", "consumer key"));
-    addElement(new FixedStringEncoder("oauth_token", "token"));
-    addElement(new OAuthNonceEncoder);
-    addElement(new FixedStringEncoder("oauth_timestamp", "timestamp"));
-    addElement(new FixedStringEncoder("oauth_signature_method", "HMAC-SHA1"));
-    addElement(new FixedStringEncoder("oauth_version", "1.0"));
-    addElement(new FixedStringEncoder("oauth_signaure", "signaure"));
+
+}
+
+void OAuthSignatureEncoder::computeSignature(const std::string& httpMethod,
+                                             std::vector<HttpParamEncoder*> encoders)
+{
+    set("computed.");
 }
 
 
+
+OAuthParamEncoder::OAuthParamEncoder(const std::string& realm, const std::string& key)
+    : CompoundEncoder(", \n    ")	// separator
+    , consumerKey_(key)
+    , signatureEncoder_(new OAuthSignatureEncoder)
+{
+    TimestampEncoder *tse = new TimestampEncoder(true, TimestampEncoder::DateTimeRaw);
+    tse->setName("oauth_timestamp");
+
+    addElement(new FixedStringEncoder("OAuth realm", realm));
+    addElement(new FixedStringEncoder("oauth_consumer_key", consumerKey_));
+    addElement(new OAuthNonceEncoder);
+    addElement(tse);
+    addElement(new FixedStringEncoder("oauth_signature_method", "HMAC-SHA1"));
+    addElement(new FixedStringEncoder("oauth_version", "1.0"));
+    addElement(signatureEncoder_);
+}
+
+
+OAuthParamEncoder::~OAuthParamEncoder()
+{
+
+}
+
+std::string OAuthParamEncoder::toString()
+{
+    if (token_.empty())
+        std::cout << "Warning: no OAuth token set." << std::endl;
+
+    // Update the signature
+    signatureEncoder_->computeSignature("GET", encoders_);
+    
+    return CompoundEncoder::toString();
+}
+
+void OAuthParamEncoder::setToken(const std::string& token, const std::string& secret)
+{
+    token_ = token;
+    tokenSecret_ = secret;
+
+    addElement(new FixedStringEncoder("oauth_token", token_));
+    addElement(new FixedStringEncoder("oauth_token_secret", tokenSecret_));
+}

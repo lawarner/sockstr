@@ -67,11 +67,34 @@ private:
     static const char* validChars_;
 };
 
+class DllExport OAuthSignatureEncoder : public HttpParamEncoder
+{
+public:
+    OAuthSignatureEncoder();
 
+    void computeSignature(const std::string& httpMethod,
+                          std::vector<HttpParamEncoder*> encoders);
+};
+
+
+/**
+ * Handles the various header components for an OAuth session.
+ */
 class DllExport OAuthParamEncoder : public CompoundEncoder
 {
 public:
-    OAuthParamEncoder(const char* separator = ", \n    ");
+    OAuthParamEncoder(const std::string& realm, const std::string& key = std::string());
+    virtual ~OAuthParamEncoder();
+
+    virtual std::string toString();
+
+    void setToken(const std::string& token, const std::string& secret);
+
+private:
+    std::string consumerKey_;
+    std::string token_;
+    std::string tokenSecret_;
+    OAuthSignatureEncoder* signatureEncoder_;
 };
 
 }  // namespace sockstr

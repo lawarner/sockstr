@@ -103,9 +103,11 @@ public:
      *                and will be freed when this object is destroyed.
      */
     void addElement(HttpParamEncoder* encoder);
+    void sortElements() { } //TODO: implement
 
-private:
+protected:
     std::vector<HttpParamEncoder*> encoders_;
+private:
     const char* separator_;
 };
 
@@ -131,20 +133,33 @@ public:
 class DllExport TimestampEncoder : public HttpParamEncoder
 {
 public:
+    enum DateTimeFormat
+    {
+        DateTimeRfc822,
+        DateTimeRaw
+    };
+
     /** Construct a TimestampEncoder.
      *  @param timeSecs Number of seconds since epoch to set this timestamp to.
      *                  Defaults to current date/time.
+     *  @param format  The output format of the date.  Either DateTimeRfc822
+     *                 or DateTimeRaw.
      */
-    TimestampEncoder(time_t timeSecs = time(0));
+    TimestampEncoder(time_t timeSecs = time(0), DateTimeFormat format = DateTimeRfc822);
     /** Construct a TimestampEncoder.
-     *  @param refresh If true, regenerate timestamp get time toString() is called.
+     *  @param refresh If true, regenerate timestamp from current time when toString()
+     *                 is called.
+     *  @param format  The output format of the date.  Either DateTimeRfc822
+     *                 or DateTimeRaw.
      */
-    TimestampEncoder(bool refresh);
+    TimestampEncoder(bool refresh, DateTimeFormat format = DateTimeRfc822);
 
     virtual std::string toString();
 private:
     time_t timeSecs_;
     bool refresh_;
+
+    DateTimeFormat format_;
 };
 
 

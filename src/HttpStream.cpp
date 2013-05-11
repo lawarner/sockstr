@@ -24,6 +24,7 @@
 
 #include <sockstr/HttpStream.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <time.h>
 using namespace sockstr;
@@ -76,16 +77,18 @@ void CompoundEncoder::addElement(HttpParamEncoder* encoder)
 }
 
 
-TimestampEncoder::TimestampEncoder(time_t timeSecs)
+TimestampEncoder::TimestampEncoder(time_t timeSecs, DateTimeFormat format)
     : timeSecs_(timeSecs)
     , refresh_(false)
+    , format_(format)
 {
 
 }
 
-TimestampEncoder::TimestampEncoder(bool refresh)
+TimestampEncoder::TimestampEncoder(bool refresh, DateTimeFormat format)
     : timeSecs_(time(0))
     , refresh_(refresh)
+    , format_(format)
 {
 
 }
@@ -98,11 +101,16 @@ std::string TimestampEncoder::toString()
         timeSecs_ = time(0);
     tmp = localtime(&timeSecs_);
 
-    strftime(outstr, sizeof(outstr), "%a, %d %b %Y %T %Z", tmp);
+    if (format_ == DateTimeRfc822)
+        strftime(outstr, sizeof(outstr), "%a, %d %b %Y %T %Z", tmp);
+    else
+        snprintf(outstr, sizeof(outstr), "%ld", timeSecs_);
+
     return std::string(outstr);
 }
 
 
+// ---------------------------------------------------------------------- //
 
 HttpStream::HttpStream()
     : Socket()

@@ -66,7 +66,8 @@ int main(int argc, const char *argv[])
     CompoundEncoder cme;
     cme.addElement(nonce1);
     cme.addElement(nonce2);
-    OAuthParamEncoder oauth;
+    OAuthParamEncoder oauth(url, "consumerKey");
+    oauth.setToken("MY TOKEN", "Token Secret");
 
     http.loadDefaultHeaders();
     http.addHeader("Host", strhost);
