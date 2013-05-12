@@ -1,23 +1,14 @@
-Some planned enhancements to sockstr        Updated: 2/6/2013
-------------------------------------        -----------------
+Some planned enhancements to sockstr        Updated: 5/11/2013
+------------------------------------        ------------------
+Allow to pass a bigger buffer to StreamBuf
+
 Support IPv6 address resolution (Work in progress)
-
-Provide subclasses of Socket class for common protocols like http:
-
-Improve ipctest UI so there is clear if test cases are being created, edited or
-run.  Allow drag-n-drop editting.  Add ability to group/ungroup function commands.
-
-Implement ipctest client with Qt UI and a webappserver UI.
-
-Add extensible commands via plugin in ipctest.
-
-Make it easier to create new commands; maybe using class templates, helpers, etc.
 
 Port to Android, iOS.
 
-Add more protocols besides Http.
+Add more protocols besides Http.  Possibly use a ProtocolBuf interface.
 
-Split sockstr and ipctest to 2 projects
+Need SSL and/or TLS.
 
-ipctest:  Add SendFile, ReceiveFile commands
-ipctest:  Support server-side testing
+Fully implement OAuth classes.
+

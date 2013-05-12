@@ -112,6 +112,10 @@ private:
 };
 
 
+/**
+ * This encoder contains a constant string value.  It can emit just a value
+ * but it is likely most useful as a name/value pair.
+ */
 class DllExport FixedStringEncoder : public HttpParamEncoder
 {
 public:
@@ -135,8 +139,8 @@ class DllExport TimestampEncoder : public HttpParamEncoder
 public:
     enum DateTimeFormat
     {
-        DateTimeRfc822,
-        DateTimeRaw
+        DateTimeRfc822,		//!< Output in RFC-822 format
+        DateTimeRaw			//!< Output as number of seconds since epoch
     };
 
     /** Construct a TimestampEncoder.

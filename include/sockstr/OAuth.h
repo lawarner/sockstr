@@ -52,6 +52,10 @@ namespace sockstr
 // CLASS DEFINITIONS
 //
 
+/**
+ * Handles OAuth nonce encoding that outputs a random, non-repeating string value.
+ * Used internally by the OAuthParamEncoder class.
+ */
 class DllExport OAuthNonceEncoder : public HttpParamEncoder
 {
 public:
@@ -67,6 +71,10 @@ private:
     static const char* validChars_;
 };
 
+/**
+ * Handles OAuth signature.
+ * Used internally by the OAuthParamEncoder class.
+ */
 class DllExport OAuthSignatureEncoder : public HttpParamEncoder
 {
 public:
