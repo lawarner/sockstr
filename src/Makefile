@@ -40,6 +40,8 @@ INCS = $(IDIR2)/IPAddress.h $(IDIR2)/IPC.h $(IDIR2)/SocketAddr.h $(IDIR2)/Stream
 
 LIBSOCKSTR = libsockstr.a
 
+LIBOPENSSL = -lssl -lcrypto
+
 
 .cpp.o: ; $(CC) $(CCFLAGS) -c $<
 
@@ -50,7 +52,8 @@ $(LIBSOCKSTR): $(OBJS)
 	$(AR) rsv $@ $(OBJS)
 
 $(IDIR2)/sstypes.h: $(IDIR2)/sstypes-linux.h
-	cp $(IDIR2)/sstypes-linux.h $(IDIR2)/sstypes.h
+	cd $(IDIR2) ; \
+	ln -sf sstypes-linux.h sstypes.h
 
 .PHONY: clean
 clean:

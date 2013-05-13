@@ -37,6 +37,8 @@ INCS =
 
 LIBSOCKLIB = $(TOP)/src/libsockstr.a
 
+LIBOPENSSL = -lssl -lcrypto
+
 PROGRAMS = simplest echoserver filecopy fbread fb2read httptest testsockstr
 
 

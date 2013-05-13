@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012
+   Copyright (C) 2012, 2013
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -30,6 +30,15 @@
 #include <string>
 #include <sockstr/SocketAddr.h>
 #include <sockstr/Stream.h>
+
+
+//
+// FORWARD CLASS DECLARATIONS
+//
+struct ssl_st;
+struct ssl_ctx_st;
+typedef struct ssl_st SSL;
+typedef struct ssl_ctx_st SSL_CTX;
 
 
 namespace sockstr
@@ -70,6 +79,7 @@ namespace sockstr
 # define THRTYPE LPVOID
 # define WINAPI
 #endif
+
 
 //
 // TYPE DEFINITIONS
@@ -190,6 +200,10 @@ protected:
 	UINT		m_uOpenFlags;
 	bool        m_bAsyncMode;
 	UINT		m_nProtocol;
+#if USE_OPENSSL
+    SSL*        m_pSsl;
+    SSL_CTX*    m_pSslCtx;
+#endif
 
 private:
 	// Counter for IPC messages (generates magic cookies)
@@ -210,10 +224,14 @@ private:
 	friend class SSClosed;
 	friend class SSConnected;
 	friend class SSListening;
-	friend class SSOpenedServer;
+	friend class SSOpenedServer;	// this should be called SSOpeningServer
 	friend class SSOpenedClient;
 	friend class SSReading;
 	friend class SSWriting;
+#if USE_OPENSSL
+	friend class SSOpenedClientTLS;
+	friend class SSConnectedTLS;
+#endif
 
 	// Goes to the next specified state.
 	void changeState(SocketState* pState);

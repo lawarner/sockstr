@@ -661,8 +661,13 @@ Socket::open(const char* lpszFileName, UINT uOpenFlags)
         }
     }
 
-    if (wPort == 0 && Name.substr(0,5) == "http:")
-        wPort = 80;
+    if (wPort == 0)
+    {
+        if (Name.substr(0,5) == "http:")
+            wPort = 80;
+        else if (Name.substr(0,5) == "https:")
+            wPort = 443;
+    }
         
     if (wPort == 0 && nColon != std::string::npos)
     {

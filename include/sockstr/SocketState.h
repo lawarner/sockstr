@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012
+   Copyright (C) 2012, 2013
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -143,15 +143,9 @@ class SSOpenedServer : public SocketState
 public:
 	static SocketState* instance(void);
 
-	virtual bool   getSockOpt  (Socket* pSocket,
-								int  nOptionName, void* pOptionValue,
-								socklen_t* nOptionLen,  int   nLevel);
 	virtual bool   open        (Socket* pSocket,
 					            SocketAddr& rSockAddr,
 					            UINT uOpenFlags);
-	virtual bool   setSockOpt  (Socket* pSocket,
-								int nOptionName, const void* pOptionValue,
-								int nOptionLen, int nLevel);
 
 private:
 	static SocketState* m_pInstance;
@@ -163,15 +157,9 @@ class SSOpenedClient : public SocketState
 public:
 	static SocketState* instance(void);
 
-	virtual bool   getSockOpt  (Socket* pSocket,
-								int  nOptionName, void* pOptionValue,
-								socklen_t* nOptionLen,  int   nLevel);
 	virtual bool   open        (Socket* pSocket,
 					            SocketAddr& rSockAddr,
 					            UINT uOpenFlags);
-	virtual bool   setSockOpt  (Socket* pSocket,
-								int nOptionName, const void* pOptionValue,
-								int nOptionLen, int nLevel);
 
 private:
 	static SocketState* m_pInstance;
@@ -183,13 +171,7 @@ class SSListening : public SocketState
 public:
 	static SocketState* instance(void);
 
-	virtual bool   getSockOpt  (Socket* pSocket,
-								int  nOptionName, void* pOptionValue,
-								socklen_t* nOptionLen,  int   nLevel);
 	virtual SOCKET listen      (Socket* pSocket, const int nBacklog);
-	virtual bool   setSockOpt  (Socket* pSocket,
-								int nOptionName, const void* pOptionValue,
-								int nOptionLen, int nLevel);
 
 private:
 	static SocketState* m_pInstance;
@@ -201,14 +183,8 @@ class SSConnected : public SocketState
 public:
 	static  SocketState* instance(void);
 
-	virtual bool   getSockOpt  (Socket* pSocket,
-								int  nOptionName, void* pOptionValue,
-								socklen_t* nOptionLen,  int   nLevel);
 	virtual UINT   read        (Socket* pSocket, void* pBuf, UINT uCount);
 	virtual DWORD  readerThread(IOPARAMS* pIOP);
-	virtual bool   setSockOpt  (Socket* pSocket,
-								int nOptionName, const void* pOptionValue,
-								int nOptionLen, int nLevel);
 	virtual void   write       (Socket* pSocket, const void* pBuf, 
 							    UINT uCount);
 	virtual DWORD  writerThread(IOPARAMS* pIOP);
@@ -218,6 +194,43 @@ private:
 
 	static SocketState* m_pInstance;
 };
+
+
+#if USE_OPENSSL
+
+class SSOpenedClientTLS : public SocketState
+{
+public:
+	static SocketState* instance(void);
+
+	virtual bool   open        (Socket* pSocket,
+					            SocketAddr& rSockAddr,
+					            UINT uOpenFlags);
+
+private:
+	static SocketState* m_pInstance;
+};
+
+
+class SSConnectedTLS : public SocketState
+{
+public:
+	static  SocketState* instance(void);
+
+	virtual void   close       (Socket* pSocket);
+	virtual UINT   read        (Socket* pSocket, void* pBuf, UINT uCount);
+	virtual DWORD  readerThread(IOPARAMS* pIOP);
+	virtual void   write       (Socket* pSocket, const void* pBuf, 
+							    UINT uCount);
+	virtual DWORD  writerThread(IOPARAMS* pIOP);
+
+private:
+	int    readSocket          (Socket* pSocket, void* pBuf, UINT uCount);
+
+	static SocketState* m_pInstance;
+};
+
+#endif // USE_OPENSSL
 
 }
 #endif

@@ -21,7 +21,7 @@
 #ifndef _IPADDRESS_H_INCLUDED_
 #define _IPADDRESS_H_INCLUDED_
 
-#include "sstypes.h"
+#include <sockstr/sstypes.h>
 
 namespace sockstr
 {

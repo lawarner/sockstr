@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012
+   Copyright (C) 2012, 2013
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -28,6 +28,8 @@
 #ifndef TARGET_LINUX
 #define TARGET_LINUX
 #endif
+
+#define USE_OPENSSL 1
 
 typedef int WORD;
 typedef int DWORD;
