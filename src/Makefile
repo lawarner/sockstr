@@ -28,8 +28,8 @@ CC = g++
 #CFLAGS = -Wall -O2 -I.
 CCFLAGS = -Wall -g -O2 -I$(TOP) -I$(INCDIR)
 
-OBJS := IPAddress.o Socket.o SocketAddr.o StreamBuf.o SocketState.o Stream.o \
-        HttpStream.o OAuth.o
+OBJS := IPAddress.o Socket.o SocketAddr.o StreamBuf.o SocketState.o SocketStateTLS.o \
+        Stream.o HttpStream.o OAuth.o
 
 SRCS := $(OBJS:.o=.cpp)
 

@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012
+   Copyright (C) 2012, 2013
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -58,7 +58,9 @@ int main(int argc, char *argv[])
     if (filename[0] != '/')
         filename.insert(0, 1, '/');
 #endif
-	std::string hostport = hostname + ":80";
+	std::string hostport = hostname;
+    if (hostport.find(':') == hostport.npos)
+        hostport += ":80";
     std::cout << "Get address of host " << hostport << std::endl;
 
 
@@ -75,12 +77,10 @@ int main(int argc, char *argv[])
     std::cout << "Socket open at " << (const char *) sock << std::endl;
 
     std::string http_get = "GET " + filename;
-#if 1							// Add HTTP headers
+    // Add HTTP headers
     http_get += " HTTP/1.1\r\nHost: " + hostname + "\r\n";
     http_get += "Accept: */*\r\n";
-#endif
 
-//	http_get += "\r\n";
 //	sock.write(http_get);
 	sock << http_get << std::endl;
 

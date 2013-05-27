@@ -35,8 +35,9 @@ SRCS := $(OBJS:.o=.cpp)
 
 INCS = 
 
-LIBSOCKLIB = $(TOP)/src/libsockstr.a
+DEPLIBS = $(LIBSOCKLIB) $(LIBOPENSSL)
 
+LIBSOCKLIB = $(TOP)/src/libsockstr.a
 LIBOPENSSL = -lssl -lcrypto
 
 PROGRAMS = simplest echoserver filecopy fbread fb2read httptest testsockstr
@@ -47,7 +48,7 @@ PROGRAMS = simplest echoserver filecopy fbread fb2read httptest testsockstr
 
 all: $(PROGRAMS)
 
-$(PROGRAMS): $(LIBSOCKLIB)
+$(PROGRAMS): $(DEPLIBS)
 
 .PHONY: clean
 clean:

@@ -477,7 +477,8 @@ Socket::abort(void)
 void
 Socket::close(void)
 {
-	m_pState->close(this);
+    if (m_hFile != INVALID_SOCKET)
+        m_pState->close(this);
 }
 
 
@@ -665,7 +666,7 @@ Socket::open(const char* lpszFileName, UINT uOpenFlags)
     {
         if (Name.substr(0,5) == "http:")
             wPort = 80;
-        else if (Name.substr(0,5) == "https:")
+        else if (Name.substr(0,6) == "https:")
             wPort = 443;
     }
         
@@ -692,23 +693,21 @@ Socket::open(SocketAddr& rSockAddr, UINT uOpenFlags)
 
 	if (rSockAddr.netAddress() == INADDR_NONE && m_nProtocol == SOCK_STREAM)
 	{
-//        std::cout << "3 Socket::open errno=" << errno << std::endl;
 		m_Status = SC_FAILED;
 		return false;
 	}
 	if (rSockAddr.netAddress() == INADDR_ANY || (uOpenFlags & modeCreate))
-	{
 		m_pState = SSOpenedServer::instance();
-	}
+    else if (rSockAddr.portNumber() == 443)
+    {
+        std::cout << "SSL connection" << std::endl;
+        m_pState = SSOpenedClientTLS::instance();
+    }
 	else
-	{
 		m_pState = SSOpenedClient::instance();
-	}
-//    std::cout << "4 Socket::open errno=" << errno << std::endl;
 
 	if (! m_pState->open(this, rSockAddr, uOpenFlags))
 	{
-//        std::cout << "5 Socket::open errno=" << errno << std::endl;
 		m_Status = SC_FAILED;
 		return false;
 	}
@@ -723,7 +722,6 @@ Socket::open(SocketAddr& rSockAddr, UINT uOpenFlags)
 	// go ahead and get it in case the LPCSTR operator is called.
 	socklen_t iSizeAddr = sizeof(sockaddr);
 	::getsockname(m_hFile, (sockaddr *) &m_PeerAddr, &iSizeAddr);
-//    std::cout << "6 Socket::open errno=" << errno << std::endl;
 
 	if (m_nProtocol == SOCK_DGRAM)
 	{

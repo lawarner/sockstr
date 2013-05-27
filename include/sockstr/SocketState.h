@@ -200,12 +200,29 @@ private:
 
 class SSOpenedClientTLS : public SocketState
 {
+private:
+    SSOpenedClientTLS();
+
 public:
 	static SocketState* instance(void);
 
+	//! Open the socket connection
 	virtual bool   open        (Socket* pSocket,
 					            SocketAddr& rSockAddr,
 					            UINT uOpenFlags);
+
+	//! Get the socket options currently in effect
+	virtual bool   getSockOpt  (Socket* pSocket,
+								int  nOptionName, void* pOptionValue,
+								socklen_t* nOptionLen,  int   nLevel);
+	//! Set a socket option to a new value
+	virtual bool   setSockOpt  (Socket* pSocket,
+								int nOptionName, const void* pOptionValue,
+								int nOptionLen, int nLevel);
+
+private:
+    std::string m_key;
+    std::string m_password;
 
 private:
 	static SocketState* m_pInstance;

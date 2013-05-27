@@ -80,6 +80,11 @@ namespace sockstr
 # define WINAPI
 #endif
 
+/** Level to use for our custom sockopt settings. */
+#define SOL_SOCKSTR  300
+#define SO_SOCKSTR_SSL_KEY      1
+#define SO_SOCKSTR_SSL_KEYFILE  2
+#define SO_SOCKSTR_SSL_PASSWORD 3
 
 //
 // TYPE DEFINITIONS

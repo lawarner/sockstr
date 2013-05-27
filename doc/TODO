@@ -1,4 +1,4 @@
-Some planned enhancements to sockstr        Updated: 5/11/2013
+Some planned enhancements to sockstr        Updated: 5/27/2013
 ------------------------------------        ------------------
 Allow to pass a bigger buffer to StreamBuf
 
@@ -8,7 +8,10 @@ Port to Android, iOS.
 
 Add more protocols besides Http.  Possibly use a ProtocolBuf interface.
 
-Need SSL and/or TLS.
+Authenicate server, more options for TLS.
 
 Fully implement OAuth classes.
 
+Change to a better config/build system. I hate the autoconf/automake tools since
+they are overly complex and only seem to work well on Linux.  I'm considering 
+using cmake.
