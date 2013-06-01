@@ -27,12 +27,19 @@ How to Build on Linux
 
 ## Dependencies
 
-You will need GNU make, g++ and pthreads to build this package.  Optionally you can 
-generate documentation if you have doxygen.
+You will need GNU make, g++ and pthreads to build this package.
+If you want TLS/SSL, then you also need openssl library and headers.  Double check 
+the config.h file and various Makefile's in this project and adjust accordingly.
+
+Optionally you can generate documentation if you have doxygen installed.  Just 
+type 'make doc'.
 
 This library was originally written on Windows with winsock, but has since been ported
-to Linux.  During the port, the winsock functionality has broken.  I plan to fix this
-in a future version.
+to Linux.  During the port, the winsock functionality has been neglected.  I have done
+an initial port back to windows, but it needs much more testing.
+
+The primary purpose of this library is to provide a standard C++ iostream interface,
+and to make sockets as easy as possible.
 
 ## Building
 Simply type 'make'.  This will build the sockstr library and example programs.

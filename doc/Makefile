@@ -28,7 +28,11 @@ CC = g++
 CCFLAGS = -Wall -g -O2 -I$(TOP) -I$(INCDIR)
 
 
-all:
+all: doc
+
+.PHONY: doc
+doc:
+	rm -rf html
 	doxygen ./Doxyfile
 
 

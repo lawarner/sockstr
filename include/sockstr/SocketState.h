@@ -223,6 +223,8 @@ public:
 private:
     std::string m_key;
     std::string m_password;
+    std::string m_cafile;
+    std::string m_capath;
 
 private:
 	static SocketState* m_pInstance;

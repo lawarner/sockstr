@@ -86,6 +86,8 @@ SocketState* SSConnectedTLS::m_pInstance = 0;
 SSOpenedClientTLS::SSOpenedClientTLS()
     : m_key("sockstr.pem")
     , m_password("password")
+    , m_cafile("")
+    , m_capath("/etc/ssl/cert")
 {
 
 }
@@ -155,8 +157,11 @@ SSOpenedClientTLS::open(Socket* pSocket,
     }
     SSL_CTX_set_default_passwd_cb(ctx, sockstr_password_cb);
     SSL_CTX_set_default_passwd_cb_userdata(ctx, (void *) m_password.c_str());
+    // Usually only one of either cafile or capath would be set, but not both.
     if (!SSL_CTX_use_PrivateKey_file(ctx, m_key.c_str(), SSL_FILETYPE_PEM) ||
-        !(SSL_CTX_load_verify_locations(ctx, "root.pem", 0)))
+        !(SSL_CTX_load_verify_locations(ctx,
+                                        m_cafile.empty() ? 0 : m_cafile.c_str(),
+                                        m_capath.empty() ? 0 : m_capath.c_str())))
     {
         SSL_CTX_free(ctx);
         return false;
@@ -267,6 +272,12 @@ SSOpenedClientTLS::setSockOpt(Socket* pSocket,
             break;
         case SO_SOCKSTR_SSL_PASSWORD:
             m_password.assign(static_cast<const char*>(pOptionValue), nOptionLen);
+            break;
+        case SO_SOCKSTR_SSL_CAFILE:
+            m_cafile.assign(static_cast<const char*>(pOptionValue), nOptionLen);
+            break;
+        case SO_SOCKSTR_SSL_CAPATH:
+            m_capath.assign(static_cast<const char*>(pOptionValue), nOptionLen);
             break;
         default:
             // Error

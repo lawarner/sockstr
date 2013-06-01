@@ -40,16 +40,19 @@ namespace sockstr
 //
 // TYPE DEFINITIONS
 //
+/**
+ *  Stream status codes.
+ *  These are used by the @deprecated queryStatus method.
+ */
 enum STATUSCODE
 {
-    SC_OK,
-    SC_NODATA,
-    SC_EOF,
-    SC_FAILED
+    SC_OK,		//!< Stream status is good.
+    SC_NODATA,	//!< No data is available on stream (useful for asynchronous streams.
+    SC_FAILED	//!< Stream has an error.
 };
 
 
-/**!
+/**
  *  @typedef Callback
  *  Definition of the asynchronous callback routines
  *  @param id  Corresponding request ID

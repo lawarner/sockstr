@@ -137,6 +137,7 @@ public:
 class DllExport TimestampEncoder : public HttpParamEncoder
 {
 public:
+    /** Type of output for the date time encoder. */
     enum DateTimeFormat
     {
         DateTimeRfc822,		//!< Output in RFC-822 format

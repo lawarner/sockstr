@@ -85,6 +85,8 @@ namespace sockstr
 #define SO_SOCKSTR_SSL_KEY      1
 #define SO_SOCKSTR_SSL_KEYFILE  2
 #define SO_SOCKSTR_SSL_PASSWORD 3
+#define SO_SOCKSTR_SSL_CAFILE   4
+#define SO_SOCKSTR_SSL_CAPATH   5
 
 //
 // TYPE DEFINITIONS
