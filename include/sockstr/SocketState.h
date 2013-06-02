@@ -20,6 +20,17 @@
 
 #ifndef _SOCKETSTATE_H_INCLUDED_
 #define _SOCKETSTATE_H_INCLUDED_
+//
+// INCLUDE FILES
+//
+#include <sockstr/sstypes.h>
+#include <sockstr/ThreadHandler.h>
+
+//
+// MACRO DEFINITIONS
+//
+
+
 namespace sockstr
 {
 /**
@@ -125,6 +136,23 @@ private:
 };
 
 
+/////////////
+class ReadThreadHandler : public ThreadHandler<IOPARAMS*>
+{
+public:
+    ReadThreadHandler(IOPARAMS* pIOP) { setData(pIOP); }
+
+    virtual void handle(IOPARAMS* pIOP);
+};
+
+class WriteThreadHandler : public ThreadHandler<IOPARAMS*>
+{
+public:
+    WriteThreadHandler(IOPARAMS* pIOP) { setData(pIOP); }
+
+    virtual void handle(IOPARAMS* pIOP);
+};
+
 //////////////////////////////////////////////////////////
 //   All subclasses of SocketState are defined here.
 
@@ -192,6 +220,9 @@ public:
 private:
 	int    readSocket          (Socket* pSocket, void* pBuf, UINT uCount);
 
+#ifdef _DEBUG
+	static void* m_pLastBuffer;	// Last buffer used for overlapped I/O
+#endif
 	static SocketState* m_pInstance;
 };
 

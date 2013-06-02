@@ -83,9 +83,6 @@ using namespace sockstr;
 
 // Initialize static members
 DWORD  Socket::m_dwSequence  = 0;
-#ifdef _DEBUG
-void* Socket::m_pLastBuffer = 0;
-#endif
 const int Socket::modeCreate       = 1;
 const int Socket::modeAsyncSocket  = 2;
 const int Socket::modeRead         = 4;
@@ -281,7 +278,7 @@ Socket::getHandle (void) const
 //            write and this routine returns immediately.  When the worker
 //            thread completes, the application's callback routine is called.
 //            If the pCallback parameter is 0, then the routine that
-//            was given as parameter to RegisterCallback() will be called.
+//            was given as parameter to registerCallback() will be called.
 //            Otherwise, if pCallback is specified, then it will be
 //            called instead.
 //
@@ -783,50 +780,6 @@ Socket::read(std::string& str, int delimiter)
     return ret;
 }
 
-// Abstract : Executes the state-dependent reader thread
-//
-// Returns  : THRTYPE
-// Params   :
-//   pThis                     Pointer to the socket object
-//
-// Pre      : The buffer pointed to by pIOP->m_pBuf must not be re-used or
-//            freed by the application until the user's callback routine
-//            has been called, indicating that the overlapped I/O is
-//            complete.
-// Post     :
-//
-// Remarks  : This (protected) routine is not called by user applications.
-//            It is only called by the SocketState friend class, or 
-//            one of its sub-classes.
-//
-THRTYPE WINAPI Socket::readerThread(LPVOID _pIOP)
-{
-	IOPARAMS* pIOP = (IOPARAMS*) _pIOP;
-#ifdef _DEBUG
-	if (m_pLastBuffer == pIOP->m_pBuf)
-	{
-//		TRACE("Buffer in use for overlapped I/O\n");
-		VERIFY(0);
-	}
-	m_pLastBuffer = pIOP->m_pBuf;
-#endif
-
-    SocketState* pState = pIOP->m_pSocket->m_pState;
-	DWORD  dwReturn;
-	dwReturn = pState->readerThread(pIOP);
-
-#ifdef _DEBUG
-	m_pLastBuffer = 0;
-#endif
-	delete pIOP;
-
-#ifdef THRTYPE_NOCAST
-	return dwReturn;
-#else
-	return reinterpret_cast<THRTYPE>(dwReturn);
-#endif
-}
-
 
 // Abstract : Sets a socket option (state-dependent)
 //
@@ -876,48 +829,6 @@ void
 Socket::write(const std::string& str)
 {
     m_pState->write(this, str.c_str(), str.size());
-}
-
-
-// Abstract : Executes the state-dependent writer thread
-//
-// Returns  : THRTYPE
-// Params   :
-//   pThis                     Pointer to the socket object
-//
-// Pre      :
-// Post     :
-//
-// Remarks  : This (protected) routine is not called by user applications.
-//            It is only called by the SocketState friend class, or 
-//            one of its sub-classes.
-//
-THRTYPE WINAPI Socket::writerThread(LPVOID _pIOP)
-{
-	IOPARAMS* pIOP = (IOPARAMS*) _pIOP;
-#ifdef _DEBUG
-	if (m_pLastBuffer == pIOP->m_pBuf)
-	{
-//		TRACE("Buffer in use for overlapped I/O\n");
-		VERIFY(0);
-	}
-	m_pLastBuffer = pIOP->m_pBuf;
-#endif
-
-    SocketState* pState = pIOP->m_pSocket->m_pState;
-	DWORD  dwReturn;
-	dwReturn = pState->writerThread(pIOP);
-#ifdef _DEBUG
-	m_pLastBuffer = 0;
-#endif
-
-	delete pIOP;
-
-#ifdef THRTYPE_NOCAST
-	return dwReturn;
-#else
-	return reinterpret_cast<THRTYPE>(dwReturn);
-#endif
 }
 
 

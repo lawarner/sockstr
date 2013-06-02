@@ -19,14 +19,15 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-#ifndef _THREADMANAGER_H_INCLUDED_
-#define _THREADMANAGER_H_INCLUDED_
+#ifndef _THREADHANDLER_H_INCLUDED_
+#define _THREADHANDLER_H_INCLUDED_
 //
 //
 
 //
 // INCLUDE FILES
 //
+#include <sockstr/sstypes.h>
 
 
 namespace sockstr
@@ -39,17 +40,79 @@ namespace sockstr
 #define DllExport
 #endif
 
+// Define a type for the return value of threads since this is system dependent.
+#ifdef TARGET_WINDOWS
+# ifdef USE_MFC
+#  define THRTYPE UINT
+# else
+#  define THRTYPE DWORD
+#  define THRTYPE_NOCAST
+# endif
+#else
+# define THRTYPE LPVOID
+# define WINAPI
+#endif
+
 //
 // FORWARD CLASS DECLARATIONS
 //
+struct IOPARAMS;
+class ThreadManager;
 
 //
 // TYPE DEFINITIONS
 //
+typedef THRTYPE WINAPI THRTYPE_FUNCTION(LPVOID);
+
 
 //
 // CLASS DEFINITIONS
 //
+/**
+ * Interface definition for a threads.  Any thread class should inherit
+ * this interface and override the handle() method.
+ * The template parameter T specifies the type of data that is passed
+ * to the thread handler and the R parameter specifies the return type
+ * of the handler routine (default is void).
+ */
+template <typename T, typename R=void>
+class DllExport ThreadHandler
+{
+public:
+    virtual R handle(T data) = 0;
+
+    THRTYPE getStatus() const { return status_; }
+    void setData(T data) { data_ = data; }
+
+protected:
+    static THRTYPE WINAPI hookHandle_(LPVOID data)
+    {
+        ThreadHandler<T,R>* handleThis = (ThreadHandler<T,R>*) data;
+
+        // ignoring any return value for now
+        handleThis->handle(handleThis->data_);
+
+        DWORD  dwReturn = 0;
+#ifdef THRTYPE_NOCAST
+        return dwReturn;
+#else
+        return reinterpret_cast<THRTYPE>(dwReturn);
+#endif
+    }
+
+protected:
+    T data_;
+
+    THRTYPE status_;  // thread return status
+
+#ifdef _DEBUG
+	static void* m_pLastBuffer;	// Last buffer used for overlapped I/O
+#endif
+    friend class ThreadManager;
+};
+
+
+
 /**
  * This class manages the creation and execution of threads.
  * This is a convenience so the rest of the library does not have to worry
@@ -61,14 +124,26 @@ public:
     ThreadManager() { }
     virtual ~ThreadManager() { }
 
-    virtual void run() { }
+    /** This is for backwards compatibility only and will be removed soon. */
+    static bool
+        create(THRTYPE_FUNCTION function, void* data, bool start = true);
 
-    void setHandler(void* handler) { handler_ = handler; }
+    template<typename T, typename R>
+    static bool
+        create(ThreadHandler<T,R>* handler, bool start = true)
+        {
+            return _launchThread(handler->hookHandle_, (void*)handler);
+        }
+
+    virtual void start() { }
+
+protected:
+    static bool _launchThread(THRTYPE_FUNCTION function, void* handler);
 
 private:
-    void* handler_;
+
 };
 
 }  // namespace sockstr
 
-#endif // _THREADMANAGER_H_INCLUDED_
+#endif // _THREADHANDLER_H_INCLUDED_

@@ -23,6 +23,10 @@ httptest.o: httptest.cpp ../include/sockstr/IPAddress.h \
  ../include/sockstr/HttpStream.h ../include/sockstr/Socket.h \
  ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \
  ../include/sockstr/StreamBuf.h
+asyncsock.o: asyncsock.cpp ../include/sockstr/IPAddress.h \
+ ../include/sockstr/sstypes.h ../include/sockstr/Socket.h \
+ ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \
+ ../include/sockstr/StreamBuf.h
 testsockstr.o: testsockstr.cpp ../include/sockstr/IPAddress.h \
  ../include/sockstr/sstypes.h ../include/sockstr/Socket.h \
  ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \

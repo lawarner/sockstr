@@ -23,8 +23,4 @@
 #define VERIFY assert
 //#include <cerrno>
 
-#if CONFIG_HAS_PTHREADS
-#include <pthread.h>
-#endif
-
 #endif

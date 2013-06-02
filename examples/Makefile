@@ -24,13 +24,14 @@ TOP = ..
 INCDIR = $(TOP)/include
 
 CC = g++
-#CFLAGS = -Wall -O2 -I..
 CCFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
+#CCFLAGS = -Wall -g -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
 DEPCPPFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
 LDFLAGS = -pthread
 LDLIBS = 
 
-OBJS := simplest.o echoserver.o filecopy.o fbread.o fb2read.o httptest.o testsockstr.o
+OBJS := simplest.o echoserver.o filecopy.o fbread.o fb2read.o httptest.o \
+        asyncsock.o testsockstr.o
 SRCS := $(OBJS:.o=.cpp)
 
 INCS = 
@@ -40,7 +41,7 @@ DEPLIBS = $(LIBSOCKLIB) $(LIBOPENSSL)
 LIBSOCKLIB = $(TOP)/src/libsockstr.a
 LIBOPENSSL = -lssl -lcrypto
 
-PROGRAMS = simplest echoserver filecopy fbread fb2read httptest testsockstr
+PROGRAMS = simplest echoserver filecopy fbread fb2read httptest testsockstr asyncsock
 
 
 .cpp.o: ; $(CC) $(CCFLAGS) -c $<

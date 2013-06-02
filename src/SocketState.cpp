@@ -96,6 +96,9 @@ SocketState* SSOpenedServer::m_pInstance = 0;
 SocketState* SSOpenedClient::m_pInstance = 0;
 SocketState* SSListening::m_pInstance = 0;
 SocketState* SSConnected::m_pInstance = 0;
+#ifdef _DEBUG
+void* SocketState::m_pLastBuffer = 0;
+#endif
 
 //
 // CLASS MEMBER FUNCTION DEFINITIONS
@@ -549,6 +552,91 @@ SocketState::createIOParams(Socket* pSocket, const void* pBuf, UINT uCount,
 }
 
 
+// Abstract : Executes the state-dependent reader thread
+//
+// Returns  : THRTYPE
+// Params   :
+//   pThis                     Pointer to the socket object
+//
+// Pre      : The buffer pointed to by pIOP->m_pBuf must not be re-used or
+//            freed by the application until the user's callback routine
+//            has been called, indicating that the overlapped I/O is
+//            complete.
+// Post     :
+//
+// Remarks  : This (protected) routine is not called by user applications.
+//            It is only called by the SocketState friend class, or 
+//            one of its sub-classes.
+//
+void ReadThreadHandler::handle(IOPARAMS* pIOP)
+{
+#ifdef _DEBUG
+	if (m_pLastBuffer == pIOP->m_pBuf)
+	{
+//		TRACE("Buffer in use for overlapped I/O\n");
+		VERIFY(0);
+	}
+	m_pLastBuffer = pIOP->m_pBuf;
+#endif
+
+    SocketState* pState = pIOP->m_pSocket->m_pState;
+	DWORD  dwReturn;
+	dwReturn = pState->readerThread(pIOP);
+
+#ifdef _DEBUG
+	m_pLastBuffer = 0;
+#endif
+	delete pIOP;
+
+#ifdef THRTYPE_NOCAST
+	status_ = dwReturn;
+#else
+	status_ = reinterpret_cast<THRTYPE>(dwReturn);
+#endif
+}
+
+
+// Abstract : Executes the state-dependent writer thread
+//
+// Returns  : THRTYPE
+// Params   :
+//   pThis                     Pointer to the socket object
+//
+// Pre      :
+// Post     :
+//
+// Remarks  : This (protected) routine is not called by user applications.
+//            It is only called by the SocketState friend class, or 
+//            one of its sub-classes.
+//
+void WriteThreadHandler::handle(IOPARAMS* pIOP)
+{
+#ifdef _DEBUG
+	if (m_pLastBuffer == pIOP->m_pBuf)
+	{
+//		TRACE("Buffer in use for overlapped I/O\n");
+		VERIFY(0);
+	}
+	m_pLastBuffer = pIOP->m_pBuf;
+#endif
+
+    SocketState* pState = pIOP->m_pSocket->m_pState;
+	DWORD  dwReturn;
+	dwReturn = pState->writerThread(pIOP);
+#ifdef _DEBUG
+	m_pLastBuffer = 0;
+#endif
+
+	delete pIOP;
+
+#ifdef THRTYPE_NOCAST
+	status_ = dwReturn;
+#else
+	status_ = reinterpret_cast<THRTYPE>(dwReturn);
+#endif
+}
+
+
 // Remarks  : All of the subclasses of SocketState follow here.
 //            The C++ Coding Standards states that each (sub)class
 //            should be in a separate file.  For state tree classes
@@ -953,34 +1041,14 @@ SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount)
                 pSocket->setstate(std::ios::eofbit);
 				return 0;
 			}
-#if CONFIG_HAS_PTHREADS
-            pthread_t thread_id;
-            int st = pthread_create(&thread_id, NULL, Socket::readerThread, 
-								  createIOParams(pSocket, pBuf, uCount,
-                                                 pSocket->m_pDefCallback));
-            VERIFY(st==0);
-#else
-#ifdef WIN32
-#ifdef USE_MFC
-			VERIFY(AfxBeginThread((AFX_THREADPROC) Socket::readerThread,
-								  createIOParams(pSocket, pBuf, uCount,
-								  pSocket->m_pDefCallback)));
-#else
-			DWORD thread_id;
-			VERIFY(CreateThread( 
-            NULL,                   // default security attributes
-            0,                      // use default stack size  
-			Socket::readerThread,   // thread function name
-            createIOParams(pSocket, pBuf, uCount,
-						   pSocket->m_pDefCallback),          // argument to thread function 
-            0,                      // use default creation flags 
-            &thread_id));   // returns the thread identifier 
-#endif
-#else
-			// multi-threaded mode not implemented for this platform
-			VERIFY(0);
-#endif
-#endif
+
+            ReadThreadHandler* readThreadHandler
+                = new ReadThreadHandler(createIOParams(pSocket, pBuf, uCount,
+                                                       pSocket->m_pDefCallback));
+
+            std::cout << "Going to create thread thru ThreadManager" << std::endl;
+            bool th = ThreadManager::create<IOPARAMS*>(readThreadHandler);
+            VERIFY(th);
 		}
 	}
 
@@ -1127,35 +1195,13 @@ SSConnected::write(Socket* pSocket, const void* pBuf, UINT uCount)
 	}
 	else
 	{
-#if CONFIG_HAS_PTHREADS
-		// Asynchronous mode -- let a worker thread write and wait.
-        pthread_t thread_id;
-        int st = pthread_create(&thread_id, NULL, Socket::writerThread, 
-                                createIOParams(pSocket, pBuf, uCount,
-                                               pSocket->m_pDefCallback));
-        VERIFY(st==0);
-#else
-#ifdef WIN32
-#ifdef USE_MFC
-		VERIFY(AfxBeginThread((AFX_THREADPROC) Socket::writerThread,
-							  createIOParams(pSocket, pBuf, uCount,
-							  pSocket->m_pDefCallback)));
-#else
-			DWORD thread_id;
-			VERIFY(CreateThread( 
-            NULL,                   // default security attributes
-            0,                      // use default stack size  
-			Socket::writerThread,   // thread function name
-            createIOParams(pSocket, pBuf, uCount,
-						   pSocket->m_pDefCallback),          // argument to thread function 
-            0,                      // use default creation flags 
-            &thread_id));   // returns the thread identifier 
-#endif
-#else
-        // multi-threaded not implemented for this platform
-		VERIFY(0);
-#endif
-#endif
+        WriteThreadHandler* writeThreadHandler
+            = new WriteThreadHandler(createIOParams(pSocket, pBuf, uCount,
+                                                    pSocket->m_pDefCallback));
+
+        std::cout << "Going to create write thread thru ThreadManager" << std::endl;
+        bool th = ThreadManager::create<IOPARAMS*>(writeThreadHandler);
+        VERIFY(th);
 	}
 }
 

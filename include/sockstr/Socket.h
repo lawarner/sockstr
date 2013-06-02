@@ -67,19 +67,6 @@ namespace sockstr
 #define DllExport
 #endif
 
-// Define a type for the return value of threads since this is system dependent.
-#ifdef TARGET_WINDOWS
-# ifdef USE_MFC
-#  define THRTYPE UINT
-# else
-#  define THRTYPE DWORD
-#  define THRTYPE_NOCAST
-# endif
-#else
-# define THRTYPE LPVOID
-# define WINAPI
-#endif
-
 /** Level to use for our custom sockopt settings. */
 #define SOL_SOCKSTR  300
 #define SO_SOCKSTR_SSL_KEY      1
@@ -105,6 +92,8 @@ struct IOPARAMS
 // FORWARD CLASS DECLARATIONS
 //
 class SocketState;
+class ReadThreadHandler;
+class WriteThreadHandler;
 
 
 //
@@ -189,17 +178,12 @@ public:
 	Socket& operator=(const Socket& rSource);
 
 public:
-    static const int modeCreate;
-    static const int modeAsyncSocket;
-    static const int modeRead;
-    static const int modeWrite;
-    static const int modeReadWrite;
-
-protected:
-	//!   The read worker thread's routine.
-	static THRTYPE WINAPI readerThread(LPVOID _pIOP);
-	//!   The write worker thread's routine.
-	static THRTYPE WINAPI writerThread(LPVOID _pIOP);
+    /** Open flags. */
+    static const int modeCreate;		//!< Create a server socket
+    static const int modeAsyncSocket;	//!< Socket will be asynchronous by default
+    static const int modeRead;			//!< Socket can only be read from
+    static const int modeWrite;			//!< Socket can only be written to
+    static const int modeReadWrite;		//!< Socket can be read from and written to
 
 protected:
 	IPAddress   m_IpAddr;
@@ -215,9 +199,6 @@ protected:
 private:
 	// Counter for IPC messages (generates magic cookies)
 	static DWORD  m_dwSequence;
-#ifdef _DEBUG
-	static void* m_pLastBuffer;	// Last buffer used for overlapped I/O
-#endif
 
 private:
 	/// Do initializations that are common to all constructors.
@@ -239,6 +220,8 @@ private:
 	friend class SSOpenedClientTLS;
 	friend class SSConnectedTLS;
 #endif
+    friend ReadThreadHandler;
+    friend WriteThreadHandler;
 
 	// Goes to the next specified state.
 	void changeState(SocketState* pState);

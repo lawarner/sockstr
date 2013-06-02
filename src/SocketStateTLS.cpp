@@ -401,34 +401,13 @@ SSConnectedTLS::read(Socket* pSocket, void* pBuf, UINT uCount)
                 pSocket->setstate(std::ios::eofbit);
 				return 0;
 			}
-#if CONFIG_HAS_PTHREADS
-            pthread_t thread_id;
-            int st = pthread_create(&thread_id, NULL, Socket::readerThread, 
-								  createIOParams(pSocket, pBuf, uCount,
-                                                 pSocket->m_pDefCallback));
-            VERIFY(st==0);
-#else
-#ifdef WIN32
-#ifdef USE_MFC
-			VERIFY(AfxBeginThread((AFX_THREADPROC) Socket::readerThread,
-								  createIOParams(pSocket, pBuf, uCount,
-								  pSocket->m_pDefCallback)));
-#else
-			DWORD thread_id;
-			VERIFY(CreateThread( 
-            NULL,                   // default security attributes
-            0,                      // use default stack size  
-			Socket::readerThread,   // thread function name
-            createIOParams(pSocket, pBuf, uCount,
-						   pSocket->m_pDefCallback),          // argument to thread function 
-            0,                      // use default creation flags 
-            &thread_id));   // returns the thread identifier 
-#endif
-#else
-			// multi-threaded mode not implemented for this platform
-			VERIFY(0);
-#endif
-#endif
+
+            ReadThreadHandler* readThreadHandler
+                = new ReadThreadHandler(createIOParams(pSocket, pBuf, uCount,
+                                                       pSocket->m_pDefCallback));
+
+            bool th = ThreadManager::create<IOPARAMS*>(readThreadHandler);
+            VERIFY(th);
 		}
 	}
 
@@ -556,35 +535,13 @@ SSConnectedTLS::write(Socket* pSocket, const void* pBuf, UINT uCount)
 	}
 	else
 	{
-#if CONFIG_HAS_PTHREADS
-		// Asynchronous mode -- let a worker thread write and wait.
-        pthread_t thread_id;
-        int st = pthread_create(&thread_id, NULL, Socket::writerThread, 
-                                createIOParams(pSocket, pBuf, uCount,
-                                               pSocket->m_pDefCallback));
-        VERIFY(st==0);
-#else
-#ifdef WIN32
-#ifdef USE_MFC
-		VERIFY(AfxBeginThread((AFX_THREADPROC) Socket::writerThread,
-							  createIOParams(pSocket, pBuf, uCount,
-							  pSocket->m_pDefCallback)));
-#else
-			DWORD thread_id;
-			VERIFY(CreateThread( 
-            NULL,                   // default security attributes
-            0,                      // use default stack size  
-			Socket::writerThread,   // thread function name
-            createIOParams(pSocket, pBuf, uCount,
-						   pSocket->m_pDefCallback),          // argument to thread function 
-            0,                      // use default creation flags 
-            &thread_id));   // returns the thread identifier 
-#endif
-#else
-        // multi-threaded not implemented for this platform
-		VERIFY(0);
-#endif
-#endif
+        WriteThreadHandler* writeThreadHandler
+            = new WriteThreadHandler(createIOParams(pSocket, pBuf, uCount,
+                                                    pSocket->m_pDefCallback));
+
+        std::cout << "Going to create write thread thru ThreadManager" << std::endl;
+        bool th = ThreadManager::create<IOPARAMS*>(writeThreadHandler);
+        VERIFY(th);
 	}
 }
 
