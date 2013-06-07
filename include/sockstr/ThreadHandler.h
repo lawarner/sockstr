@@ -42,6 +42,7 @@ namespace sockstr
 
 // Define a type for the return value of threads since this is system dependent.
 #ifdef TARGET_WINDOWS
+# define THRTYPE_ID DWORD
 # ifdef USE_MFC
 #  define THRTYPE UINT
 # else
@@ -51,6 +52,7 @@ namespace sockstr
 #else
 # define THRTYPE LPVOID
 # define WINAPI
+# define THRTYPE_ID pthread_t
 #endif
 
 //
@@ -83,6 +85,12 @@ public:
 
     THRTYPE getStatus() const { return status_; }
     void setData(T data) { data_ = data; }
+    void setTid(THRTYPE_ID tid) { tid_ = tid; }
+    void wait()
+    {
+        void* res;
+        pthread_join(tid_, &res);
+    }
 
 protected:
     static THRTYPE WINAPI hookHandle_(LPVOID data)
@@ -104,6 +112,8 @@ protected:
     T data_;
 
     THRTYPE status_;  // thread return status
+
+    THRTYPE_ID tid_;  // thread ID
 
 #ifdef _DEBUG
 	static void* m_pLastBuffer;	// Last buffer used for overlapped I/O
@@ -132,13 +142,16 @@ public:
     static bool
         create(ThreadHandler<T,R>* handler, bool start = true)
         {
-            return _launchThread(handler->hookHandle_, (void*)handler);
+            THRTYPE_ID thread_id;
+            thread_id = _launchThread(handler->hookHandle_, (void*)handler);
+            handler->setTid(thread_id);
+            return (thread_id > 0);
         }
 
     virtual void start() { }
 
 protected:
-    static bool _launchThread(THRTYPE_FUNCTION function, void* handler);
+    static THRTYPE_ID _launchThread(THRTYPE_FUNCTION function, void* handler);
 
 private:
 

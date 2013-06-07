@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012
+   Copyright (C) 2012, 2013
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -25,9 +25,9 @@
 
 #include <cerrno>
 #include <iostream>
-#include <pthread.h>
-#include <sockstr/sstypes.h>
+
 #include <sockstr/Socket.h>
+#include <sockstr/ThreadHandler.h>
 using namespace sockstr;
 using namespace std;
 
@@ -36,10 +36,18 @@ struct Params
     int port;
 };
 
-void* server_process(void* args)
+
+class ServerThreadHandler : public ThreadHandler<Params*, void*>
+{
+public:
+    ServerThreadHandler(Params* params) { setData(params); }
+
+    virtual void* handle(Params* params);
+};
+
+void* ServerThreadHandler::handle(Params* params)
 {
     void* ret = (void*) 2;
-    Params* params = (Params*) args;
     cout << "Server connecting to port " << params->port << endl;
 
     Socket sock;
@@ -55,7 +63,6 @@ void* server_process(void* args)
     {
         string strbuf;
 
-//        clientSock->read(strbuf);
         *clientSock >> strbuf;
         while (clientSock->queryStatus() == SC_OK)
         {
@@ -99,13 +106,12 @@ int main(int argc, const char* argv[])
 {
     Params params = { 4321 };
 
-    pthread_t tid;
-    pthread_create(&tid, NULL, server_process, &params);
+    ServerThreadHandler server(&params);
+    ThreadManager::create<Params*, void*>(&server);
 
     client_process(&params);
 
-    void* res;
-    pthread_join(tid, &res);
+    server.wait();
 
     return 0;
 }

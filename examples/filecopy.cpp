@@ -27,10 +27,10 @@
 #include <cerrno>
 #include <fstream>
 #include <iostream>
-#include <pthread.h>
 #include <unistd.h>
-#include <sockstr/sstypes.h>
+
 #include <sockstr/Socket.h>
+#include <sockstr/ThreadHandler.h>
 using namespace sockstr;
 using namespace std;
 
@@ -42,10 +42,17 @@ struct Params
 };
 
 
-void* server_process(void* args)
+class ServerThreadHandler : public ThreadHandler<Params*, void*>
+{
+public:
+    ServerThreadHandler(Params* params) { setData(params); }
+
+    virtual void* handle(Params* params);
+};
+
+void* ServerThreadHandler::handle(Params* params)
 {
     void* ret = (void*) 2;
-    Params* params = (Params*) args;
     cout << "Server connecting to port " << params->port << endl;
     string fileName = params->fileName + ".bak";
     cout << "Writing to file " << fileName << endl;
@@ -163,13 +170,12 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    pthread_t tid;
-    pthread_create(&tid, NULL, server_process, &params);
+    ServerThreadHandler server(&params);
+    ThreadManager::create<Params*, void*>(&server);
 
     client_process(&params);
 
-    void* res;
-    pthread_join(tid, &res);
+    server.wait();	// wait for server thread to end
 
     return 0;
 }

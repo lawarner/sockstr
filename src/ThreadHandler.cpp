@@ -66,20 +66,19 @@ ThreadManager::create(THRTYPE_FUNCTION function, void* data, bool start)
 }
 
 
-bool ThreadManager::_launchThread(THRTYPE_FUNCTION function, void* handler)
+THRTYPE_ID ThreadManager::_launchThread(THRTYPE_FUNCTION function, void* handler)
 {
+    THRTYPE_ID thread_id = 0;
 #if CONFIG_HAS_PTHREADS
-    pthread_t thread_id;
     int st = pthread_create(&thread_id, NULL, 
                             function,
                             handler);
-    return (st == 0);
+    return thread_id;
 #else
 #ifdef WIN32
 #ifdef USE_MFC
     VERIFY(AfxBeginThread((AFX_THREADPROC) function, handler));
 #else
-    DWORD thread_id;
     VERIFY(CreateThread( 
                NULL,            // default security attributes
                0,               // use default stack size  
@@ -97,7 +96,7 @@ bool ThreadManager::_launchThread(THRTYPE_FUNCTION function, void* handler)
 
     // TODO: keep a list of all handlers so they can be managed and deleted
 
-    return true;
+    return thread_id;
 }
 
 

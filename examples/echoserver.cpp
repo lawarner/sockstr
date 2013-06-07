@@ -29,12 +29,12 @@
 #include <cerrno>
 #include <fstream>
 #include <iostream>
-#include <pthread.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 #include <sockstr/Socket.h>
+#include <sockstr/ThreadHandler.h>
 using namespace sockstr;
 using namespace std;
 
@@ -57,10 +57,18 @@ struct Params
 };
 
 
-void* client_process(void* args)
+class ClientThreadHandler : public ThreadHandler<Params*, void*>
+{
+public:
+    ClientThreadHandler(Params* params) { setData(params); }
+
+    virtual void* handle(Params* params);
+};
+
+
+void* ClientThreadHandler::handle(Params* params)
 {
     cout << "Client process started." << endl;
-    Params* params = static_cast<Params*>(args);
     Stream* clientSock = params->clientSock;
     int totalRead = 0;
 
@@ -99,6 +107,8 @@ void* client_process(void* args)
 }
 
 
+// The echo server runs in the main process thread.  It spawns a thread for
+// each client connection
 void* server_process(void* args)
 {
     void* ret = (void*) 2;
@@ -120,8 +130,8 @@ void* server_process(void* args)
             Params *clientParams = new Params(params);
             clientParams->clientSock = clientSock;
             
-            pthread_t tid;
-            pthread_create(&tid, NULL, client_process, clientParams);
+            ClientThreadHandler* client = new ClientThreadHandler(clientParams);
+            ThreadManager::create<Params*, void*>(client);
         }
     }
 
@@ -176,9 +186,6 @@ int main(int argc, char* argv[])
     signal(SIGQUIT, quitit);
 
     server_process(&params);
-
-//    void* res;
-//    pthread_join(tid, &res);
 
     return 0;
 }

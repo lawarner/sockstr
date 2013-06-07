@@ -1,5 +1,8 @@
 Some planned enhancements to sockstr        Updated: 5/27/2013
 ------------------------------------        ------------------
+Implement a pure async callback mode where a single thread is constantly
+delivering new data from socket.
+
 Allow to pass a bigger buffer to StreamBuf
 
 Support IPv6 address resolution (Work in progress)
@@ -8,7 +11,8 @@ Port to Android, iOS.
 
 Add more protocols besides Http.  Possibly use a ProtocolBuf interface.
 
-Authenicate server, more options for TLS.
+Authenticate server, more options for TLS.
+- Be able to detect a TLS session on a socket and switch to TLS mode.
 
 Fully implement OAuth classes.
 
