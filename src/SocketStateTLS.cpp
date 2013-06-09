@@ -193,7 +193,6 @@ SSOpenedClientTLS::open(Socket* pSocket,
 			return false;
         }
 
-//        std::cout << "2 SSOpenedClientTLS::open errno=" << errno << std::endl;
 #ifdef TARGET_WINDOWS
 		bool bSockOpt = true;
 #else
@@ -380,11 +379,7 @@ SSConnectedTLS::read(Socket* pSocket, void* pBuf, UINT uCount)
 		// avoid blocking the main thread
 		if (dwBytes /*&& ! WSAIsBlocking()*/)	// This much (dwBytes) can be
 		{										// read without blocking
-#ifdef TARGET_WINDOWS
-			iResult = readSocket(pSocket, pBuf, min((UINT)dwBytes, uCount));
-#else
 			iResult = readSocket(pSocket, pBuf, std::min((UINT)dwBytes, uCount));
-#endif
 			if (iResult == 0 || iResult == SOCKET_ERROR)
             {
                 pSocket->m_Status = SC_NODATA;
@@ -539,7 +534,6 @@ SSConnectedTLS::write(Socket* pSocket, const void* pBuf, UINT uCount)
             = new WriteThreadHandler(createIOParams(pSocket, pBuf, uCount,
                                                     pSocket->m_pDefCallback));
 
-        std::cout << "Going to create write thread thru ThreadManager" << std::endl;
         bool th = ThreadManager::create<IOPARAMS*>(writeThreadHandler);
         VERIFY(th);
 	}

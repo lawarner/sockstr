@@ -24,6 +24,7 @@
 
 #include "config.h"
 #include <cassert>
+#include <unistd.h>
 #if CONFIG_HAS_PTHREADS
 #include <pthread.h>
 #endif
@@ -32,8 +33,9 @@
 using namespace sockstr;
 
 #ifdef _DEBUG
-void* ThreadHandler::m_pLastBuffer = 0;
+void* ThreadHandler::pLastBuffer = 0;
 #endif
+std::vector<THRTYPE_ID> ThreadManager::threads_;
 
 
 bool
@@ -65,6 +67,36 @@ ThreadManager::create(THRTYPE_FUNCTION function, void* data, bool start)
     return true;
 }
 
+void ThreadManager::waitAll(int timeOut)
+{
+    while (timeOut == -1 && joinAllWaiting() > 0)
+        sleep(1);
+        
+}
+
+size_t ThreadManager::joinAllWaiting()
+{
+    std::vector<THRTYPE_ID>::iterator it;
+    for (it = threads_.begin(); it != threads_.end(); ++it)
+    {
+        if (*it == 0)
+            break;
+
+        void* res;
+        if (pthread_tryjoin_np(*it, &res) == 0)
+        {
+            std::vector<THRTYPE_ID>::reverse_iterator rit = threads_.rbegin();
+            *it = *rit;
+            *rit = 0;
+        }
+    }
+
+    if (it != threads_.end())
+        threads_.erase(it, threads_.end());
+
+    return threads_.size();
+}
+
 
 THRTYPE_ID ThreadManager::_launchThread(THRTYPE_FUNCTION function, void* handler)
 {
@@ -73,7 +105,8 @@ THRTYPE_ID ThreadManager::_launchThread(THRTYPE_FUNCTION function, void* handler
     int st = pthread_create(&thread_id, NULL, 
                             function,
                             handler);
-    return thread_id;
+
+    return (st == 0) ? thread_id : 0;
 #else
 #ifdef WIN32
 #ifdef USE_MFC

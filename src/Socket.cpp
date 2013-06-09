@@ -375,7 +375,7 @@ Socket::remoteReadData(IpcStruct* pData, UINT uMaxLength)
 		{
 			// flush buffer
 			DWORD dwBytes;
-			if (::ioctl(m_hFile, FIONREAD, &dwBytes) == SOCKET_ERROR)
+			if (IOCTLSOCK(m_hFile, FIONREAD, &dwBytes) == SOCKET_ERROR)
 			{
 				registerCallback(pOldCallback);
 				return 0;

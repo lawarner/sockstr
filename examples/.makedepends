@@ -1,15 +1,15 @@
-simplest.o: simplest.cpp ../include/sockstr/sstypes.h \
- ../include/sockstr/Socket.h ../include/sockstr/SocketAddr.h \
+simplest.o: simplest.cpp ../include/sockstr/Socket.h \
+ ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
  ../include/sockstr/IPAddress.h ../include/sockstr/Stream.h \
- ../include/sockstr/StreamBuf.h
+ ../include/sockstr/StreamBuf.h ../include/sockstr/ThreadHandler.h
 echoserver.o: echoserver.cpp ../include/sockstr/Socket.h \
  ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
  ../include/sockstr/IPAddress.h ../include/sockstr/Stream.h \
- ../include/sockstr/StreamBuf.h
-filecopy.o: filecopy.cpp ../include/sockstr/sstypes.h \
- ../include/sockstr/Socket.h ../include/sockstr/SocketAddr.h \
+ ../include/sockstr/StreamBuf.h ../include/sockstr/ThreadHandler.h
+filecopy.o: filecopy.cpp ../include/sockstr/Socket.h \
+ ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
  ../include/sockstr/IPAddress.h ../include/sockstr/Stream.h \
- ../include/sockstr/StreamBuf.h
+ ../include/sockstr/StreamBuf.h ../include/sockstr/ThreadHandler.h
 fbread.o: fbread.cpp ../include/sockstr/IPAddress.h \
  ../include/sockstr/sstypes.h ../include/sockstr/Socket.h \
  ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \

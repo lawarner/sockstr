@@ -22,11 +22,11 @@
 #ifndef _THREADHANDLER_H_INCLUDED_
 #define _THREADHANDLER_H_INCLUDED_
 //
-//
 
 //
 // INCLUDE FILES
 //
+#include <vector>
 #include <sockstr/sstypes.h>
 
 
@@ -116,7 +116,7 @@ protected:
     THRTYPE_ID tid_;  // thread ID
 
 #ifdef _DEBUG
-	static void* m_pLastBuffer;	// Last buffer used for overlapped I/O
+	static void* pLastBuffer_;	// Last buffer used for overlapped I/O
 #endif
     friend class ThreadManager;
 };
@@ -132,7 +132,10 @@ class DllExport ThreadManager
 {
 public:
     ThreadManager() { }
-    virtual ~ThreadManager() { }
+    virtual ~ThreadManager()
+    {
+        waitAll();
+    }
 
     /** This is for backwards compatibility only and will be removed soon. */
     static bool
@@ -145,13 +148,33 @@ public:
             THRTYPE_ID thread_id;
             thread_id = _launchThread(handler->hookHandle_, (void*)handler);
             handler->setTid(thread_id);
-            return (thread_id > 0);
+            if (thread_id > 0)
+            {
+                threads_.push_back(thread_id);
+                return true;
+            }
+            return false;
         }
 
+    /**
+     * Joins any threads that have already exited and removes them from our
+     * list.
+     *
+     * @return Number of threads still running.
+     */
+    virtual size_t joinAllWaiting();
     virtual void start() { }
+    /**
+     * Wait for all threads to terminate by doing a join.
+     * @param timeOut Number of milliseconds to wait for threads to exit.
+     *                If -1, then this function blocks until all theads exit.
+     */
+    virtual void waitAll(int timeOut = 0);
 
 protected:
     static THRTYPE_ID _launchThread(THRTYPE_FUNCTION function, void* handler);
+
+    static std::vector<THRTYPE_ID> threads_;
 
 private:
 

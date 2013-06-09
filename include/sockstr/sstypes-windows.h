@@ -29,6 +29,8 @@
 #define TARGET_WINDOWS
 #endif
 
+#define NOMINMAX 1
+
 #define _X86_
 #include <WinDef.h>
 #include <WinSock2.h>

@@ -731,21 +731,18 @@ SSOpenedServer::open(Socket* pSocket,
 		return false;
 
 	// TODO: Maybe skip the sockopt if portnum = 0?
-	bool bSockOpt = true;
+#ifdef TARGET_WINDOWS
+    bool bSockOpt = true;
+#else
+    int bSockOpt = 1;
+#endif
 	::setsockopt(pSocket->m_hFile, SOL_SOCKET, SO_REUSEADDR,
-				 (char *)&bSockOpt, sizeof(bool));
+				 (char *)&bSockOpt, sizeof(bSockOpt));
 
 	if (pSocket->m_nProtocol == SOCK_STREAM)
 	{
-#ifdef TARGET_WINDOWS
-		bool bSockOpt = true;
 		::setsockopt(pSocket->m_hFile, SOL_SOCKET, SO_KEEPALIVE,
-					 (char *)&bSockOpt, sizeof(bool));
-#else
-        int soopt = 1;
-		::setsockopt(pSocket->m_hFile, SOL_SOCKET, SO_KEEPALIVE,
-					 &soopt, sizeof(soopt));
-#endif
+					 (char *)&bSockOpt, sizeof(bSockOpt));
 	}
 
 	if (::bind(pSocket->m_hFile, (sockaddr *)rSockAddr, sizeof(sockaddr)) == SOCKET_ERROR)
@@ -767,9 +764,13 @@ SSOpenedServer::open(Socket* pSocket,
 	}
 	else	// SOCK_DGRAM
 	{
-		bSockOpt = true;
+#ifdef TARGET_WINDOWS
+        bSockOpt = true;
+#else
+        bSockOpt = 1;
+#endif
 		::setsockopt(pSocket->m_hFile, SOL_SOCKET, SO_BROADCAST,
-					 (char *)&bSockOpt, sizeof(bool));
+					 (char *)&bSockOpt, sizeof(bSockOpt));
 
 		rSockAddr.sin_addr.s_addr = INADDR_BROADCAST;
 
@@ -845,17 +846,13 @@ SSOpenedClient::open(Socket* pSocket,
 			== SOCKET_ERROR)
 			return false;
 
-//        std::cout << "2 SSOpenedClient::open errno=" << errno << std::endl;
 #ifdef TARGET_WINDOWS
 		bool bSockOpt = true;
-		::setsockopt(pSocket->m_hFile, SOL_SOCKET, SO_KEEPALIVE,
-					 (char *)&bSockOpt, sizeof(bool));
 #else
-        int soopt = 1;
-		::setsockopt(pSocket->m_hFile, SOL_SOCKET, SO_KEEPALIVE,
-					 &soopt, sizeof(soopt));
+		int bSockOpt = 1;
 #endif
-//        std::cout << "3 SSOpenedClient::open errno=" << errno << std::endl;
+		::setsockopt(pSocket->m_hFile, SOL_SOCKET, SO_KEEPALIVE,
+					 (char *)&bSockOpt, sizeof(bSockOpt));
 	}
 	else
 	{
@@ -869,9 +866,13 @@ SSOpenedClient::open(Socket* pSocket,
 			== SOCKET_ERROR)
 			return false;
 
+#ifdef TARGET_WINDOWS
 		bool bSockOpt = true;
+#else
+		int bSockOpt = 1;
+#endif
 		::setsockopt(pSocket->m_hFile, SOL_SOCKET, SO_BROADCAST,
-					 (char *)&bSockOpt, sizeof(bool));
+					 (char *)&bSockOpt, sizeof(bSockOpt));
 
 		rSockAddr.sin_addr.s_addr = INADDR_BROADCAST;
 	}
@@ -1020,11 +1021,7 @@ SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount)
 		// avoid blocking the main thread
 		if (dwBytes /*&& ! WSAIsBlocking()*/)	// This much (dwBytes) can be
 		{										// read without blocking
-#ifdef TARGET_WINDOWS
-			iResult = readSocket(pSocket, pBuf, min((UINT)dwBytes, uCount));
-#else
 			iResult = readSocket(pSocket, pBuf, std::min((UINT)dwBytes, uCount));
-#endif
 			if (iResult == 0 || iResult == SOCKET_ERROR)
             {
                 pSocket->m_Status = SC_NODATA;
@@ -1046,7 +1043,6 @@ SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount)
                 = new ReadThreadHandler(createIOParams(pSocket, pBuf, uCount,
                                                        pSocket->m_pDefCallback));
 
-            std::cout << "Going to create thread thru ThreadManager" << std::endl;
             bool th = ThreadManager::create<IOPARAMS*>(readThreadHandler);
             VERIFY(th);
 		}
@@ -1199,7 +1195,6 @@ SSConnected::write(Socket* pSocket, const void* pBuf, UINT uCount)
             = new WriteThreadHandler(createIOParams(pSocket, pBuf, uCount,
                                                     pSocket->m_pDefCallback));
 
-        std::cout << "Going to create write thread thru ThreadManager" << std::endl;
         bool th = ThreadManager::create<IOPARAMS*>(writeThreadHandler);
         VERIFY(th);
 	}

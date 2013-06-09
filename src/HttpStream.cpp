@@ -141,8 +141,6 @@ UINT HttpStream::get(const std::string& uri, char* buffer, UINT uCount)
     expandHeaders(httpreq);
     write(httpreq);
     UINT ret = read(buffer, uCount);	//TODO loop for 1024 and fill string param
-    std::cout << "header:" << std::endl << httpreq << std::endl
-              << "read=" << ret << std::endl;
 
     return ret;
 }
@@ -161,8 +159,6 @@ UINT HttpStream::post(const std::string& uri, char* message, char* buffer, UINT 
         write(message, strlen(message));
 
     UINT ret = read(buffer, uCount);	//TODO loop for 1024 and fill string param
-    std::cout << "header:" << std::endl << httpreq << std::endl
-              << "read=" << ret << std::endl;
 
     return ret;
 }
@@ -179,8 +175,6 @@ UINT HttpStream::deleter(const std::string& uri)
     write(httpreq);
     char buffer[1024];
     UINT ret = read(buffer, sizeof(buffer));
-    std::cout << "header:" << std::endl << httpreq << std::endl
-              << "read=" << ret << std::endl;
 
     return ret;
 }
