@@ -37,10 +37,13 @@
 #include <sockstr/Socket.h>
 using namespace sockstr;
 
+bool bImDone = false;
+
 
 void readSockData(DWORD dw, void* data)
 {
     std::cout << "got some data " << dw << " " << std::string((char*)data, dw) << std::endl;
+    if (dw < 1024) bImDone = true;
 }
 
 
@@ -63,18 +66,13 @@ int main(int argc, char *argv[])
 	std::string hostport = hostname;
     if (hostport.find(':') == hostport.npos)
         hostport += ":80";
-    std::cout << "Get address of host " << hostport << std::endl;
-
-
-    IPAddress ipaddr(hostname.c_str());
-    printf("Netaddress is %x, string value is %s\n",
-           ipaddr.netAddress(), (const char*) ipaddr);
 
     Socket sock;
     if (!sock.open(hostport.c_str(), Socket::modeReadWrite))
 //                   Socket::modeAsyncSocket | Socket::modeReadWrite))
     {
-        std::cout << "Error opening socket: " << errno << std::endl;
+        std::cout << "Error opening socket: "
+                  << errno << ": " << strerror(errno) << std::endl;
         return(2);
     }
     std::cout << "Socket open at " << (const char *) sock << std::endl;
@@ -84,7 +82,7 @@ int main(int argc, char *argv[])
     std::string http_get = "GET " + filename;
     // Add HTTP headers
     http_get += " HTTP/1.1\r\nHost: " + hostname + "\r\n";
-    http_get += "Accept: */*\r\n";
+    http_get += "Accept: */*\r\n\r";
 
 	sock << http_get << std::endl;	// Send the request synchronously
 
@@ -93,12 +91,15 @@ int main(int argc, char *argv[])
     char buf[1024] = "";
     int inLen;
     int totalLen = 0;
-    while ((inLen = sock.read(buf, sizeof(buf))) >= 0)
+    while (sock.good())
     {
+        inLen = sock.read(buf, sizeof(buf));
+        if (inLen <= 0 && bImDone) break;
+
         if (isSummary)
             std::cout << "+=+=+=+=+ Read from socket " << inLen << " characters" << std::endl;
         else
-            std::cout << std::string(buf, inLen);
+            std::cout << "+= " << std::string(buf, inLen) << std::endl;
         totalLen += inLen;
         sleep(1);
     }
@@ -106,6 +107,7 @@ int main(int argc, char *argv[])
     if (isSummary)
         std::cout << "+=+=+=+=+ Total read from socket is " 
                   << totalLen << " characters" << std::endl;
+
     std::cout << std::endl;
 
     sock.close();

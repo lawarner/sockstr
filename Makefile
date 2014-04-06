@@ -27,8 +27,9 @@ LIBSOCKSTR = libsockstr.a
 
 SUBDIRS = src examples
 
+PROGRAMS =
 
-all: subdirs
+all: $(PROGRAMS) subdirs
 
 .PHONY: doc
 doc:

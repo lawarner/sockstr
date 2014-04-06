@@ -30,8 +30,8 @@ DEPCPPFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
 LDFLAGS = -pthread
 LDLIBS = 
 
-OBJS := simplest.o echoserver.o filecopy.o fbread.o fb2read.o httptest.o \
-        asyncsock.o testsockstr.o
+OBJS :=  asyncsock.o echoserver.o fbread.o fb2read.o filecopy.o httptest.o \
+         restclient.o restserver.o simplest.o testsockstr.o
 SRCS := $(OBJS:.o=.cpp)
 
 INCS = 
@@ -41,7 +41,8 @@ DEPLIBS = $(LIBSOCKLIB) $(LIBOPENSSL)
 LIBSOCKLIB = $(TOP)/src/libsockstr.a
 LIBOPENSSL = -lssl -lcrypto
 
-PROGRAMS = simplest echoserver filecopy fbread fb2read httptest testsockstr asyncsock
+PROGRAMS = asyncsock echoserver fbread fb2read  filecopy httptest \
+           restclient restserver simplest testsockstr
 
 
 .cpp.o: ; $(CC) $(CCFLAGS) -c $<
