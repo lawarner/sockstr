@@ -22,11 +22,10 @@
 // HttpStream.cpp
 //
 
+#include <sockstr/HttpHelpers.h>
 #include <sockstr/HttpStream.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
-#include <time.h>
 using namespace sockstr;
 
 
@@ -36,81 +35,6 @@ static const char* defaultHeaderFields[] =
     0, 0
 };
 
-
-
-CompoundEncoder::CompoundEncoder(const char* separator)
-    : separator_(separator)
-{
-
-}
-
-CompoundEncoder::~CompoundEncoder()
-{
-    std::vector<HttpParamEncoder*>::iterator it;
-    for (it = encoders_.begin(); it != encoders_.end(); ++it)
-    {
-        delete *it;
-    }
-}
-
-
-std::string CompoundEncoder::toString()
-{
-    std::string str;
-    std::vector<HttpParamEncoder*>::iterator it;
-    for (it = encoders_.begin(); it != encoders_.end(); ++it)
-    {
-        std::string name = (*it)->getName();
-        if (name.empty())
-            str += (*it)->toString();
-        else
-            str += (*it)->getName() + "=\"" + (*it)->toString() + "\"";
-        if (*it != encoders_.back())
-            str += separator_;
-    }
-    return str;
-}
-
-void CompoundEncoder::addElement(HttpParamEncoder* encoder)
-{
-    encoders_.push_back(encoder);
-}
-
-
-TimestampEncoder::TimestampEncoder(time_t timeSecs, DateTimeFormat format)
-    : timeSecs_(timeSecs)
-    , refresh_(false)
-    , format_(format)
-{
-
-}
-
-TimestampEncoder::TimestampEncoder(bool refresh, DateTimeFormat format)
-    : timeSecs_(time(0))
-    , refresh_(refresh)
-    , format_(format)
-{
-
-}
-
-std::string TimestampEncoder::toString()
-{
-    char outstr[200];
-    struct tm* tmp;
-    if (refresh_)
-        timeSecs_ = time(0);
-    tmp = localtime(&timeSecs_);
-
-    if (format_ == DateTimeRfc822)
-        strftime(outstr, sizeof(outstr), "%a, %d %b %Y %T %Z", tmp);
-    else
-        snprintf(outstr, sizeof(outstr), "%ld", timeSecs_);
-
-    return std::string(outstr);
-}
-
-
-// ---------------------------------------------------------------------- //
 
 HttpStream::HttpStream()
     : Socket()

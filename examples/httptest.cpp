@@ -31,6 +31,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <sockstr/HttpStream.h>
 #include <sockstr/IPAddress.h>
 #include <sockstr/OAuth.h>
 

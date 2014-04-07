@@ -27,7 +27,7 @@
 //
 // INCLUDE FILES
 //
-#include <sockstr/HttpStream.h>
+#include <sockstr/HttpHelpers.h>
 
 
 namespace sockstr

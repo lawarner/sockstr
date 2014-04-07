@@ -35,6 +35,7 @@
  */
 
 #include <sockstr/OAuth.h>
+#include <iostream>
 #include <stdlib.h>
 #include <string.h>
 using namespace sockstr;

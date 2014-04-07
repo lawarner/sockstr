@@ -31,6 +31,8 @@
 #include <cstring>
 #include <unistd.h>
 
+#include <sockstr/HttpHelpers.h>
+#include <sockstr/HttpStream.h>
 #include <sockstr/Socket.h>
 #include <sockstr/ThreadHandler.h>
 using namespace sockstr;
@@ -61,11 +63,13 @@ void* RequestThreadHandler::handle(Params* params)
 
     char buf[256];
     int sz = sock->read(buf, sizeof(buf));
+    HttpStatus httpStatus;
     while (sock->queryStatus() == SC_OK)
     {
 //           ofile.write(buf, sz);
         sz = sock->read(buf, sizeof(buf));
-        *sock << "Hi buddy!" << endl;
+        *sock << httpStatus.statusLine() << "\r\n"
+              << "{ jsondata: { a: 1, b: 2 } }\r" << endl;
     }
 
     sock->close();

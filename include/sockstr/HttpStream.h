@@ -21,15 +21,12 @@
 
 #ifndef _HTTPSTREAM_H_INCLUDED_
 #define _HTTPSTREAM_H_INCLUDED_
-//
-//
 
 //
 // INCLUDE FILES
 //
 #include <sockstr/Socket.h>
 #include <map>
-#include <vector>
 
 #include <time.h>
 
@@ -47,6 +44,7 @@ namespace sockstr
 //
 // FORWARD CLASS DECLARATIONS
 //
+class HttpParamEncoder;
 
 //
 // TYPE DEFINITIONS
@@ -55,118 +53,6 @@ namespace sockstr
 //
 // CLASS DEFINITIONS
 //
-/**
- * The HTTP header contains parameters that are the form "Name: Value"
- * The "Value" portion can be a fixed string, but often it is a computed
- * value, for example the Date parameter.  The HttpParamEncoder class can be
- * subclassed to handle these special computed, encoded parameter values.
- */
-class DllExport HttpParamEncoder
-{
-public:
-    HttpParamEncoder() { }
-    HttpParamEncoder(const std::string& name, const std::string& value = std::string())
-        : name_(name), value_(value) { }
-    virtual ~HttpParamEncoder() { }
-
-    virtual void set(const std::string& value) { value_ = value; }
-    virtual std::string toString() { return value_; }
-    virtual std::string getNameValue()
-    {
-        return getName() + "\"" + toString() + "\"";
-    }
-
-    void setName(const std::string& name) { name_ = name; }
-    const std::string& getName() const { return name_; }
-
-private:
-    std::string name_;	// optional name
-    std::string value_;	// optional value
-};
-
-/**
- * The CompoundEncoder is simply a list of other encoders.
- * This is useful when a parameter contains multiple parts.  For
- * example, an Authorization header containing values for OAuth.
- */
-class DllExport CompoundEncoder : public HttpParamEncoder
-{
-public:
-    CompoundEncoder(const char* separator = ", ");
-    virtual ~CompoundEncoder();
-    virtual std::string toString();
-
-    /**
-     * Add encoder to this compound encoder.
-     * @param encoder Pointer to an http encoder.  Ownership of the memory 
-     *                pointed to by encoder is transferred to this object
-     *                and will be freed when this object is destroyed.
-     */
-    void addElement(HttpParamEncoder* encoder);
-    void sortElements() { } //TODO: implement
-
-protected:
-    std::vector<HttpParamEncoder*> encoders_;
-private:
-    const char* separator_;
-};
-
-
-/**
- * This encoder contains a constant string value.  It can emit just a value
- * but it is likely most useful as a name/value pair.
- */
-class DllExport FixedStringEncoder : public HttpParamEncoder
-{
-public:
-    /** Construct a FixedStringEncoder. */
-    FixedStringEncoder(const std::string& value = std::string())
-        : HttpParamEncoder(std::string(), value) { }
-    FixedStringEncoder(const std::string& name, const std::string& value)
-        : HttpParamEncoder(name, value) { }
-
-};
-
-
-/**
- * Encodes Date/time into acceptable W3C format.
- * Example of format: "Sun, 05 May 2013 19:51:06 PDT".
- * Defaults to current time, but can be initialized with any epoch time
- * in seconds.
- */
-class DllExport TimestampEncoder : public HttpParamEncoder
-{
-public:
-    /** Type of output for the date time encoder. */
-    enum DateTimeFormat
-    {
-        DateTimeRfc822,		//!< Output in RFC-822 format
-        DateTimeRaw			//!< Output as number of seconds since epoch
-    };
-
-    /** Construct a TimestampEncoder.
-     *  @param timeSecs Number of seconds since epoch to set this timestamp to.
-     *                  Defaults to current date/time.
-     *  @param format  The output format of the date.  Either DateTimeRfc822
-     *                 or DateTimeRaw.
-     */
-    TimestampEncoder(time_t timeSecs = time(0), DateTimeFormat format = DateTimeRfc822);
-    /** Construct a TimestampEncoder.
-     *  @param refresh If true, regenerate timestamp from current time when toString()
-     *                 is called.
-     *  @param format  The output format of the date.  Either DateTimeRfc822
-     *                 or DateTimeRaw.
-     */
-    TimestampEncoder(bool refresh, DateTimeFormat format = DateTimeRfc822);
-
-    virtual std::string toString();
-private:
-    time_t timeSecs_;
-    bool refresh_;
-
-    DateTimeFormat format_;
-};
-
 
 /**
  * Class to handle HTTP protocol over a socket connection.
