@@ -24,14 +24,23 @@
 
 #include <sockstr/HttpHelpers.h>
 #include <sockstr/HttpStream.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <string.h>
+#include <sstream>
 using namespace sockstr;
 
+#define HTTP_VERSION_LINE " " HTTP_VERSION "\r\n"
 
-static const char* defaultHeaderFields[] =
+const char* HttpStream::defaultHeaderFields_[] =
 {
     "Accept", "*/*",
+    0, 0
+};
+
+const char* HttpServerStream::defaultSrvHeaderFields_[] =
+{
+    "Date", "*",
+    "Host", "*",
     0, 0
 };
 
@@ -39,7 +48,7 @@ static const char* defaultHeaderFields[] =
 HttpStream::HttpStream()
     : Socket()
 {
-
+//    loadDefaultHeaders();
 }
 
 HttpStream::HttpStream(const char* lpszFileName, UINT uOpenFlags)
@@ -61,7 +70,7 @@ HttpStream::~HttpStream()
 
 UINT HttpStream::get(const std::string& uri, char* buffer, UINT uCount)
 {
-    std::string httpreq = "GET " + uri + " HTTP/1.1\r\n";
+    std::string httpreq = "GET " + uri + HTTP_VERSION_LINE;
     expandHeaders(httpreq);
     write(httpreq);
     UINT ret = read(buffer, uCount);	//TODO loop for 1024 and fill string param
@@ -76,7 +85,7 @@ UINT HttpStream::head(const std::string& uri)
 
 UINT HttpStream::post(const std::string& uri, char* message, char* buffer, UINT uCount)
 {
-    std::string httpreq = "POST " + uri + " HTTP/1.1\r\n";
+    std::string httpreq = "POST " + uri + HTTP_VERSION_LINE;
     expandHeaders(httpreq);
     write(httpreq);
     if (message)
@@ -87,14 +96,22 @@ UINT HttpStream::post(const std::string& uri, char* message, char* buffer, UINT 
     return ret;
 }
 
-UINT HttpStream::put(const std::string& uri, char* buffer)
+UINT HttpStream::put(const std::string& uri, char* message, char* buffer, UINT uCount)
 {
-    return 0;
+    std::string httpreq = "PUT " + uri + HTTP_VERSION_LINE;
+    expandHeaders(httpreq);
+    write(httpreq);
+    if (message)
+        write(message, strlen(message));
+
+    UINT ret = read(buffer, uCount);	//TODO loop for 1024 and fill string param
+
+    return ret;
 }
 
 UINT HttpStream::deleter(const std::string& uri)
 {
-    std::string httpreq = "DELETE " + uri + " HTTP/1.1\r\n";
+    std::string httpreq = "DELETE " + uri + HTTP_VERSION_LINE;
     expandHeaders(httpreq);
     write(httpreq);
     char buffer[1024];
@@ -103,30 +120,37 @@ UINT HttpStream::deleter(const std::string& uri)
     return ret;
 }
 
+void HttpStream::addHeader(const std::string& header, int value)
+{
+    std::ostringstream oss;
+    oss << value;
+    addHeader(header, oss.str());
+}
+
 void HttpStream::addHeader(const std::string& header, const std::string& value)
 {
     std::string hdrstr = header;
     HttpParamEncoder* encoder = new FixedStringEncoder(value);
-    headers[hdrstr] = encoder;
+    headers_[hdrstr] = encoder;
 }
 
 void HttpStream::addHeader(const std::string& header, HttpParamEncoder* encoder,
                            const std::string& value)
 {
     std::string hdrstr = header;
-    headers[hdrstr] = encoder;
+    headers_[hdrstr] = encoder;
 }
 
 
 void HttpStream::clearHeaders(void)
 {
-    headers.clear();
+    headers_.clear();
 }
 
 void HttpStream::expandHeaders(std::string& str)
 {
     HeaderMap::iterator it;
-    for (it = headers.begin(); it != headers.end(); ++it)
+    for (it = headers_.begin(); it != headers_.end(); ++it)
     {
         HttpParamEncoder* encoder = it->second;
         std::string param = encoder->toString();
@@ -137,14 +161,79 @@ void HttpStream::expandHeaders(std::string& str)
 
 void HttpStream::loadDefaultHeaders(void)
 {
-    for (int i = 0; defaultHeaderFields[i]; i += 2)
+    for (int i = 0; defaultHeaderFields_[i]; i += 2)
     {
-        addHeader(defaultHeaderFields[i], defaultHeaderFields[i+1]);
+        if (strcmp("Host", defaultHeaderFields_[i]) == 0) {
+            addHeader("Host", new HostnameEncoder(*this));
+        } else if (strcmp("Date", defaultHeaderFields_[i]) == 0) {
+            addHeader("Date", new TimestampEncoder(true));
+        } else {
+            addHeader(defaultHeaderFields_[i], defaultHeaderFields_[i+1]);
+        }
     }
-#if 0
-    std::string strhost((const char *) *this);
-    strhost = strhost.substr(0, strhost.find_first_of(':'));
-    if (!strhost.empty())
-        addHeader("Host", strhost);
-#endif
+}
+
+
+HttpServerStream::HttpServerStream()
+    : HttpStream()
+    , status_(*new HttpStatus)
+{
+}
+
+HttpServerStream::HttpServerStream(const char* lpszFileName, UINT uOpenFlags)
+    : HttpStream(lpszFileName, uOpenFlags)
+    , status_(*new HttpStatus)
+{
+}
+
+HttpServerStream::HttpServerStream(SocketAddr& rSockAddr, UINT uOpenFlags)
+    : HttpStream(rSockAddr, uOpenFlags)
+    , status_(*new HttpStatus)
+{
+}
+
+HttpServerStream::~HttpServerStream()
+{
+    delete &status_;
+}
+
+Stream *
+HttpServerStream::listen(const int nBacklog)
+{
+	// Construct a new client socket object
+	Socket * pClient = new HttpServerStream;
+    return listenIntern(pClient, nBacklog);
+}
+
+void HttpServerStream::loadDefaultHeaders(void)
+{
+    for (int i = 0; defaultSrvHeaderFields_[i]; i += 2)
+    {
+        if (strcmp("Host", defaultSrvHeaderFields_[i]) == 0) {
+            addHeader("Host", new HostnameEncoder(*this));
+        } else if (strcmp("Date", defaultSrvHeaderFields_[i]) == 0) {
+            addHeader("Date", new TimestampEncoder(true));
+        } else {
+            addHeader(defaultSrvHeaderFields_[i], defaultSrvHeaderFields_[i+1]);
+        }
+    }
+}
+
+UINT HttpServerStream::response(const char* buffer, UINT uCount, const char* contentType,
+    UINT statusCode)
+{
+    // send status line, headers, <blanks>, payload
+    status_.setStatus(statusCode);
+
+    if (contentType) addHeader("Content-Type", contentType);
+    addHeader("Content-Length", uCount);
+
+    std::string httpres = status_.statusLine();
+
+    expandHeaders(httpres);
+    write(httpres);
+    if (buffer)
+        write(buffer, uCount);
+
+    return 0;
 }

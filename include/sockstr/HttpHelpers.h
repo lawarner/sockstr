@@ -42,9 +42,12 @@ namespace sockstr
 #define DllExport
 #endif
 
+#define HTTP_VERSION "HTTP/1.1"
+
 //
 // FORWARD CLASS DECLARATIONS
 //
+class Socket;
 
 //
 // TYPE DEFINITIONS
@@ -123,6 +126,22 @@ public:
     FixedStringEncoder(const std::string& name, const std::string& value)
         : HttpParamEncoder(name, value) { }
 
+};
+
+
+/**
+ * Encoder to generate Host header with resolved hostname
+ */
+class DllExport HostnameEncoder : public HttpParamEncoder
+{
+public:
+    /** Construct a HostnameEncoder. */
+    HostnameEncoder(Socket& socket);
+
+    virtual std::string toString();
+
+private:
+    Socket& socket_;
 };
 
 

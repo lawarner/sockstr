@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012
+   Copyright (C) 2014
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -18,11 +18,9 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-// filecopy.cpp
+// restserver.cpp
 //
-// This example spawns 2 threads that talk over a socket.
-// The first thread reads a file and sends it on the socket.
-// The second thread reads the socket and writes the contents to a file.
+// An example of a multi-threaded REST server.
 
 #include <cerrno>
 #include <fstream>
@@ -40,9 +38,9 @@ using namespace std;
 
 struct Params
 {
-    Params(int lPort, Stream* lClient) : port(lPort), client(lClient) { }
+    Params(int lPort, HttpServerStream* lClient) : port(lPort), client(lClient) { }
     int port;
-    Stream* client;
+    HttpServerStream* client;
 };
 
 
@@ -50,6 +48,7 @@ class RequestThreadHandler : public ThreadHandler<Params*, void*>
 {
 public:
     RequestThreadHandler(Params* params) { setData(params); }
+    ~RequestThreadHandler() { delete data_; }
 
     virtual void* handle(Params* params);
 };
@@ -58,18 +57,18 @@ void* RequestThreadHandler::handle(Params* params)
 {
     cout << "Server thread connected to port " << params->port << endl;
 
-    Stream* sock = params->client;
-    SocketAddr saddr(0, params->port);
+    HttpServerStream* sock = params->client;
+    sock->loadDefaultHeaders();
 
-    char buf[256];
-    int sz = sock->read(buf, sizeof(buf));
-    HttpStatus httpStatus;
-    while (sock->queryStatus() == SC_OK)
+    char buf[512];
+    static const char* someJson = "{ jsondata: { a: 1, b: 2 } }\r\n";
+
+    if (sock->queryStatus() == SC_OK)
     {
-//           ofile.write(buf, sz);
-        sz = sock->read(buf, sizeof(buf));
-        *sock << httpStatus.statusLine() << "\r\n"
-              << "{ jsondata: { a: 1, b: 2 } }\r" << endl;
+        int sz = sock->read(buf, sizeof(buf));
+        sock->response(someJson, strlen(someJson), "application/json");
+//        TimestampEncoder dateTime(true);
+//        sock->addHeader("Date", dateTime.toString());
     }
 
     sock->close();
@@ -97,17 +96,11 @@ int main(int argc, char* argv[])
         }
     }
 
-    if (optind < argc)
-        port = atoi(argv[optind]);
-    else
-    {
-        cout << "Usage:  filecopy [ -D ] [ port ]" << endl;
-        return 1;
-    }
+    if (optind < argc) port = atoi(argv[optind]);
 
     cout << "Server connecting to port " << port << endl;
 
-    Socket sock;
+    HttpServerStream sock;
     SocketAddr saddr(0, port);
     if (!sock.open(saddr, Socket::modeReadWrite))
     {
@@ -117,12 +110,13 @@ int main(int argc, char* argv[])
     }
 
     do {
-        Stream* clientSock = sock.listen();
+        HttpServerStream* clientSock = (HttpServerStream*) sock.listen();
         if (clientSock)
         {
-            Params params(port, clientSock);
-            RequestThreadHandler server(&params);
-            ThreadManager::create<Params*, void*>(&server);
+            Params* params = new Params(port, clientSock);
+            RequestThreadHandler* server = new RequestThreadHandler(params);
+            //Note that ThreadManager currently leaks handlers
+            ThreadManager::create<Params*, void*>(server);
         }
     } while (true);
 

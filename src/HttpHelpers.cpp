@@ -23,13 +23,14 @@
 //
 
 #include <sockstr/HttpHelpers.h>
+#include <sockstr/Socket.h>
 #include <sstream>
 #include <stdio.h>
 #include <time.h>
 using namespace sockstr;
 using namespace std;
 
-const std::string HttpStatus::HTTP_HEADER = "HTTP/1.1 ";
+const std::string HttpStatus::HTTP_HEADER = HTTP_VERSION " ";
 std::map<int, std::string> HttpStatus::statusNames_;
 
 CompoundEncoder::CompoundEncoder(const char* separator)
@@ -68,6 +69,26 @@ std::string CompoundEncoder::toString()
 void CompoundEncoder::addElement(HttpParamEncoder* encoder)
 {
     encoders_.push_back(encoder);
+}
+
+
+HostnameEncoder::HostnameEncoder(Socket& socket)
+    : socket_(socket)
+{
+
+}
+
+std::string HostnameEncoder::toString()
+{
+    std::string strhost((const char *) socket_);
+    if (strhost.empty()) {
+        //TODO show dot address
+        strhost = "(Unknown)";
+    } else {
+        std::size_t colon = strhost.find_first_of(':');
+        strhost = strhost.substr(0, colon);
+    }
+    return strhost;
 }
 
 

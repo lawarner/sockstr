@@ -45,6 +45,7 @@ namespace sockstr
 // FORWARD CLASS DECLARATIONS
 //
 class HttpParamEncoder;
+class HttpStatus;
 
 //
 // TYPE DEFINITIONS
@@ -55,7 +56,7 @@ class HttpParamEncoder;
 //
 
 /**
- * Class to handle HTTP protocol over a socket connection.
+ * Class to handle client-side HTTP protocol over a socket connection.
  */
 class DllExport HttpStream : public Socket
 {
@@ -69,24 +70,53 @@ public:
     UINT get(const std::string& uri, char* buffer, UINT uCount);
     UINT head(const std::string& uri);
     UINT post(const std::string& uri, char* message, char* buffer, UINT uCount);
-    UINT put(const std::string& uri, char* buffer);
+    UINT put(const std::string& uri, char* message, char* buffer, UINT uCount);
     UINT deleter(const std::string& uri);
 
+    void addHeader(const std::string& header, int value);
     void addHeader(const std::string& header, const std::string& value);
     void addHeader(const std::string& header, HttpParamEncoder* encoder,
                    const std::string& value = "");
     void clearHeaders(void);
     void expandHeaders(std::string& str);
-    void loadDefaultHeaders(void);
+    virtual void loadDefaultHeaders(void);
 
 protected:
     typedef std::map<std::string, HttpParamEncoder*> HeaderMap;
 
-    HeaderMap headers;
+    HeaderMap headers_;
+
+protected:
+    static const char* defaultHeaderFields_[];
 
 private:
     HttpStream(const HttpStream&);	// disable copy constructor
     HttpStream& operator=(const HttpStream& rSource);	// disable assignment operator
+};
+
+/**
+ * Class to handle server-side HTTP protocol over a socket connection.
+ */
+class DllExport HttpServerStream : public HttpStream
+{
+public:
+    HttpServerStream();
+	HttpServerStream(const char* lpszFileName, UINT uOpenFlags);
+	HttpServerStream(SocketAddr& rSockAddr, UINT uOpenFlags);
+
+    virtual ~HttpServerStream();
+
+	virtual Stream* listen(const int nBacklog = 4);
+    virtual void loadDefaultHeaders(void);
+
+    UINT response(const char* buffer, UINT uCount, 
+                  const char* contentType = 0, UINT statusCode = 200);
+
+protected:
+    HttpStatus& status_;
+
+protected:
+    static const char* defaultSrvHeaderFields_[];
 };
 
 }  // namespace sockstr

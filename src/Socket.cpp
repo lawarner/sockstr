@@ -541,10 +541,16 @@ Socket::getSockOpt(int  nOptionName, void* pOptionValue,
 Stream *
 Socket::listen(const int nBacklog)
 {
-	SOCKET ClientSocket = m_pState->listen(this, nBacklog);
-
 	// Construct a new client socket object
 	Socket * pClient = new Socket;
+    return listenIntern(pClient, nBacklog);
+}
+
+Stream *
+Socket::listenIntern(Socket* pClient, const int nBacklog)
+{
+	SOCKET ClientSocket = m_pState->listen(this, nBacklog);
+
 	pClient->m_hFile = ClientSocket;
 	pClient->m_uOpenFlags = m_uOpenFlags;
 	pClient->m_bAsyncMode = m_bAsyncMode;
@@ -849,9 +855,9 @@ Socket::write(const std::string& str)
 //
 // Remarks  :
 //
-Socket::operator char* (void) const
+Socket::operator const char* (void) const
 {
-	static char szHostName[124];
+	static char szHostName[200];
 	UINT dwAddress = m_PeerAddr.sin_addr.s_addr;
     char tmpName[100];
 //	struct hostent* pHostEntry;

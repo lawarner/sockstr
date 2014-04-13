@@ -135,7 +135,7 @@ public:
 	//!  Write a string to the stream (state-dependent).
     virtual void    write           (const std::string& str) = 0;
 	//!  Return a static, textual representation of the peer's address.
-	virtual operator char* (void) const = 0;
+	virtual operator const char* (void) const = 0;
 
 protected:
     //! Constructs a Stream objects.

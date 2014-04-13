@@ -25,8 +25,8 @@ INCDIR = $(TOP)/include
 IDIR2 = $(INCDIR)/sockstr
 
 CC = g++
-CCFLAGS = -Wall -g -O2 -I$(TOP) -I$(INCDIR)
-#CCFLAGS = -Wall -g -I$(TOP) -I$(INCDIR)
+#CCFLAGS = -Wall -g -O2 -I$(TOP) -I$(INCDIR)
+CCFLAGS = -Wall -g -I$(TOP) -I$(INCDIR)
 
 OBJS := IPAddress.o Socket.o SocketAddr.o StreamBuf.o SocketState.o SocketStateTLS.o \
         Stream.o ThreadHandler.o HttpHelpers.o HttpStream.o OAuth.o

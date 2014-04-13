@@ -172,10 +172,15 @@ public:
     virtual void  write           (const std::string& str);
 
 	/** Returns a static, textual representation of an address
-     *  (i.e., "host.acme.com:1074") */
-	virtual     operator char* (void) const;
+     *  (i.e., "host.acme.com:1074").  The value returned is an internal
+     *  static and is thus not thread safe.
+     */
+	virtual operator const char* (void) const;
 	//!   Assignment operator
 	Socket& operator=(const Socket& rSource);
+
+protected:
+    Stream* listenIntern(Socket* pClient, const int nBacklog);
 
 public:
     /** Open flags. */
