@@ -701,11 +701,13 @@ Socket::open(SocketAddr& rSockAddr, UINT uOpenFlags)
 	}
 	if (rSockAddr.netAddress() == INADDR_ANY || (uOpenFlags & modeCreate))
 		m_pState = SSOpenedServer::instance();
+#if USE_OPENSSL
     else if (rSockAddr.portNumber() == 443)
     {
         std::cout << "SSL connection" << std::endl;
         m_pState = SSOpenedClientTLS::instance();
     }
+#endif
 	else
 		m_pState = SSOpenedClient::instance();
 

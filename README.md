@@ -9,6 +9,9 @@ standard C++ library.
 A number of I/O modes are supported and a Stream such as asynchronous, 
 polling, etc.  These can be used interchangably on an open Stream.
 
+This library is compatible with Windows and Linux, and has recently been ported to ARM
+Linux using the Raspberry Pi toolchain.
+
 Sample code
 ===========
      #include <sockstr/Socket.h>

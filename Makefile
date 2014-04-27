@@ -20,6 +20,9 @@
 
 # Simple makefile for the sockstr class library
 
+ARMPREFIX=arm-linux-gnueabihf
+ARMAR=$(ARMPREFIX)-ar
+ARMCC=$(ARMPREFIX)-g++
 
 BACKUPFILE = ~/Downloads/srcrepo/sockstr-src-`date +%Y%j`.tar.bz2
 
@@ -45,6 +48,11 @@ subdirs:
 		make -C $$dir; \
 	done
 
+
+arm:
+	for dir in $(SUBDIRS); do \
+		make -C $$dir CC=$(ARMCC) AR=$(ARMAR) ; \
+	done
 
 .PHONY: clean
 clean:
