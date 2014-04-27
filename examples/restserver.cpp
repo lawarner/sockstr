@@ -25,6 +25,7 @@
 #include <cerrno>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <stdlib.h>
 #include <cstring>
 #include <unistd.h>
@@ -55,20 +56,31 @@ public:
 
 void* RequestThreadHandler::handle(Params* params)
 {
-    cout << "Server thread connected to port " << params->port << endl;
-
     HttpServerStream* sock = params->client;
+    const char* hostport = *sock;
+    cout << "Server thread connected to " << hostport << endl;
     sock->loadDefaultHeaders();
 
-    char buf[512];
-    static const char* someJson = "{ jsondata: { a: 1, b: 2 } }\r\n";
+    char buf[1024];
+    static const char* errorJson = "{ error: { text: \"Malformed request\" } }\r\n";
 
     if (sock->queryStatus() == SC_OK)
     {
-        int sz = sock->read(buf, sizeof(buf));
-        sock->response(someJson, strlen(someJson), "application/json");
-//        TimestampEncoder dateTime(true);
-//        sock->addHeader("Date", dateTime.toString());
+        HttpServerStream::HttpFunction funct;
+        string url;
+        unsigned int sz = sock->request(buf, sizeof(buf), funct, url);
+        if (sz == 0)
+        {
+            cout << "ERROR on http request" << endl;
+            sock->response(errorJson, strlen(errorJson), "application/json", 404);
+        } else {
+            const char* funcName = sock->functionName(funct);
+            cout << "HttpReq: " << funcName << " to: " << url << "." << endl;
+//            cout << string(buf, sz) << endl;
+            ostringstream someJson;
+            someJson << "{ http: \"" << funcName << "\", url: \"" << url << "\" }\r\n";
+            sock->response(someJson.str().c_str(), someJson.str().size(), "application/json");
+        }
     }
 
     sock->close();

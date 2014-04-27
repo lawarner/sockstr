@@ -28,6 +28,7 @@
 #include <string.h>
 #include <sstream>
 using namespace sockstr;
+using namespace std;
 
 #define HTTP_VERSION_LINE " " HTTP_VERSION "\r\n"
 
@@ -173,6 +174,36 @@ void HttpStream::loadDefaultHeaders(void)
     }
 }
 
+void HttpStream::parseHeaders(const char* buffer, UINT uSize, HeaderMap& headers)
+{
+/*
+Host: localhost:4321
+Connection: keep-alive
+Accept: *-*
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.152 Safari/537.36
+Accept-Encoding: gzip,deflate,sdch
+Accept-Language: en-US,en;q=0.8
+Cookie: csrftoken=ei5sMYAzs3TskYTKrLocO8oi0BzRaHtg
+*/
+    headers.clear();
+    if (buffer == 0 || uSize == 0) return;
+
+    string str(buffer, uSize);
+    size_t pt = 0;
+    do
+    {
+        pt = str.find_first_not_of("\r\n ", pt);
+        size_t col = str.find_first_of(':', pt);
+        size_t nl = str.find_first_of("\r\n", col);
+        if (pt == str.npos || col == str.npos || nl == str.npos) break;
+        string hkey(str.substr(pt, col - pt));
+        string kval(str.substr(col+1, nl - col - 1));
+        //cout << "reqHdr:" << hkey << "::" << kval << ";" << endl;
+        HttpParamEncoder* encoder = new FixedStringEncoder(kval);
+        headers[hkey] = encoder;
+        pt = nl;
+    } while (1);
+}
 
 HttpServerStream::HttpServerStream()
     : HttpStream()
@@ -219,6 +250,23 @@ void HttpServerStream::loadDefaultHeaders(void)
     }
 }
 
+const char* HttpServerStream::functionName(HttpFunction function)
+{
+    static const char* names[] = { "Invalid", "DELETE", "GET", "HEAD",
+                                   "OPTIONS", "PUT", "POST" };
+    int ifunc = function + 1;
+    if (ifunc < 0 || ifunc > sizeof(names)) ifunc = 0;
+
+    return names[ifunc];
+}
+
+
+HttpStream::HeaderMap
+HttpServerStream::getRequestHeaders() const
+{
+    return reqHeaders_;
+}
+
 UINT HttpServerStream::response(const char* buffer, UINT uCount, const char* contentType,
     UINT statusCode)
 {
@@ -236,4 +284,69 @@ UINT HttpServerStream::response(const char* buffer, UINT uCount, const char* con
         write(buffer, uCount);
 
     return 0;
+}
+
+UINT
+HttpServerStream::request(char* buffer, UINT uCount,
+                          HttpServerStream::HttpFunction& funct, std::string& url)
+{
+    UINT ret = 0;
+    funct = INVALID;
+    if (buffer == 0 || uCount < 17) return ret;
+    ret = read(buffer, uCount);
+    if (ret <= 0) return ret;
+
+    /* Find first line and parse for GET /url HTTP/1.1 */
+    const char* nl = buffer;
+    while ((nl - buffer) < uCount && *nl)
+    {
+        if (*nl == '\n' || *nl == '\r') break;
+        nl++;
+    }
+    int sz1 = nl - buffer;
+    if (sz1 <= 0) return ret;
+    string cmd(buffer, sz1);
+    vector<string> cmdline = split(cmd, ' ');
+    if (cmdline.size() != 3) return ret;
+    
+    if (cmdline[0] == "GET")          funct = GET;
+    else if (cmdline[0] == "POST")    funct = POST;
+    else if (cmdline[0] == "HEAD")    funct = HEAD;
+    else if (cmdline[0] == "DELETE")  funct = DELETE;
+    else if (cmdline[0] == "PUT")     funct = PUT;
+    else if (cmdline[0] == "OPTIONS") funct = OPTIONS;
+
+    url = cmdline[1];
+    if (cmdline[2] != "HTTP/1.1")
+    {
+        std::cerr << "Warning, NOT HTTP 1.1" << std::endl;
+    }
+
+    nl++;
+    sz1 = ret - (nl - buffer);
+    parseHeaders(nl, sz1, reqHeaders_);
+
+    return ret;
+}
+
+
+std::vector<std::string>&
+HttpServerStream::split(const std::string &s, char delim,
+                                std::vector<std::string> &elems)
+{
+    std::stringstream ss(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        elems.push_back(item);
+    }
+    return elems;
+}
+
+
+std::vector<std::string>
+HttpServerStream::split(const std::string &s, char delim)
+{
+    std::vector<std::string> elems;
+    split(s, delim, elems);
+    return elems;
 }

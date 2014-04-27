@@ -27,6 +27,7 @@
 //
 #include <sockstr/Socket.h>
 #include <map>
+#include <vector>
 
 #include <time.h>
 
@@ -60,6 +61,9 @@ class HttpStatus;
  */
 class DllExport HttpStream : public Socket
 {
+protected:
+    typedef std::map<std::string, HttpParamEncoder*> HeaderMap;
+
 public:
     HttpStream();
 	HttpStream(const char* lpszFileName, UINT uOpenFlags);
@@ -80,10 +84,9 @@ public:
     void clearHeaders(void);
     void expandHeaders(std::string& str);
     virtual void loadDefaultHeaders(void);
+    void parseHeaders(const char* buffer, UINT uSize, HeaderMap& headers);
 
 protected:
-    typedef std::map<std::string, HttpParamEncoder*> HeaderMap;
-
     HeaderMap headers_;
 
 protected:
@@ -109,11 +112,36 @@ public:
 	virtual Stream* listen(const int nBacklog = 4);
     virtual void loadDefaultHeaders(void);
 
+    enum HttpFunction
+    {
+        INVALID = -1,
+        DELETE,
+        GET,
+        HEAD,
+        OPTIONS,
+        PUT,
+        POST
+    };
+
+    static const char* functionName(HttpFunction function);
+
+    HeaderMap getRequestHeaders() const;
+
     UINT response(const char* buffer, UINT uCount, 
                   const char* contentType = 0, UINT statusCode = 200);
+    UINT request(char* buffer, UINT uCount,
+                 HttpFunction& funct, std::string& url);
+
+protected:
+    std::vector<std::string>& split(const std::string &s, char delim,
+                                    std::vector<std::string> &elems);
+    std::vector<std::string>  split(const std::string &s, char delim);
+
 
 protected:
     HttpStatus& status_;
+    /** Request headers */
+    HeaderMap reqHeaders_;
 
 protected:
     static const char* defaultSrvHeaderFields_[];
