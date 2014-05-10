@@ -84,13 +84,14 @@ public:
     virtual R handle(T data) = 0;
 
     THRTYPE getStatus() const { return status_; }
+    THRTYPE_ID getThreadId() const { return tid_; }
     bool kill(int sig)
     {
         int ret = pthread_kill(tid_, sig);
         return ret == 0;
     }
     void setData(T data) { data_ = data; }
-    void setTid(THRTYPE_ID tid) { tid_ = tid; }
+    void setThreadId(THRTYPE_ID tid) { tid_ = tid; }
     void wait()
     {
         void* res;
@@ -154,7 +155,7 @@ public:
         {
             THRTYPE_ID thread_id;
             thread_id = _launchThread(handler->hookHandle_, (void*)handler);
-            handler->setTid(thread_id);
+            handler->setThreadId(thread_id);
             if (thread_id > 0)
             {
                 threads_.push_back(thread_id);

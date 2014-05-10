@@ -32,6 +32,9 @@
  *    oauth_signature_method="HMAC-SHA1",
  *    oauth_version="1.0",
  *    oauth_signature="tR3%2BTy81lMeYAr%2FFid0kMTYa%2FWM%3D"
+ *
+ * Obtaining a token is similar to:
+ * https://oauth2srv.com/auth?response_type=code&client_id=XXX&redirect_uri=XXX&scope=YYY
  */
 
 #include <sockstr/OAuth.h>
@@ -41,9 +44,54 @@
 using namespace sockstr;
 
 
+OAuthAuthenticator::OAuthAuthenticator()
+    : parameters_("&")
+    , otherParameters_("&")
+    , clientKey_(0)
+    , callback_(0)
+{
+}
+
+OAuthAuthenticator::OAuthAuthenticator(const CompoundEncoder& otherParameters)
+    : parameters_("&")
+    , otherParameters_(otherParameters, "&")
+    , clientKey_(0)
+    , callback_(0)
+{
+}
+
+int OAuthAuthenticator::authenticate(const std::string& authUri, const std::string& redirectUri)
+{
+    authUri_ = authUri;
+    redirectUri_ = redirectUri;
+
+    return 0;
+}
+
+void OAuthAuthenticator::setClientKey(const std::string& clientKey)
+{
+    if (clientKey_) delete clientKey_;
+
+    clientKey_ = new FixedStringEncoder("consumer_key", clientKey);
+}
+
+void OAuthAuthenticator::setClientKey(HttpParamEncoder* clientKey)
+{
+    if (clientKey_) delete clientKey_;
+
+    clientKey_ = clientKey;
+}
+
+void OAuthAuthenticator::setClientSecretHook(OAuthCallback callback, int maxKeyLength)
+{
+    callback_ = callback;
+    maxKeyLength_ = maxKeyLength;
+}
+
+
+// valid characters in a random nonce string
 const char* OAuthNonceEncoder::validChars_ = "abcdefghijklmnopqrstuvwxyz"
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "0123456789_";
-
 
 
 OAuthNonceEncoder::OAuthNonceEncoder(unsigned int seed)
@@ -128,5 +176,5 @@ void OAuthParamEncoder::setToken(const std::string& token, const std::string& se
     tokenSecret_ = secret;
 
     addElement(new FixedStringEncoder("oauth_token", token_));
-    addElement(new FixedStringEncoder("oauth_token_secret", tokenSecret_));
+//    addElement(new FixedStringEncoder("oauth_token_secret", tokenSecret_));
 }

@@ -53,7 +53,8 @@ int main(int argc, const char *argv[])
     HttpStream http;
     if (!http.open(url.c_str(), Socket::modeReadWrite))
     {
-        cout << "Error opening socket: " << errno << endl;
+        cout << "Error opening socket: "
+             << errno << ": " << strerror(errno) << endl;
         return(2);
     }
 

@@ -37,6 +37,9 @@
 using namespace sockstr;
 using namespace std;
 
+
+static bool debugOut = false;
+
 struct Params
 {
     Params(int lPort, HttpServerStream* lClient) : port(lPort), client(lClient) { }
@@ -75,8 +78,8 @@ void* RequestThreadHandler::handle(Params* params)
             sock->response(errorJson, strlen(errorJson), "application/json", 404);
         } else {
             const char* funcName = sock->functionName(funct);
-            cout << "HttpReq: " << funcName << " to: " << url << "." << endl;
-//            cout << string(buf, sz) << endl;
+            cout << "HttpReq: " << funcName << " " << url << "." << endl;
+            if (debugOut) cout << string(buf, sz) << endl;
             ostringstream someJson;
             someJson << "{ http: \"" << funcName << "\", url: \"" << url << "\" }\r\n";
             sock->response(someJson.str().c_str(), someJson.str().size(), "application/json");
@@ -100,7 +103,7 @@ int main(int argc, char* argv[])
         switch (opt)
         {
         case 'D':
-            cout << "Debugging output" << endl;
+            debugOut = true;
             break;
         default:
             cout << "Usage:  restserver [ -D ] [ port ]" << endl;
@@ -111,6 +114,9 @@ int main(int argc, char* argv[])
     if (optind < argc) port = atoi(argv[optind]);
 
     cout << "Server connecting to port " << port << endl;
+
+    UrlParameterEncoder upe("My_good ness", "M&M's are\t great!;");
+    cout << "UrlQuery: " << upe.toString() << endl;
 
     HttpServerStream sock;
     SocketAddr saddr(0, port);

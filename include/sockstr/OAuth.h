@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2013
+   Copyright (C) 2013, 2014
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -51,6 +51,56 @@ namespace sockstr
 //
 // CLASS DEFINITIONS
 //
+
+class DllExport OAuthAuthenticator
+{
+public:
+    /**
+     * Signature of callback.  This class will allocate and free the provided buffer.
+     * @param buf This buffer is allocated and provided by this class.  The callback
+     *            implementation is expected to copy a null terminated string
+     *            representing the client secret.  The buffer is 64 bytes by 
+     *            default (see #setClientSecretHook).
+     * @return The callback should return true if successful, otherwise false.
+     */
+    typedef bool (*OAuthCallback)(char* buf);
+
+public:
+    OAuthAuthenticator();
+    OAuthAuthenticator(const CompoundEncoder& otherParameters);
+
+    /**
+     * Call the auth server to obtain authentication token.
+     * The client secret must be handed off here in a secure manner.
+     */
+    int authenticate(const std::string& authUri, const std::string& redirectUri);
+
+    /** Set client key and use default format of "consumer_key=xxxxx" */
+    void setClientKey(const std::string& clientKey);
+
+    /** Set client key from encoder's name/vale. */
+    void setClientKey(HttpParamEncoder* clientKey);
+
+    /**
+     * Setup the function that will be called when this class needs to obtain
+     * the client secret.
+     * @param callback Function that will be called.
+     * @param maxKeyLength Size of the buffer that will be passed to the callback
+     */
+    void setClientSecretHook(OAuthCallback callback, int maxKeyLength = 64);
+
+private:
+    CompoundEncoder parameters_;
+    CompoundEncoder otherParameters_;
+
+    HttpParamEncoder* clientKey_;
+    OAuthCallback callback_;
+
+    std::string authUri_;
+    std::string redirectUri_;
+
+    int maxKeyLength_;
+};
 
 /**
  * Handles OAuth nonce encoding that outputs a random, non-repeating string value.

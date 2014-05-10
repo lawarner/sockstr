@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012, 2013
+   Copyright (C) 2012 - 2014
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -59,8 +59,8 @@ class Socket;
 /**
  * The HTTP header contains parameters that are the form "Name: Value"
  * The "Value" portion can be a fixed string, but often it is a computed
- * value, for example the Date parameter.  The HttpParamEncoder class can be
- * subclassed to handle these special computed, encoded parameter values.
+ * value, for example the Date parameter.  Subclasses of the HttpParamEncoder
+ * class handle these special computed, encoded parameter values.
  */
 class DllExport HttpParamEncoder
 {
@@ -70,14 +70,19 @@ public:
         : name_(name), value_(value) { }
     virtual ~HttpParamEncoder() { }
 
+    /** Set value of parameter. */
     virtual void set(const std::string& value) { value_ = value; }
+    /** Get the value as a string. */
     virtual std::string toString() { return value_; }
+    /** Get a string containing name=value. */
     virtual std::string getNameValue()
     {
-        return getName() + "\"" + toString() + "\"";
+        return getName() + "=\"" + toString() + "\"";
     }
 
+    /** Set name of parameter. */
     void setName(const std::string& name) { name_ = name; }
+    /** Get name of parameter. */
     const std::string& getName() const { return name_; }
 
 private:
@@ -93,8 +98,15 @@ private:
 class DllExport CompoundEncoder : public HttpParamEncoder
 {
 public:
+    /** Construct a CompoundEncoder. */
     CompoundEncoder(const char* separator = ", ");
+    /** Construct a CompoundEncoder. */
+    CompoundEncoder(const CompoundEncoder& other, const char* separator = ", ");
+
+    /** Destruct a CompoundEncoder. */
     virtual ~CompoundEncoder();
+
+    /** Convert parameters to string using separator */
     virtual std::string toString();
 
     /**
@@ -108,14 +120,16 @@ public:
 
 protected:
     std::vector<HttpParamEncoder*> encoders_;
+
 private:
     const char* separator_;
+    bool owned_;
 };
 
 
 /**
- * This encoder contains a constant string value.  It can emit just a value
- * but it is likely most useful as a name/value pair.
+ * This encoder contains a constant string value.  It can emit just the value if
+ * the name is omitted, but it is likely most useful as a name/value pair.
  */
 class DllExport FixedStringEncoder : public HttpParamEncoder
 {
@@ -123,9 +137,9 @@ public:
     /** Construct a FixedStringEncoder. */
     FixedStringEncoder(const std::string& value = std::string())
         : HttpParamEncoder(std::string(), value) { }
+    /** Construct a FixedStringEncoder. */
     FixedStringEncoder(const std::string& name, const std::string& value)
         : HttpParamEncoder(name, value) { }
-
 };
 
 
@@ -185,14 +199,45 @@ private:
 };
 
 
+/**
+ * Encoder that can be used to output URL encoded parameters
+ */
+class DllExport UrlParameterEncoder : public HttpParamEncoder
+{
+public:
+    /** Construct a UrlParameterEncoder. */
+    UrlParameterEncoder(const std::string& value = std::string())
+        : HttpParamEncoder(std::string(), value) { }
+    /** Construct a UrlParameterEncoder. */
+    UrlParameterEncoder(const std::string& name, const std::string& value)
+        : HttpParamEncoder(name, value) { }
+
+    virtual std::string toString();
+
+    /** Convert a string to be compliant with URL Encoded parameters.
+     *  @param inStr Original, unencoded string
+     */
+    std::string urlEncode(const std::string& inStr);
+};
+
+/**
+ * HTTP status handling.  Helper for status code, status name and status line.
+ */
 class DllExport HttpStatus
 {
 public:
+    /** Construct a HttpStatus. */
     HttpStatus();
+    /** Construct a HttpStatus. */
     HttpStatus(int status);
+    /** Construct a HttpStatus based from parsing a status line.
+     *  @param statusLine HTTP status line as received in a HTTP response header
+     */
     HttpStatus(const std::string& statusLine);
 
+    /** Get the status code */
     int getStatus() const;
+    /** Set the status code */
     void setStatus(int status);
     std::string statusLine() const;
     std::string statusName() const;

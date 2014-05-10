@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012, 2013
+   Copyright (C) 2012 - 2014
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -35,19 +35,29 @@ std::map<int, std::string> HttpStatus::statusNames_;
 
 CompoundEncoder::CompoundEncoder(const char* separator)
     : separator_(separator)
+    , owned_(true)
 {
 
+}
+
+CompoundEncoder::CompoundEncoder(const CompoundEncoder& other, const char* separator)
+    : separator_(separator)
+    , owned_(false)
+{
+    encoders_ = other.encoders_;
 }
 
 CompoundEncoder::~CompoundEncoder()
 {
-    std::vector<HttpParamEncoder*>::iterator it;
-    for (it = encoders_.begin(); it != encoders_.end(); ++it)
+    if (owned_)
     {
-        delete *it;
+        std::vector<HttpParamEncoder*>::iterator it;
+        for (it = encoders_.begin(); it != encoders_.end(); ++it)
+        {
+            delete *it;
+        }
     }
 }
-
 
 std::string CompoundEncoder::toString()
 {
@@ -122,6 +132,35 @@ std::string TimestampEncoder::toString()
         snprintf(outstr, sizeof(outstr), "%ld", timeSecs_);
 
     return std::string(outstr);
+}
+
+
+std::string UrlParameterEncoder::toString()
+{
+    std::string outstr(urlEncode(getName()) + "=" + urlEncode(HttpParamEncoder::toString()));
+    return outstr;
+}
+
+#define VALID_IN_URL "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-_~"
+
+std::string UrlParameterEncoder::urlEncode(const std::string& inStr)
+{
+    std::ostringstream oss;
+    // Space can be encoded as either %20 or +
+    size_t lastPos = 0;
+    size_t pos = inStr.find_first_not_of(VALID_IN_URL);
+    while (pos != string::npos)
+    {
+        if (lastPos != pos) oss << inStr.substr(lastPos, pos - lastPos);
+        unsigned int ich = inStr[pos];
+        oss << (ich < 16 ? "%0" : "%") << std::hex << ich;
+
+        lastPos = pos + 1;
+        pos = inStr.find_first_not_of(VALID_IN_URL, lastPos);
+    }
+
+    oss << inStr.substr(lastPos);
+    return oss.str();
 }
 
 
