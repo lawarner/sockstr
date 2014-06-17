@@ -31,7 +31,7 @@ LDFLAGS = -pthread
 LDLIBS = 
 
 OBJS :=  asyncsock.o echoserver.o fbread.o fb2read.o filecopy.o httptest.o \
-         restclient.o restserver.o simplest.o testsockstr.o
+         readsdp.o restclient.o restserver.o simplest.o testsockstr.o
 SRCS := $(OBJS:.o=.cpp)
 
 INCS = 
@@ -42,7 +42,7 @@ LIBSOCKLIB = $(TOP)/src/libsockstr.a
 LIBOPENSSL = -lssl -lcrypto
 
 PROGRAMS = asyncsock echoserver fbread fb2read  filecopy httptest \
-           restclient restserver simplest testsockstr
+           readsdp restclient restserver simplest testsockstr
 
 
 .cpp.o: ; $(CC) $(CCFLAGS) -c $<

@@ -121,7 +121,7 @@ SocketAddr::SocketAddr(void)
 
 
 SocketAddr::SocketAddr(const IPAddress Host, WORD wPort,
-							   const char * pProtocol /*= NULL*/)
+                       const char * pProtocol /*= NULL*/)
 :	m_pProtocol (pProtocol)
 {
 	// Call the copy constructor
@@ -133,7 +133,7 @@ SocketAddr::SocketAddr(const IPAddress Host, WORD wPort,
 
 
 SocketAddr::SocketAddr(const char * lpszHost, WORD wPort,
-							   const char * pProtocol /*= 0*/)
+                       const char * pProtocol /*= 0*/)
 :	m_pProtocol (pProtocol)
 {
 	m_pPeerAddr     = new IPAddress(lpszHost);
@@ -144,7 +144,7 @@ SocketAddr::SocketAddr(const char * lpszHost, WORD wPort,
 
 
 SocketAddr::SocketAddr(const char * lpszHost, const char * lpszService,
-							   const char * pProtocol /*= 0*/)
+                       const char * pProtocol /*= 0*/)
 :	m_pProtocol (pProtocol)
 {
 	// WARNING:  The following statement MUST precede the call to
@@ -184,7 +184,7 @@ SocketAddr::SocketAddr(const char * lpszHost, const char * lpszService,
 //
 SocketAddr::~SocketAddr(void)
 {
-	delete m_pPeerAddr;
+    delete m_pPeerAddr;
 }
 
 
@@ -202,7 +202,7 @@ SocketAddr::~SocketAddr(void)
 UINT
 SocketAddr::netAddress(void) const
 {
-	return m_pPeerAddr->netAddress();
+    return m_pPeerAddr->netAddress();
 }
 
 
@@ -220,7 +220,7 @@ SocketAddr::netAddress(void) const
 WORD
 SocketAddr::portNumber(void) const
 {
-	return ntohs(sin_port);
+    return ntohs(sin_port);
 }
 
 
@@ -238,7 +238,7 @@ SocketAddr::portNumber(void) const
 //
 SocketAddr::operator sockaddr* (void) const
 {
-	return (sockaddr *)this;
+    return (sockaddr *)this;
 }
 
 

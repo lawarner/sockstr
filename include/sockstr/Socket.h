@@ -225,8 +225,8 @@ private:
 	friend class SSOpenedClientTLS;
 	friend class SSConnectedTLS;
 #endif
-    friend ReadThreadHandler;
-    friend WriteThreadHandler;
+    friend class ReadThreadHandler;
+    friend class WriteThreadHandler;
 
 	// Goes to the next specified state.
 	void changeState(SocketState* pState);
