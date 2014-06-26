@@ -23,13 +23,14 @@ Stream.o: Stream.cpp ../config.h ../include/sockstr/sstypes.h \
  ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
 ThreadHandler.o: ThreadHandler.cpp ../config.h \
  ../include/sockstr/sstypes.h ../include/sockstr/ThreadHandler.h
-HttpHelpers.o: HttpHelpers.cpp ../include/sockstr/HttpHelpers.h
-HttpStream.o: HttpStream.cpp ../include/sockstr/HttpStream.h \
+HttpHelpers.o: HttpHelpers.cpp ../include/sockstr/HttpHelpers.h \
  ../include/sockstr/Socket.h ../include/sockstr/sstypes.h \
  ../include/sockstr/SocketAddr.h ../include/sockstr/IPAddress.h \
  ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
-OAuth.o: OAuth.cpp ../include/sockstr/OAuth.h \
+HttpStream.o: HttpStream.cpp ../include/sockstr/HttpHelpers.h \
  ../include/sockstr/HttpStream.h ../include/sockstr/Socket.h \
  ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
  ../include/sockstr/IPAddress.h ../include/sockstr/Stream.h \
  ../include/sockstr/StreamBuf.h
+OAuth.o: OAuth.cpp ../include/sockstr/OAuth.h \
+ ../include/sockstr/HttpHelpers.h

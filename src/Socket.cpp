@@ -788,6 +788,40 @@ Socket::read(std::string& str, int delimiter)
     return ret;
 }
 
+// Handle multiple character delimiter (i.e., \r\n)
+UINT
+Socket::read(std::string& str, const std::string& delimiter)
+{
+    int deliLen = delimiter.length();
+    if (deliLen == 0) return read(str, EOF);
+    if (deliLen == 1) return read(str, delimiter[0]);
+
+    char buf[16];
+    int ret = 0;
+    int sz;
+
+    str.clear();
+    while ((sz = read(buf, 1)) > 0)
+    {
+        ret += sz;
+        str.append(1, buf[0]);
+        if (buf[0] == delimiter[0])
+        {
+            int di;
+            for (di = 1; di < deliLen; di++)
+            {
+                sz = read(buf, 1);
+                if (sz <= 0) return ret;
+                ret += sz;
+                str.append(1, buf[0]);
+                if (buf[0] != delimiter[di]) break;
+            }
+            if (di == deliLen) return ret;
+        }
+    }
+    return ret;
+}
+
 
 // Abstract : Sets a socket option (state-dependent)
 //
@@ -806,10 +840,10 @@ Socket::read(std::string& str, int delimiter)
 //
 int
 Socket::setSockOpt(int  nOptionName, const void* pOptionValue,
-					   int  nOptionLen, int nLevel)
+                   int  nOptionLen, int nLevel)
 {
-	return m_pState->setSockOpt(this, nOptionName, pOptionValue,
-		 						      nOptionLen,  nLevel);
+    return m_pState->setSockOpt(this, nOptionName, pOptionValue,
+                                nOptionLen,  nLevel);
 }
 
 
@@ -829,7 +863,7 @@ Socket::setSockOpt(int  nOptionName, const void* pOptionValue,
 void
 Socket::write(const void* pBuf, UINT uCount)
 {
-	m_pState->write(this, pBuf, uCount);
+    m_pState->write(this, pBuf, uCount);
 }
 
 
@@ -853,9 +887,7 @@ Socket::write(const std::string& str)
 //            attempt to modify or free the string returned.
 //            The string returned is a concatenation of the TCP/IP address
 //            (host name or dot notation) and the port number.  For example,
-//            "hostb.omroep.nl:7".
-//
-// Remarks  :
+//            "hostb.dom.com:7".
 //
 Socket::operator const char* (void) const
 {
@@ -868,19 +900,17 @@ Socket::operator const char* (void) const
     struct addrinfo* pAddrInfo = 0;
     if (::getnameinfo((const sockaddr *) &m_PeerAddr, sizeof(m_PeerAddr),
                       tmpName, sizeof(szHostName), 0, 0, 0) == 0)
-	{
-		sprintf(szHostName, "%s:%hu", tmpName, ntohs(m_PeerAddr.sin_port));
-        ::freeaddrinfo(pAddrInfo);
-	}
-    else
     {
+        sprintf(szHostName, "%s:%hu", tmpName, ntohs(m_PeerAddr.sin_port));
+        ::freeaddrinfo(pAddrInfo);
+    } else {
         // Reverse DNS failed, use TCP/IP dot notation
         sprintf(szHostName,"%0d.%0d.%0d.%0d:%hu",
                 dwAddress & 0xff, (dwAddress >> 8) & 0xff,
                 (dwAddress >> 16) & 0xff, (dwAddress >> 24) & 0xff,
                 ntohs(m_PeerAddr.sin_port));
     }
-	return szHostName;
+    return szHostName;
 }
 
 
@@ -897,10 +927,5 @@ Socket::operator const char* (void) const
 //
 void Socket::changeState(SocketState* pState)
 {
-	m_pState = pState;
+    m_pState = pState;
 }
-
-
-//
-// END OF FILE
-//

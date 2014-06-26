@@ -137,7 +137,9 @@ public:
         waitAll();
     }
 
-    /** This is for backwards compatibility only and will be removed soon. */
+    /** This is for backwards compatibility only and will be removed soon.
+     *  @deprecated
+     */
     static bool
         create(THRTYPE_FUNCTION function, void* data, bool start = true);
 
