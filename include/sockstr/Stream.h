@@ -80,11 +80,14 @@ class DllExport Stream : public std::iostream
 public:
     virtual ~Stream(void);	//!< Destructor
 
+    /**  Indicate if the stream is open. */
+    bool is_open(void) const;
+
     /**  Returns the current status of the stream.
      *   @deprecated Use good(), bad() and such functions from the 
      *       std::ios base class.
      */
-    STATUSCODE  queryStatus     (void) const;
+    STATUSCODE queryStatus(void) const;
 
     /**  Register a user-defined callback function.
      *
@@ -94,7 +97,7 @@ public:
      *   @return the address of the previous callback is returned, or 0 if 
      *           none was registered.
      */
-    Callback    registerCallback(Callback pCallback = 0);
+    Callback registerCallback(Callback pCallback = 0);
 
     // Interfaces that are implemented by derived classes
 

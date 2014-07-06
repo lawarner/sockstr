@@ -254,7 +254,7 @@ const char* HttpServerStream::functionName(HttpFunction function)
 {
     static const char* names[] = { "Invalid", "DELETE", "GET", "HEAD",
                                    "OPTIONS", "PUT", "POST" };
-    int ifunc = function + 1;
+    unsigned int ifunc = function + 1;
     if (ifunc < 0 || ifunc > sizeof(names)) ifunc = 0;
 
     return names[ifunc];

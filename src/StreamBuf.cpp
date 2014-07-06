@@ -139,7 +139,7 @@ int StreamBuf::sync()
     if (pptr() == pbase())
         return EOF;
 
-    if (stream)
+    if (stream && stream->is_open() && stream->good())
     {
         stream->write(pbase(), pptr() - pbase());
         if (stream->queryStatus() != SC_OK)

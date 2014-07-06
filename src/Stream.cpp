@@ -90,7 +90,7 @@ using namespace sockstr;
 //
 Stream::Stream(void)
     :	std::iostream (&strbuf)
-    ,	m_hFile       (0)
+    ,	m_hFile       (INVALID_SOCKET)
     ,   m_Status      (SC_OK)
     ,	m_pDefCallback(0)
     ,	strbuf(this)
@@ -131,11 +131,14 @@ Stream::~Stream(void)
 }
 
 
+bool Stream::is_open(void) const
+{
+    return m_hFile != INVALID_SOCKET;
+}
+
 // Abstract : Returns the current status of the stream.
 //
 // Returns  : STATUSCODE (enum defined in Stream.hpp)
-// Params   :
-//   -
 //
 // Pre      :
 // Post     :
