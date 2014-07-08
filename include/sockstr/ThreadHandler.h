@@ -21,11 +21,8 @@
 
 #ifndef _THREADHANDLER_H_INCLUDED_
 #define _THREADHANDLER_H_INCLUDED_
-//
 
-//
-// INCLUDE FILES
-//
+#include <signal.h>
 #include <vector>
 #include <sockstr/sstypes.h>
 
@@ -34,7 +31,7 @@ namespace sockstr
 {
 
 //
-// MACRO DEFINITIONS
+// Macro Definitions
 //
 #ifndef DllExport
 #define DllExport
@@ -84,6 +81,10 @@ public:
     virtual R handle(T data) = 0;
 
     THRTYPE getStatus() const { return status_; }
+    void kill(int sig)
+    {
+        pthread_kill(tid_, sig);
+    }
     void setData(T data) { data_ = data; }
     void setTid(THRTYPE_ID tid) { tid_ = tid; }
     void wait()
