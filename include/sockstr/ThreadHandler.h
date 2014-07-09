@@ -26,6 +26,9 @@
 #include <vector>
 #include <sockstr/sstypes.h>
 
+#ifdef TARGET_LINUX
+#include <pthread.h>
+#endif
 
 namespace sockstr
 {
@@ -81,9 +84,10 @@ public:
     virtual R handle(T data) = 0;
 
     THRTYPE getStatus() const { return status_; }
-    void kill(int sig)
+    bool kill(int sig)
     {
-        pthread_kill(tid_, sig);
+        int ret = pthread_kill(tid_, sig);
+        return ret == 0;
     }
     void setData(T data) { data_ = data; }
     void setTid(THRTYPE_ID tid) { tid_ = tid; }
