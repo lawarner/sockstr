@@ -52,9 +52,14 @@ all: $(LIBSOCKSTR)
 $(LIBSOCKSTR): $(OBJS)
 	$(AR) rsv $@ $(OBJS)
 
-$(IDIR2)/sstypes.h: $(IDIR2)/sstypes-linux.h
+$(IDIR2)/sstypes.h: $(IDIR2)/sstypes-linux.h $(IDIR2)/sstypes-armlinux.h
 	cd $(IDIR2) ; \
-	ln -sf sstypes-linux.h sstypes.h
+	echo $$CCPREFIX | grep -q arm ; \
+	if [ $$? -eq 0 ]; then \
+	    ln -sf sstypes-armlinux.h sstypes.h ; \
+	else \
+	    ln -sf sstypes-linux.h sstypes.h ; \
+	fi
 
 .PHONY: clean
 clean:
