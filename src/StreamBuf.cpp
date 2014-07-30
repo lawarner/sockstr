@@ -148,6 +148,11 @@ int StreamBuf::sync()
         setp(outbuff, outbuff+sizeof(outbuff));
         return 0;
     }
+    else
+    {
+        setg(inbuff, inbuff+sizeof(inbuff), inbuff+sizeof(inbuff));
+        setp(outbuff, outbuff+sizeof(outbuff));
+    }
 
     return EOF;
 }
