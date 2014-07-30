@@ -613,6 +613,8 @@ Socket::listenIntern(Socket* pClient, const int nBacklog)
 bool
 Socket::open(const char* lpszFileName, UINT uOpenFlags)
 {
+    initialize();
+
     WORD wPort = 0;
     size_t nColon;
     std::string Name;
