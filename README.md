@@ -9,8 +9,7 @@ standard C++ library.
 A number of I/O modes are supported and a Stream such as asynchronous, 
 polling, etc.  These can be used interchangably on an open Stream.
 
-This library is compatible with Windows and Linux, and has recently been ported to ARM
-Linux using the Raspberry Pi toolchain.
+This library is compatible with Windows and Linux 32 and 64 bits, Linux ARM and has recently been ported to Android.
 
 Sample code
 ===========
@@ -24,6 +23,19 @@ Sample code
 Note: The test harness tool that was in ipctest subdirectory has been moved to its
       own project.
 
+
+How to Build on Android
+=======================
+
+## Dependencies
+
+You will need Android NDK installed, version 10 or newer, GNU make.
+Set the NDK_ROOT environment variable to the directory where the NDK is installed.
+Make a standalone toolchain using ${NDK_ROOT}/build/tools/make-standalone-toolchain.sh.
+The Makefile assumes ${HOME}/toolchains/android-toolchain so edit as needed.
+
+## Building
+Type 'make android'.  This will build the sockstr library but not the example programs.
 
 How to Build on Linux
 =====================

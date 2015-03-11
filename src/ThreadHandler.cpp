@@ -83,7 +83,11 @@ size_t ThreadManager::joinAllWaiting()
             break;
 
         void* res;
+#ifdef TARGET_ANDROID
+        if (pthread_join(*it, &res) == 0)
+#else
         if (pthread_tryjoin_np(*it, &res) == 0)
+#endif
         {
             std::vector<THRTYPE_ID>::reverse_iterator rit = threads_.rbegin();
             *it = *rit;

@@ -24,6 +24,10 @@ ARMPREFIX=arm-linux-gnueabihf
 ARMAR=$(ARMPREFIX)-ar
 ARMCC=$(ARMPREFIX)-g++
 
+ANDROIDPREFIX=arm-linux-androideabi
+ANDROIDAR=$(ANDROIDPREFIX)-ar
+ANDROIDCC=$(ANDROIDPREFIX)-g++
+
 BACKUPFILE = ~/Downloads/srcrepo/sockstr-src-`date +%Y%j`.tar.bz2
 
 LIBSOCKSTR = libsockstr.a
@@ -53,6 +57,11 @@ subdirs:
 arm:
 	for dir in $(SUBDIRS); do \
 		make -C $$dir CC=$(ARMCC) AR=$(ARMAR) ; \
+	done
+
+android:
+	for dir in $(SUBDIRS); do \
+		make -C $$dir CC=$(ANDROIDCC) AR=$(ANDROIDAR) ; \
 	done
 
 .PHONY: clean

@@ -1,5 +1,5 @@
 #
-#   Copyright (C) 2012
+#   Copyright (C) 2012 - 2015
 #   Andy Warner
 #   This file is part of the sockstr class library.
 #
@@ -52,14 +52,14 @@ all: $(LIBSOCKSTR)
 $(LIBSOCKSTR): $(OBJS)
 	$(AR) rsv $@ $(OBJS)
 
-$(IDIR2)/sstypes.h: $(IDIR2)/sstypes-linux.h $(IDIR2)/sstypes-armlinux.h
+$(IDIR2)/sstypes.h: $(IDIR2)/sstypes-linux.h $(IDIR2)/sstypes-armlinux.h $(IDIR2)/sstypes-armandroid.h
 	cd $(IDIR2) ; \
-	echo $$CCPREFIX | grep -q arm ; \
-	if [ $$? -eq 0 ]; then \
-	    ln -sf sstypes-armlinux.h sstypes.h ; \
-	else \
-	    ln -sf sstypes-linux.h sstypes.h ; \
-	fi
+	echo CC is ${CC} ; \
+	case ${CC} in \
+	    *androideabi-g++) ln -sf sstypes-armandroid.h sstypes.h ;; \
+	    *gnueeabif-g++) ln -sf sstypes-armlinux.h sstypes.h ;; \
+	    *)  ln -sf sstypes-linux.h sstypes.h ;; \
+	esac
 
 .PHONY: clean
 clean:
