@@ -35,6 +35,7 @@
 #if USE_OPENSSL
 
 #include <cassert>
+#include <cstring>
 #ifdef TARGET_LINUX
 #include <unistd.h>
 #include <sys/ioctl.h>

@@ -115,18 +115,14 @@ IPAddress::IPAddress(void)
 
 
 IPAddress::IPAddress(const char* lpszName)
-    : m_dwAddress(INADDR_ANY)
-{
+    : m_dwAddress(INADDR_ANY) {
     initialize();
-
-    if (lpszName == 0)
-    {
+    if (lpszName == nullptr) {
         return;		// must be a server socket
     }
 
     // First check to see if the name is in valid dot notation
-    if ((m_dwAddress = ::inet_addr(lpszName)) != INADDR_NONE)
-    {
+    if ((m_dwAddress = ::inet_addr(lpszName)) != INADDR_NONE) {
         return;			// Dot address OK -- use it.
     }
 
@@ -145,21 +141,32 @@ IPAddress::IPAddress(const char* lpszName)
     };
     struct in_addr inad;
     struct in6_addr in6ad;
-    if (::inet_pton(AF_INET, lpszName, &inad))
-    {	// IPv4 address
+    if (::inet_pton(AF_INET, lpszName, &inad)) {
+        // IPv4 address
         aiHints.ai_flags  = AI_NUMERICSERV | AI_NUMERICHOST;
         aiHints.ai_family = AF_INET;
-    }
-    else if (::inet_pton(AF_INET6, lpszName, &in6ad))
-    {	// IPV6
+    } else if (::inet_pton(AF_INET6, lpszName, &in6ad)) {
+        // IPV6 address
         aiHints.ai_flags  = AI_NUMERICSERV | AI_NUMERICHOST;
         aiHints.ai_family = AF_INET6;
+    } else {
+        // Try a hostname
+        struct hostent* he = ::gethostbyname(lpszName);
+        if (he == nullptr) {
+            m_dwAddress = INADDR_NONE;
+            return;			// Host name cannot be resolved or nothing returned
+        } else {
+            in_addr_t **addr_list = (in_addr_t **)he->h_addr_list;
+            m_dwAddress = *addr_list[0];  // Just grab the first one
+        }
+        return;
     }
 
-    struct addrinfo* pAddrInfo = 0;
-    if (::getaddrinfo(lpszName, 0, &aiHints, &pAddrInfo) || !pAddrInfo)
+    struct addrinfo* pAddrInfo = nullptr;
+    if (::getaddrinfo(lpszName, 0, &aiHints, &pAddrInfo) || !pAddrInfo) {
+        m_dwAddress = INADDR_NONE;
         return;			// Host name cannot be resolved or nothing returned
-
+    }
     if (pAddrInfo->ai_addr->sa_family == AF_INET ||
         pAddrInfo->ai_addr->sa_family == AF_INET6)
     {

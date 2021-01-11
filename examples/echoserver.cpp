@@ -151,7 +151,6 @@ void quitit(int sig)
 }
 
 
-
 int main(int argc, char* argv[])
 {
     Params params(4321, true, true);

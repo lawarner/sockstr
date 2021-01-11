@@ -19,8 +19,7 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-#ifndef _THREADHANDLER_H_INCLUDED_
-#define _THREADHANDLER_H_INCLUDED_
+#pragma once
 
 #include <signal.h>
 #include <vector>
@@ -189,5 +188,3 @@ private:
 };
 
 }  // namespace sockstr
-
-#endif // _THREADHANDLER_H_INCLUDED_

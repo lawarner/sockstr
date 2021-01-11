@@ -252,6 +252,8 @@ SocketState::createServer(Socket* /*pSocket*/,
 //            is to abort the program, signifying that an illegal action
 //            was attempted.
 //
+/* Does this add to DOS line endings? */
+
 bool
 SocketState::getSockOpt(Socket* pSocket,
                         int nOptionName, void* pOptionValue,
@@ -260,12 +262,12 @@ SocketState::getSockOpt(Socket* pSocket,
     if (pSocket->getHandle() == INVALID_SOCKET)
         return false;
 
-	if (::getsockopt(pSocket->getHandle(), nLevel, nOptionName, (char *)pOptionValue,
-					 pnOptionLen) == SOCKET_ERROR)
-	{
-		return false;
-	}
-	return true;
+    if (::getsockopt(pSocket->getHandle(), nLevel, nOptionName, (char *)pOptionValue,
+                     pnOptionLen) == SOCKET_ERROR)
+    {
+        return false;
+    }
+    return true;
 }
 
 
@@ -417,17 +419,15 @@ SocketState::readerThread(IOPARAMS* /*pIOP*/)
 bool
 SocketState::setSockOpt(Socket* pSocket,
                          int nOptionName, const void* pOptionValue,
-                         int nOptionLen, int nLevel)
-{
-    if (pSocket->getHandle() == INVALID_SOCKET)
+                         int nOptionLen, int nLevel) {
+    if (pSocket->getHandle() == INVALID_SOCKET) {
         return false;
-
-	if (::setsockopt(pSocket->getHandle(), nLevel, nOptionName, (char *)pOptionValue,
-					 nOptionLen) == SOCKET_ERROR)
-	{
-		return false;
-	}
-	return true;
+    }
+    if (::setsockopt(pSocket->getHandle(), nLevel, nOptionName, (char *)pOptionValue,
+                     nOptionLen) == SOCKET_ERROR) {
+        return false;
+    }
+    return true;
 }
 
 
@@ -454,9 +454,8 @@ SocketState::setSockOpt(Socket* pSocket,
 //
 void
 SocketState::write(Socket* /*pSocket*/,
-					   const void* /*pBuf*/, UINT /*uCount*/)
-{
-	VERIFY(0);	// We should never execute this base class virtual function
+					   const void* /*pBuf*/, UINT /*uCount*/) {
+    VERIFY(0);	// We should never execute this base class virtual function
 }
 
 

@@ -32,9 +32,11 @@ BACKUPFILE = ~/Downloads/srcrepo/sockstr-src-`date +%Y%j`.tar.bz2
 
 LIBSOCKSTR = libsockstr.a
 
+INSTALLDIR = /usr/local
 SUBDIRS = src
-# examples
 
+
+# examples
 PROGRAMS =
 
 all: $(PROGRAMS) subdirs
@@ -42,6 +44,11 @@ all: $(PROGRAMS) subdirs
 .PHONY: doc
 doc:
 	make -C doc
+
+install:
+	cp src/libsockstr.a $(INSTALLDIR)/lib
+	mkdir -p $(INSTALLDIR)/include/sockstr
+	cp include/sockstr/* $(INSTALLDIR)/include/sockstr/
 
 # Backup the whole source dir.
 #  Probably want to do "make clean" beforehand, but not required.

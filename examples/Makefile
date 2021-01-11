@@ -24,7 +24,7 @@ TOP = ..
 INCDIR = $(TOP)/include
 
 CC = g++
-CCFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
+CCFLAGS = -Wall -g -O0 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
 #CCFLAGS = -Wall -g -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
 DEPCPPFLAGS = -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
 LDFLAGS = -pthread

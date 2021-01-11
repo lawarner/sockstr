@@ -37,16 +37,14 @@ struct Params
 };
 
 
-class ServerThreadHandler : public ThreadHandler<Params*, void*>
-{
+class ServerThreadHandler : public ThreadHandler<Params*, void*> {
 public:
     ServerThreadHandler(Params* params) { setData(params); }
 
     virtual void* handle(Params* params);
 };
 
-void* ServerThreadHandler::handle(Params* params)
-{
+void* ServerThreadHandler::handle(Params* params) {
     void* ret = (void*) 2;
     cout << "Server connecting to port " << params->port << endl;
 
@@ -58,17 +56,20 @@ void* ServerThreadHandler::handle(Params* params)
         return ret;
     }
 
+    cout << "Listen for client connection" << endl;
     Stream* clientSock = sock.listen();
     if (clientSock)
     {
-        string strbuf;
+        std::string strbuf;
 
-        *clientSock >> strbuf;
-        while (clientSock->queryStatus() == SC_OK)
-        {
-             cout << "Response: " << strbuf << endl;
+        while (clientSock->queryStatus() == SC_OK) {
             *clientSock >> strbuf;
+             cout << "Response: " << strbuf << endl;
+             if (strbuf.empty()) {
+                 break;
+             }
         }
+        *clientSock << "I got your message" << endl;
 
         clientSock->close();
         delete clientSock;
@@ -79,31 +80,30 @@ void* ServerThreadHandler::handle(Params* params)
 }
 
 
-void* client_process(void* args)
-{
+void* client_process(void* args) {
     void* ret = (void*) 2;
     Params* params = (Params*) args;
     cout << "Client process started." << endl;
 
     Socket sock;
     SocketAddr saddr("localhost", params->port);
-    if (!sock.open(saddr, Socket::modeReadWrite))
-    {
+    if (!sock.open(saddr, Socket::modeReadWrite)) {
         cout << "Error opening client socket: " << errno << endl;
         return ret;
     }
 
-    string str("Sending a test string.");
+    std::string str("Sending a test string.\n");
     sock << str << endl;
-
+    cout << "String sent to server, try reading" << endl;
+    sock >> str;
+    cout << "Received from server: \"" << str << "\"" << endl;
     sock.close();
 
     return 0;
 }
 
 
-int main(int argc, const char* argv[])
-{
+int main(int argc, const char* argv[]) {
     Params params = { 4321 };
 
     ServerThreadHandler server(&params);
