@@ -91,8 +91,7 @@ public:
     }
     void setData(T data) { data_ = data; }
     void setThreadId(THRTYPE_ID tid) { tid_ = tid; }
-    void wait()
-    {
+    void wait() {
         void* res;
         pthread_join(tid_, &res);
     }
@@ -120,9 +119,6 @@ protected:
 
     THRTYPE_ID tid_;  // thread ID
 
-#ifdef _DEBUG
-	static void* pLastBuffer_;	// Last buffer used for overlapped I/O
-#endif
     friend class ThreadManager;
 };
 
@@ -142,21 +138,12 @@ public:
         waitAll();
     }
 
-    /** This is for backwards compatibility only and will be removed soon.
-     *  @deprecated
-     */
-    static bool
-        create(THRTYPE_FUNCTION function, void* data, bool start = true);
-
     template<typename T, typename R>
-    static bool
-        create(ThreadHandler<T,R>* handler, bool start = true)
-        {
+    static bool create(ThreadHandler<T,R>* handler, bool start = true) {
             THRTYPE_ID thread_id;
             thread_id = _launchThread(handler->hookHandle_, (void*)handler);
             handler->setThreadId(thread_id);
-            if (thread_id > 0)
-            {
+            if (thread_id > 0) {
                 threads_.push_back(thread_id);
                 return true;
             }

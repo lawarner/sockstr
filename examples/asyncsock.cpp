@@ -47,10 +47,8 @@ void readSockData(DWORD dw, void* data)
 }
 
 
-int main(int argc, char *argv[])
-{
-    if (argc < 3)
-    {
+int main(int argc, char *argv[]) {
+    if (argc < 3) {
         std::cerr << "Error: Usage:  asyncsock hostname filename [summary]" << std::endl;
         return(1);
     }
@@ -60,13 +58,13 @@ int main(int argc, char *argv[])
 
     std::string hostname = argv[1];
     std::string filename = argv[2];
-    if (filename[0] != '/')
-        filename.insert(0, 1, '/');
-
-	std::string hostport = hostname;
-    if (hostport.find(':') == hostport.npos)
-        hostport += ":80";
-
+    if (filename[0] != '/') {
+      filename.insert(0, 1, '/');
+    }
+    std::string hostport = hostname;
+    if (hostport.find(':') == hostport.npos) {
+      hostport += ":80";
+    }
     Socket sock;
     if (!sock.open(hostport.c_str(), Socket::modeReadWrite))
 //                   Socket::modeAsyncSocket | Socket::modeReadWrite))

@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012
+   Copyright (C) 2012 - 2021
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -18,13 +18,11 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-#ifndef _IPADDRESS_H_INCLUDED_
-#define _IPADDRESS_H_INCLUDED_
+#pragma once
 
 #include <sockstr/sstypes.h>
 
-namespace sockstr
-{
+namespace sockstr {
 /**
  * @class IPAddress
  */
@@ -43,11 +41,10 @@ namespace sockstr
  *  The various names and TCP/IP 'dot addresses' are resolved to
  *  a 4 byte network address in internal format.
  */
-class DllExport IPAddress
-{
+class DllExport IPAddress {
 public:
     //! Constructs an IPAddress object
-    IPAddress(void);
+    IPAddress();
     /**
      * Constructs an IPAddress object.
      *
@@ -55,30 +52,30 @@ public:
      */
     IPAddress(const char* lpszName);
     /**
-	 * Copy constructor for IPAddress object.
+     * Copy constructor for IPAddress object.
      *
      * @param  rInAddr Reference to existing IP address to copy
-	 */
-	IPAddress(const IPAddress& rInAddr);
+     */
+    IPAddress(const IPAddress& rInAddr);
 
-	/** Destructs an IPAddress object. */
-	~IPAddress(void);
+    /** Destructs an IPAddress object. */
+    ~IPAddress();
 
-	/**
+    /**
      * Returns the internal format of network address
      */
-	UINT netAddress(void) const;
+    UINT netAddress() const;
 
-	/**
+    /**
      * Returns a static text representation of address
      */
-	operator char *(void);
+    operator char *();
 
 private:
-	void initialize(void);
+    void initialize();
 
-	// Disable assignment operator
-	IPAddress& operator=(const IPAddress&);
+    // Disable assignment operator
+    IPAddress& operator=(const IPAddress&);
 
 private:
     // Network address in internal format (network byte order).
@@ -92,5 +89,5 @@ private:
 #endif
 };
 
-}
-#endif
+}  // namespace sockstr
+

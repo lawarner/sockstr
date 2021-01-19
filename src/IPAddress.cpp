@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012
+   Copyright (C) 2012 - 2021
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -17,7 +17,6 @@
    License along with the sockstr library; if not, write to the Free
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
-
 
 //
 // File       : IPAddress.cpp
@@ -104,15 +103,10 @@ unsigned int IPAddress::m_uInstances = 0;
 //               or host name that resolves correctly.  The IP address in this
 //               case is a 4 byte internal representation of the peer's TCP/IP
 //               address.
-//
-// Remarks  :
-//
-IPAddress::IPAddress(void)
-:	m_dwAddress(INADDR_ANY)
-{
-	initialize();
+IPAddress::IPAddress()
+    : m_dwAddress(INADDR_ANY) {
+    initialize();
 }
-
 
 IPAddress::IPAddress(const char* lpszName)
     : m_dwAddress(INADDR_ANY) {
@@ -180,12 +174,11 @@ IPAddress::IPAddress(const char* lpszName)
 }
 
 
-IPAddress::IPAddress(const IPAddress& rInAddr)
-{
-	initialize();
+IPAddress::IPAddress(const IPAddress& rInAddr) {
+    initialize();
 
-	m_dwAddress = rInAddr.m_dwAddress;
-	strcpy(m_szHostName, rInAddr.m_szHostName);
+    m_dwAddress = rInAddr.m_dwAddress;
+    strcpy(m_szHostName, rInAddr.m_szHostName);
 }
 
 
@@ -201,15 +194,13 @@ IPAddress::IPAddress(const IPAddress& rInAddr)
 //
 // Remarks  :
 //
-IPAddress::~IPAddress(void)
-{
+IPAddress::~IPAddress() {
 #ifdef WIN32
-	VERIFY(m_uInstances > 0);
-	// Close the winsock.dll, if no more sockets exist
-	if (--m_uInstances == 0)
-	{
-		WSACleanup();
-	}
+    VERIFY(m_uInstances > 0);
+    // Close the winsock.dll, if no more sockets exist
+    if (--m_uInstances == 0) {
+        WSACleanup();
+    }
 #endif
 }
 
@@ -233,23 +224,20 @@ IPAddress::~IPAddress(void)
 //            the constructors.
 //
 void
-IPAddress::initialize(void)
-{
+IPAddress::initialize() {
 #ifdef WIN32
     // Must initialize Windows Sockets library once before using it.
-    if (m_uInstances++ == 0)
-    {
+    if (m_uInstances++ == 0) {
         WSADATA wsaData;
         // Initialize winsock.dll
         VERIFY(WSAStartup(MAKEWORD(2,2), &wsaData) == 0);
 
         // Confirm that the Windows Sockets DLL supports 2.2
         if (LOBYTE(wsaData.wVersion) != 2 ||
-                HIBYTE(wsaData.wVersion) != 2)
-        {
-                // Wrong version of winsock -- cannot be used
-                WSACleanup();
-                VERIFY(0);
+            HIBYTE(wsaData.wVersion) != 2) {
+            // Wrong version of winsock -- cannot be used
+            WSACleanup();
+            VERIFY(0);
         }
     }
 #endif
@@ -265,12 +253,9 @@ IPAddress::initialize(void)
 // Pre      :
 // Post     : The IP address is returned in internal, network byte-order format.
 //
-// Remarks  :
-//
 UINT
-IPAddress::netAddress(void) const
-{
-	return m_dwAddress;
+IPAddress::netAddress() const {
+    return m_dwAddress;
 }
 
 
@@ -291,25 +276,19 @@ IPAddress::netAddress(void) const
 //            is 'cached' in the m_szHostName member variable (which is the
 //            reason this operator is not const).
 //
-IPAddress::operator char* (void)
-{
-	struct hostent* pHostEntry;
+IPAddress::operator char* () {
+    struct hostent* pHostEntry;
 	
-	pHostEntry = ::gethostbyaddr((char *)&m_dwAddress, sizeof(m_dwAddress),
-								 AF_INET);
-	if (pHostEntry != 0)
-	{
-		strcpy(m_szHostName, pHostEntry->h_name);
-		return m_szHostName;
-	}
+    pHostEntry = ::gethostbyaddr((char *)&m_dwAddress, sizeof(m_dwAddress),
+                                 AF_INET);
+    if (pHostEntry != 0) {
+        strcpy(m_szHostName, pHostEntry->h_name);
+        return m_szHostName;
+    }
 
-	// Reverse DNS failed, use TCP/IP dot notation
-	sprintf(m_szHostName,"%0d.%0d.%0d.%0d",
-		    m_dwAddress & 0xff, (m_dwAddress >> 8) & 0xff,
-		   (m_dwAddress >> 16) & 0xff, (m_dwAddress >> 24) & 0xff);
-	return m_szHostName;
+    // Reverse DNS failed, use TCP/IP dot notation
+    sprintf(m_szHostName,"%0d.%0d.%0d.%0d",
+            m_dwAddress & 0xff, (m_dwAddress >> 8) & 0xff,
+            (m_dwAddress >> 16) & 0xff, (m_dwAddress >> 24) & 0xff);
+    return m_szHostName;
 }
-
-//
-// END OF FILE
-//

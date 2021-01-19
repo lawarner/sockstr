@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012
+   Copyright (C) 2012 - 2021
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -23,22 +23,7 @@
 //
 // Class      : Socket
 //
-// Description: The Socket class provides a transport-specific
-//              interface for IPC based on Windows Sockets.
-//
-// Decisions  : This class inherits from Stream and therefore provides
-//              an interface that is based on the MFC CFile class.  A
-//              user application could further derive sub-classes from
-//              Socket to do application specific processing, but this is
-//              probably not desirable since this might break the Stream
-//              polymorphic interface.  An application can better include
-//              references to Stream objects within its class to
-//              provide new functionality.
-//
 
-//
-// INCLUDE FILES
-//
 #include "config.h"
 #include <cassert>
 #include <cstdio>
@@ -46,15 +31,15 @@
 #include <cstring>
 #include <string>
 
-#ifdef linux
+#ifdef WINDOWS
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#else
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#else
-#include <WinSock2.h>
-#include <WS2tcpip.h>
 #endif
 #include <sockstr/IPC.h>
 #include <sockstr/Socket.h>
@@ -70,33 +55,12 @@ using namespace sockstr;
 #endif
 
 //
-// TYPE DEFINITIONS
-//
-
-//
 // FORWARD FUNCTION DECLARATIONS
-//
-
-//
-// DATA DEFINITIONS
 //
 
 // Initialize static members
 DWORD  Socket::m_dwSequence  = 0;
-const int Socket::modeCreate       = 1;
-const int Socket::modeAsyncSocket  = 2;
-const int Socket::modeRead         = 4;
-const int Socket::modeWrite        = 8;
-const int Socket::modeReadWrite    = 16;
 
-
-//
-// CLASS MEMBER FUNCTION DEFINITIONS
-//
-
-// Abstract : Constructs a Socket object
-//
-// Returns  : -
 // Params   :
 //   lpszFileName              Fully qualified host name and port
 //   uOpenFlags                open mode flags
@@ -112,51 +76,29 @@ const int Socket::modeReadWrite    = 16;
 //
 // Remarks  :
 //
-Socket::Socket(void)
-{
-	initialize();	// Do setup common to all constructors
+Socket::Socket() {
+    initialize();    // Do setup common to all constructors
 }
 
-
-Socket::Socket(const char* lpszFileName, UINT uOpenFlags)
-{
-	initialize();	// Do setup common to all constructors
-	if (!open(lpszFileName, uOpenFlags))
-	{
-		m_Status = SC_FAILED;
+Socket::Socket(const char* lpszFileName, UINT uOpenFlags) {
+    initialize();	// Do setup common to all constructors
+    if (!open(lpszFileName, uOpenFlags)) {
+        m_Status = SC_FAILED;
         setstate(std::ios::failbit);
-	}
+    }
 }
 
-
-Socket::Socket(SocketAddr& rSockAddr, UINT uOpenFlags)
-{
-	initialize();	// Do setup common to all constructors
-	if (!open(rSockAddr, uOpenFlags))
-	{
-		m_Status = SC_FAILED;
+Socket::Socket(SocketAddr& rSockAddr, UINT uOpenFlags) {
+    initialize();	// Do setup common to all constructors
+    if (!open(rSockAddr, uOpenFlags)) {
+        m_Status = SC_FAILED;
         setstate(std::ios::failbit);
-	}
+    }
 }
 
-
-// Abstract : Destructor of Socket object
-//
-// Returns  : -
-// Params   :
-//   -
-//
-// Pre      :
-// Post     : The Socket object is destructed.  The socket
-//            connection will be closed if it was still open.
-//
-// Remarks  :
-//
-Socket::~Socket(void)
-{
-	close();	// Just in case connection is still open
+Socket::~Socket() {
+  close();	// Just in case connection is still open
 }
-
 
 // Abstract : Assignment operator
 //
@@ -204,8 +146,7 @@ Socket::operator=(const Socket& rSource)
 //            the constructors.
 //
 void
-Socket::initialize(void)
-{
+Socket::initialize() {
 	m_bAsyncMode = false;
 	// Set initial state to Closed
 	m_pState = SSClosed::instance();
@@ -226,32 +167,15 @@ Socket::initialize(void)
 // Remarks  :
 //
 void
-Socket::setAsyncMode (const bool bMode)
-{
-	m_bAsyncMode = bMode;
+Socket::setAsyncMode(const bool bMode) {
+    m_bAsyncMode = bMode;
 }
 
-
-// Abstract : Returns the socket handle
-//
-// Returns  : SOCKET
-// Params   :
-//   -
-//
-// Pre      :
-// Post     :
-//
-// Remarks  :
-//
-Socket::operator SOCKET (void) const
-{
-	return m_hFile;
+Socket::operator SOCKET (void) const {
+    return m_hFile;
 }
 
-
-int
-Socket::getHandle (void) const
-{
+int Socket::getHandle (void) const {
     return m_hFile;
 }
 
@@ -454,7 +378,7 @@ Socket::remoteWriteReply(IpcReplyStruct* pData, DWORD dwSequence)
 // Remarks  :
 //
 void
-Socket::abort(void)
+Socket::abort()
 {
 	m_pState->abort(this);
 }
@@ -472,7 +396,7 @@ Socket::abort(void)
 // Remarks  :
 //
 void
-Socket::close(void)
+Socket::close()
 {
     if (m_hFile != INVALID_SOCKET)
         m_pState->close(this);
@@ -761,61 +685,49 @@ Socket::open(SocketAddr& rSockAddr, UINT uOpenFlags)
 // Remarks  :
 //
 UINT
-Socket::read(void* pBuf, UINT uCount)
-{
-	if (uCount == 0)
+Socket::read(void* pBuf, UINT uCount) {
+	if (uCount == 0) {
 		return 0;		// In that case, we are done quickly.
-
+    }
 	return m_pState->read(this, pBuf, uCount);
 }
 
 UINT
-Socket::read(std::string& str, int delimiter)
-{
-    char buf[32];
+Socket::read(std::string& str, int delimiter) {
+    char buf[2];
     int ret = 0;
     int sz;
 
     str.clear();
-    while ((sz = read(buf, 1)) > 0)
-    {
-        ret += sz;
-        for (int i = 0; i < sz; i++)
-        {
-            str.append(1, buf[i]);
-            if (buf[i] == delimiter)
-                return ret;
-        }
+    while ((sz = read(buf, 1)) == 1) {
+        ++ret;
+        str.push_back(buf[0]);
     }
     return ret;
 }
 
 // Handle multiple character delimiter (i.e., \r\n)
 UINT
-Socket::read(std::string& str, const std::string& delimiter)
-{
+Socket::read(std::string& str, const std::string& delimiter) {
     int deliLen = delimiter.length();
     if (deliLen == 0) return read(str, EOF);
     if (deliLen == 1) return read(str, delimiter[0]);
 
-    char buf[16];
+    char buf[2];
     int ret = 0;
     int sz;
 
     str.clear();
-    while ((sz = read(buf, 1)) > 0)
-    {
+    while ((sz = read(buf, 1)) == 1) {
         ret += sz;
-        str.append(1, buf[0]);
-        if (buf[0] == delimiter[0])
-        {
+        str.push_back(buf[0]);
+        if (buf[0] == delimiter[0]) {
             int di;
-            for (di = 1; di < deliLen; di++)
-            {
+            for (di = 1; di < deliLen; di++) {
                 sz = read(buf, 1);
                 if (sz <= 0) return ret;
                 ret += sz;
-                str.append(1, buf[0]);
+                str.push_back(buf[0]);
                 if (buf[0] != delimiter[di]) break;
             }
             if (di == deliLen) return ret;
@@ -842,10 +754,9 @@ Socket::read(std::string& str, const std::string& delimiter)
 //
 int
 Socket::setSockOpt(int  nOptionName, const void* pOptionValue,
-                   int  nOptionLen, int nLevel)
-{
+                   int  nOptionLen, int nLevel) {
     return m_pState->setSockOpt(this, nOptionName, pOptionValue,
-                                nOptionLen,  nLevel);
+                                nOptionLen, nLevel);
 }
 
 
@@ -863,15 +774,13 @@ Socket::setSockOpt(int  nOptionName, const void* pOptionValue,
 // Remarks  :
 //
 void
-Socket::write(const void* pBuf, UINT uCount)
-{
+Socket::write(const void* pBuf, UINT uCount) {
     m_pState->write(this, pBuf, uCount);
 }
 
 
 void
-Socket::write(const std::string& str)
-{
+Socket::write(const std::string& str) {
     m_pState->write(this, str.c_str(), str.size());
 }
 
@@ -891,18 +800,16 @@ Socket::write(const std::string& str)
 //            (host name or dot notation) and the port number.  For example,
 //            "hostb.dom.com:7".
 //
-Socket::operator const char* (void) const
-{
-	static char szHostName[200];
-	UINT dwAddress = m_PeerAddr.sin_addr.s_addr;
-    char tmpName[100];
+Socket::operator const char* () const {
+    static char szHostName[NI_MAXHOST + 12];
+    UINT dwAddress = m_PeerAddr.sin_addr.s_addr;
+    char tmpName[NI_MAXHOST + 1];
 //	struct hostent* pHostEntry;
 //	pHostEntry = ::gethostbyaddr((char *)&dwAddress, sizeof(dwAddress), AF_INET);
 //	if (pHostEntry != 0)
     struct addrinfo* pAddrInfo = 0;
     if (::getnameinfo((const sockaddr *) &m_PeerAddr, sizeof(m_PeerAddr),
-                      tmpName, sizeof(szHostName), 0, 0, 0) == 0)
-    {
+                      tmpName, sizeof(tmpName), 0, 0, 0) == 0) {
         sprintf(szHostName, "%s:%hu", tmpName, ntohs(m_PeerAddr.sin_port));
         ::freeaddrinfo(pAddrInfo);
     } else {
@@ -927,7 +834,6 @@ Socket::operator const char* (void) const
 //
 // Remarks  : This routine is part of the State machine mechanics
 //
-void Socket::changeState(SocketState* pState)
-{
+void Socket::changeState(SocketState* pState) {
     m_pState = pState;
 }

@@ -73,6 +73,12 @@ Visual Studio 2010 C++ Express.
 In Visual Studio, open the solution in sockstr/vs2010/sockstr.sln.  By default this will build 
 the sockstr.lib library and a simple test program in the examples/ directory.
 
+# Branches
+
+The code was originally developed in 1996 with (legacy) C++9x. Further development on the 'master' branch will use modern C++, which is C++17 at this time.
+
+The branch 'cpp98' is a snapshot before any modern C++ is used, in case there is some obscure reason for needed it.
+
 # Copyright Information
 
 The sockstr library is provided under the LGPL version 2.1 or later.

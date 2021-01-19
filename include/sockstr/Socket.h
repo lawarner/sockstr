@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012, 2013
+   Copyright (C) 2012 - 2021
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -18,8 +18,7 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-#ifndef _SOCKET_H_INCLUDED_
-#define _SOCKET_H_INCLUDED_
+#pragma once
 //
 // INCLUDE FILES
 //
@@ -27,10 +26,9 @@
 #ifdef TARGET_WINDOWS
 #include <WinSock2.h>
 #endif
-#include <string>
 #include <sockstr/SocketAddr.h>
 #include <sockstr/Stream.h>
-
+#include <string>
 
 //
 // FORWARD CLASS DECLARATIONS
@@ -41,8 +39,7 @@ typedef struct ssl_st SSL;
 typedef struct ssl_ctx_st SSL_CTX;
 
 
-namespace sockstr
-{
+namespace sockstr {
 /**
   @class Socket
   This class encapsulates the functionality for one end of a socket connection.
@@ -79,12 +76,11 @@ namespace sockstr
 // TYPE DEFINITIONS
 //
 // This structure is used to pass parameters to worker threads.
-struct IOPARAMS
-{
-	Socket* m_pSocket;
-	void*      m_pBuf;
-	UINT        m_uCount;
-	Callback m_pCallback;
+struct IOPARAMS {
+    Socket* m_pSocket;
+    void*   m_pBuf;
+    UINT    m_uCount;
+    Callback m_pCallback;
 };
 
 // Forward references
@@ -92,9 +88,6 @@ class SocketState;
 class ReadThreadHandler;
 class WriteThreadHandler;
 
-
-//
-// CLASS DECLARATION
 /**
  *  A Stream using TCP/IP or UDP sockets as transport.
  */
@@ -102,7 +95,7 @@ class DllExport Socket : public Stream
 {
 public:
     //!  Constructs a Socket object.
-    Socket(void);
+    Socket();
     /*!
      *   Constructs a Socket object.
      *   @param lpszFileName Hostname or dotted IP address
@@ -118,62 +111,61 @@ public:
     /*!
      *   Destruct a Socket object and close socket
      */
-    virtual ~Socket(void);
+    virtual ~Socket();
     /**
      * Return socket handle of the connection.
      */
-    operator SOCKET (void) const;
+    operator SOCKET() const;
 
-    int getHandle (void) const;
+    int getHandle() const;
 
     // State-dependent functions
 
     //!  Cancel any pending I/O operations on stream (state-dependent).
-    virtual void  abort		      (void);
+    virtual void abort();
 
     //!  Close the socket (state-dependent).
-    virtual void  close           (void);
+    virtual void close();
 
     //!  Create a new server socket from current connection
     //!  @param wPort Port number
     //!  @param pHost IPAddress of host
-    Socket&       createServer    (const WORD wPort, 
-								   const IPAddress* pHost = 0);
+    Socket& createServer(const WORD wPort, const IPAddress* pHost = nullptr);
     //!   Query socket options
-    bool          getSockOpt      (int  nOptionName, void* pOptionValue,
-                                   socklen_t* pnOptionLen, int nLevel = SOL_SOCKET);
+    bool getSockOpt(int nOptionName, void* pOptionValue,
+                    socklen_t* pnOptionLen, int nLevel = SOL_SOCKET);
     //! Listen for incoming connection on server socket (state-dependent)
-    virtual Stream * listen          (const int nBacklog = 4);
+    virtual Stream * listen(const int nBacklog = 4);
     //! Open a client or server socket (state-dependent)
-    virtual bool  open            (const char* lpszFileName, UINT uOpenFlags);
-    virtual bool  open			  (SocketAddr& rSockAddr, UINT uOpenFlags);
+    virtual bool open(const char* lpszFileName, UINT uOpenFlags);
+    virtual bool open(SocketAddr& rSockAddr, UINT uOpenFlags);
     //! Read from socket (state-dependent)
-    virtual UINT  read            (void* pBuf, UINT uCount);
+    virtual UINT read(void* pBuf, UINT uCount);
     //!  Read a string from the socket (state-dependent).
-    virtual UINT  read            (std::string& str, int delimiter='\n');
+    virtual UINT read(std::string& str, int delimiter='\n');
     //!  Read a string from the socket (state-dependent).
-    virtual UINT  read            (std::string& str, const std::string& delimiter="\r\n");
+    virtual UINT read(std::string& str, const std::string& delimiter="\r\n");
     //! Send an IPC message over the socket (state-dependent)
-    virtual int   remoteProcedure (IpcStruct* pData, Callback pCallback = 0);
+    virtual int remoteProcedure(IpcStruct* pData, Callback pCallback = 0);
     //! Read an IPC message or reply from socket (state-dependent)
-    virtual int   remoteReadData  (IpcStruct* pData, UINT uMaxLength = 0);
+    virtual int remoteReadData(IpcStruct* pData, UINT uMaxLength = 0);
     //!     RemoteWriteReply Send a reply to an IPC message (state-dependent)
-    virtual int   remoteWriteReply(IpcReplyStruct* pData, DWORD dwSequence = 0);
+    virtual int remoteWriteReply(IpcReplyStruct* pData, DWORD dwSequence = 0);
     //!   Asynchronous I/O mode on or off.
-    virtual void  setAsyncMode    (const bool bMode);
+    virtual void setAsyncMode(const bool bMode);
     //!   Set socket options.
-    int           setSockOpt      (int  nOptionName, const void* pOptionValue,
-                                   int  nOptionLen,  int nLevel = SOL_SOCKET);
+    int setSockOpt(int nOptionName, const void* pOptionValue,
+                   int nOptionLen, int nLevel = SOL_SOCKET);
     //! Write to socket (state-dependent)
-    virtual void  write           (const void* pBuf, UINT uCount);
+    virtual void write(const void* pBuf, UINT uCount);
     //!  Write a string to the stream (state-dependent).
-    virtual void  write           (const std::string& str);
+    virtual void write(const std::string& str);
 
     /** Returns a static, textual representation of an address
      *  (i.e., "host.acme.com:1074").  The value returned is an internal
      *  static and is thus not thread safe.
      */
-    virtual operator const char* (void) const;
+    virtual operator const char* () const;
     //!   Assignment operator
     Socket& operator=(const Socket& rSource);
 
@@ -182,11 +174,11 @@ protected:
 
 public:
     /** Open flags. */
-    static const int modeCreate;		//!< Create a server socket
-    static const int modeAsyncSocket;	//!< Socket will be asynchronous by default
-    static const int modeRead;			//!< Socket can only be read from
-    static const int modeWrite;			//!< Socket can only be written to
-    static const int modeReadWrite;		//!< Socket can be read from and written to
+    static constexpr int modeCreate       = 1;  //!< Create a server socket
+    static constexpr int modeAsyncSocket  = 2;  //!< Socket will be asynchronous by default
+    static constexpr int modeRead         = 4;  //!< Socket can only be read from
+    static constexpr int modeWrite        = 8;  //!< Socket can only be written to
+    static constexpr int modeReadWrite    = 16; //!< Socket can be read from and written to
 
 protected:
     IPAddress   m_IpAddr;
@@ -205,10 +197,10 @@ private:
 
 private:
     /// Do initializations that are common to all constructors.
-    void initialize(void);
+    void initialize();
 
     // Disable copy constructor
-    Socket(const Socket&);
+    Socket(const Socket&) = delete;
 
     // State machine
     friend class SocketState;
@@ -231,5 +223,4 @@ private:
     SocketState* m_pState;		// Pointer to current state
 };
 
-}
-#endif
+}  // namespace sockstr

@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012 - 2014
+   Copyright (C) 2012 - 2021
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -18,8 +18,7 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-#ifndef _STREAM_H_INCLUDED_
-#define _STREAM_H_INCLUDED_
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -29,8 +28,7 @@
 /*
  * Socket class library.
  */
-namespace sockstr
-{
+namespace sockstr {
 //
 // MACRO DEFINITIONS
 //
@@ -45,8 +43,7 @@ namespace sockstr
  *  Stream status codes.
  *  These are used by the @deprecated queryStatus method.
  */
-enum STATUSCODE
-{
+enum STATUSCODE {
     SC_OK,		//!< Stream status is good.
     SC_NODATA,	//!< No data is available on stream (useful for asynchronous streams.
     SC_FAILED	//!< Stream has an error.
@@ -75,8 +72,7 @@ class IpcReplyStruct;
  *  transport-specific classes (see Socket for example).  This class
  *  is not specific to any particular transport mechanism.
  */
-class DllExport Stream : public std::iostream
-{
+class DllExport Stream : public std::iostream {
 public:
     virtual ~Stream(void);	//!< Destructor
 
@@ -171,5 +167,4 @@ protected:
     StreamBuf strbuf;
 };
 
-}
-#endif
+}  // namespace sockstr

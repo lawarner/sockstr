@@ -32,12 +32,9 @@
 #include <sockstr/ThreadHandler.h>
 using namespace sockstr;
 
-#ifdef _DEBUG
-void* ThreadHandler::pLastBuffer = 0;
-#endif
 std::vector<THRTYPE_ID> ThreadManager::threads_;
 
-
+#if 0
 bool
 ThreadManager::create(THRTYPE_FUNCTION function, void* data, bool start)
 {
@@ -66,16 +63,15 @@ ThreadManager::create(THRTYPE_FUNCTION function, void* data, bool start)
 #endif
     return true;
 }
+#endif
 
-void ThreadManager::waitAll(int timeOut)
-{
-    while (timeOut == -1 && joinAllWaiting() > 0)
-        sleep(1);
-        
+void ThreadManager::waitAll(int timeOut) {
+  while (timeOut == -1 && joinAllWaiting() > 0) {
+    sleep(1);
+  }
 }
 
-size_t ThreadManager::joinAllWaiting()
-{
+size_t ThreadManager::joinAllWaiting() {
     std::vector<THRTYPE_ID>::iterator it;
     for (it = threads_.begin(); it != threads_.end(); ++it)
     {
@@ -129,7 +125,6 @@ THRTYPE_ID ThreadManager::_launchThread(THRTYPE_FUNCTION function, void* handler
     VERIFY(0);
 #endif
 #endif
-
 
     // TODO: keep a list of all handlers so they can be managed and deleted
 

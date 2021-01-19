@@ -19,41 +19,18 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-#ifndef _OAUTH_H_INCLUDED_
-#define _OAUTH_H_INCLUDED_
-//
-//
+#pragma once
 
-//
-// INCLUDE FILES
-//
 #include <sockstr/HttpHelpers.h>
+#include <memory>
 
+namespace sockstr {
 
-namespace sockstr
-{
-
-//
-// MACRO DEFINITIONS
-//
 #ifndef DllExport
 #define DllExport
 #endif
 
-//
-// FORWARD CLASS DECLARATIONS
-//
-
-//
-// TYPE DEFINITIONS
-//
-
-//
-// CLASS DEFINITIONS
-//
-
-class DllExport OAuthAuthenticator
-{
+class DllExport OAuthAuthenticator {
 public:
     /**
      * Signature of callback.  This class will allocate and free the provided buffer.
@@ -93,7 +70,7 @@ private:
     CompoundEncoder parameters_;
     CompoundEncoder otherParameters_;
 
-    HttpParamEncoder* clientKey_;
+    std::unique_ptr<HttpParamEncoder> clientKey_;
     OAuthCallback callback_;
 
     std::string authUri_;
@@ -156,5 +133,3 @@ private:
 };
 
 }  // namespace sockstr
-
-#endif // _OAUTH_H_INCLUDED_

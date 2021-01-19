@@ -65,11 +65,11 @@ void* ServerThreadHandler::handle(Params* params) {
         while (clientSock->queryStatus() == SC_OK) {
             *clientSock >> strbuf;
              cout << "Response: " << strbuf << endl;
-             if (strbuf.empty()) {
+             if (strbuf.empty() || strbuf == "<EOM>") {
                  break;
              }
         }
-        *clientSock << "I got your message" << endl;
+        *clientSock << "I got your message <EOM>" << endl;
 
         clientSock->close();
         delete clientSock;
@@ -92,11 +92,16 @@ void* client_process(void* args) {
         return ret;
     }
 
-    std::string str("Sending a test string.\n");
+    std::string str("Sending a test string.\n<EOM>");
     sock << str << endl;
     cout << "String sent to server, try reading" << endl;
-    sock >> str;
-    cout << "Received from server: \"" << str << "\"" << endl;
+    while (sock.good()) {
+      sock >> str;
+      cout << "Received from server: \"" << str << "\"" << endl;
+      if (str == "<EOM>") {
+        break;
+      }
+    }
     sock.close();
 
     return 0;

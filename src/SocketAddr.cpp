@@ -50,7 +50,7 @@
 #include <cstdlib>
 #include <cstring>
 
-#ifdef linux
+#ifdef TARGET_LINUX
 #include <netdb.h>
 #endif
 

@@ -18,8 +18,7 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-#ifndef _SOCKETADDR_H_INCLUDED_
-#define _SOCKETADDR_H_INCLUDED_
+#pragma once
 //
 // File       : SocketAddr.h
 //
@@ -51,31 +50,24 @@
 //                        address (i.e., "host.acme.com:1074")
 //
 //   ----------------------------------------------------------------
-//   Overridables
-//
-//     -
-//
 //
 // History    : A. Warner, 1996-05-01, Creation
 //
 
-
 //
 // INCLUDE FILES
 //
-#ifdef linux
-#include <sys/socket.h>
+#ifdef WINDOWS
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#else
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#else
-//#include <WinSock2.h>
-//#include <WS2tcpip.h>
 #endif
 
 #include <sockstr/IPAddress.h>
 
-namespace sockstr
-{
+namespace sockstr {
 
 //
 // MACRO DEFINITIONS
@@ -94,17 +86,8 @@ namespace sockstr
 class Socket;
 
 //
-// DATA DECLARATIONS
-//
-
-//
-// FUNCTION DECLARATIONS
-//
-
-//
 // CLASS DECLARATION
-class DllExport SocketAddr : public sockaddr_in
-{
+class DllExport SocketAddr : public sockaddr_in {
 public:
 	SocketAddr(const IPAddress Host, WORD wPort, const char * pProtocol = 0);
 	SocketAddr(const char * lpszHost, WORD wPort, const char * pProtocol = 0);
@@ -131,5 +114,4 @@ private:
 	const char*    m_pProtocol;		// IP protocol (default is TCP)
 };
 
-}
-#endif
+}  // namespace sockstr

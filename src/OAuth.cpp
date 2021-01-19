@@ -43,43 +43,31 @@
 #include <string.h>
 using namespace sockstr;
 
-
 OAuthAuthenticator::OAuthAuthenticator()
     : parameters_("&")
     , otherParameters_("&")
-    , clientKey_(0)
-    , callback_(0)
-{
-}
+    , clientKey_()
+    , callback_(nullptr) {}
 
 OAuthAuthenticator::OAuthAuthenticator(const CompoundEncoder& otherParameters)
     : parameters_("&")
     , otherParameters_(otherParameters, "&")
-    , clientKey_(0)
-    , callback_(0)
-{
-}
+    , clientKey_()
+    , callback_(nullptr) {}
 
-int OAuthAuthenticator::authenticate(const std::string& authUri, const std::string& redirectUri)
-{
+int OAuthAuthenticator::authenticate(const std::string& authUri, const std::string& redirectUri) {
     authUri_ = authUri;
     redirectUri_ = redirectUri;
 
     return 0;
 }
 
-void OAuthAuthenticator::setClientKey(const std::string& clientKey)
-{
-    if (clientKey_) delete clientKey_;
-
-    clientKey_ = new FixedStringEncoder("consumer_key", clientKey);
+void OAuthAuthenticator::setClientKey(const std::string& clientKey) {
+    clientKey_ = std::make_unique<FixedStringEncoder>("consumer_key", clientKey);
 }
 
-void OAuthAuthenticator::setClientKey(HttpParamEncoder* clientKey)
-{
-    if (clientKey_) delete clientKey_;
-
-    clientKey_ = clientKey;
+void OAuthAuthenticator::setClientKey(HttpParamEncoder* clientKey) {
+    clientKey_.reset(clientKey);
 }
 
 void OAuthAuthenticator::setClientSecretHook(OAuthCallback callback, int maxKeyLength)

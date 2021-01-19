@@ -9,12 +9,12 @@
 #ifndef _CONFIG_H_INCLUDED_
 #define _CONFIG_H_INCLUDED_
 
-#ifdef linux
+#ifdef WINDOWS
+#define TARGET_WINDOWS
+#else
 #define TARGET_LINUX
 #define CONFIG_HAS_OPENSSL  1
 #define CONFIG_HAS_PTHREADS 1
-#else
-#define TARGET_WINDOWS
 #endif
 
 #include <sys/types.h>
