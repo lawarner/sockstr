@@ -43,6 +43,7 @@ namespace sockstr
 #endif
 
 #define HTTP_VERSION "HTTP/1.1"
+#define HTTP_DELIMITER "\r\n"
 
 //
 // FORWARD CLASS DECLARATIONS

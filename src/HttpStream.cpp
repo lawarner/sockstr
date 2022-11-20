@@ -69,6 +69,18 @@ HttpStream::~HttpStream()
 
 }
 
+UINT HttpStream::get(const std::string& uri, std::string& content, std::string& headers)
+{
+    std::string httpreq = "GET " + uri + HTTP_VERSION_LINE;
+    expandHeaders(httpreq);
+    write(httpreq);
+    UINT ret = read(headers, HTTP_DELIMITER HTTP_DELIMITER);
+    //TODO check Content-Length and/or type (json, html, etc.)
+    ret += read(content, HTTP_DELIMITER);
+
+    return ret;
+}
+
 UINT HttpStream::get(const std::string& uri, char* buffer, UINT uCount)
 {
     std::string httpreq = "GET " + uri + HTTP_VERSION_LINE;

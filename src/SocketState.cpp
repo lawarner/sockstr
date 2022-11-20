@@ -75,14 +75,6 @@
 using namespace sockstr;
 
 //
-// MACRO DEFINITIONS
-//
-
-//
-// TYPE DEFINITIONS
-//
-
-//
 // FORWARD FUNCTION DECLARATIONS
 //
 
@@ -103,40 +95,6 @@ void* SocketState::m_pLastBuffer = 0;
 //
 // CLASS MEMBER FUNCTION DEFINITIONS
 //
-
-// Abstract : Constructs a SocketState
-//
-// Returns  : -
-// Params   :
-//   -
-//
-// Pre      :
-// Post     :
-//
-// Remarks  :
-//
-SocketState::SocketState(void)
-{
-
-}
-
-
-// Abstract : Destructor of SocketState object
-//
-// Returns  : -
-// Params   :
-//   -
-//
-// Pre      :
-// Post     : The SocketState object is destructed.
-//
-// Remarks  :
-//
-SocketState::~SocketState(void)
-{
-
-}
-
 
 // State-dependent functions
 

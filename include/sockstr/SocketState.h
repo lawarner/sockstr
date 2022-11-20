@@ -18,21 +18,12 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-#ifndef _SOCKETSTATE_H_INCLUDED_
-#define _SOCKETSTATE_H_INCLUDED_
-//
-// INCLUDE FILES
-//
+#pragma once
+
 #include <sockstr/sstypes.h>
 #include <sockstr/ThreadHandler.h>
 
-//
-// MACRO DEFINITIONS
-//
-
-
-namespace sockstr
-{
+namespace sockstr {
 /**
  *  @class SocketState
  * 
@@ -74,13 +65,12 @@ class SocketAddr;
 
 
 //! Base class for a Socket's state tree.
-class SocketState
-{
+class SocketState {
 public:
 	//! Constructs a SocketState object
-	SocketState(void);
-
-	~SocketState(void);
+	SocketState() = default;
+	//! Destructs a SocketState object
+	~SocketState() = default;
 
 	// State-dependent functions
 	//! Cancel any pending I/O operations on stream
@@ -137,8 +127,7 @@ private:
 
 
 /////////////
-class ReadThreadHandler : public ThreadHandler<IOPARAMS*>
-{
+class ReadThreadHandler : public ThreadHandler<IOPARAMS*> {
 public:
     ReadThreadHandler(IOPARAMS* pIOP) { setData(pIOP); }
 
@@ -156,8 +145,7 @@ public:
 //////////////////////////////////////////////////////////
 //   All subclasses of SocketState are defined here.
 
-class SSClosed : public SocketState
-{
+class SSClosed : public SocketState {
 public:
 	static SocketState* instance(void);
 
@@ -166,22 +154,7 @@ private:
 };
 
 
-class SSOpenedServer : public SocketState
-{
-public:
-	static SocketState* instance(void);
-
-	virtual bool   open        (Socket* pSocket,
-					            SocketAddr& rSockAddr,
-					            UINT uOpenFlags);
-
-private:
-	static SocketState* m_pInstance;
-};
-
-
-class SSOpenedClient : public SocketState
-{
+class SSOpenedServer : public SocketState {
 public:
 	static SocketState* instance(void);
 
@@ -194,8 +167,20 @@ private:
 };
 
 
-class SSListening : public SocketState
-{
+class SSOpenedClient : public SocketState {
+public:
+	static SocketState* instance(void);
+
+	virtual bool   open        (Socket* pSocket,
+					            SocketAddr& rSockAddr,
+					            UINT uOpenFlags);
+
+private:
+	static SocketState* m_pInstance;
+};
+
+
+class SSListening : public SocketState {
 public:
 	static SocketState* instance(void);
 
@@ -206,8 +191,7 @@ private:
 };
 
 
-class SSConnected : public SocketState
-{
+class SSConnected : public SocketState {
 public:
 	static  SocketState* instance(void);
 
@@ -229,8 +213,7 @@ private:
 
 #if USE_OPENSSL
 
-class SSOpenedClientTLS : public SocketState
-{
+class SSOpenedClientTLS : public SocketState {
 private:
     SSOpenedClientTLS();
 
@@ -262,8 +245,7 @@ private:
 };
 
 
-class SSConnectedTLS : public SocketState
-{
+class SSConnectedTLS : public SocketState {
 public:
 	static  SocketState* instance(void);
 
@@ -282,5 +264,4 @@ private:
 
 #endif // USE_OPENSSL
 
-}
-#endif
+}  // namespace sockstr

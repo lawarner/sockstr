@@ -60,14 +60,6 @@
 using namespace sockstr;
 
 //
-// MACRO DEFINITIONS
-//
-
-//
-// TYPE DEFINITIONS
-//
-
-//
 // FORWARD FUNCTION DECLARATIONS
 //
 static int sockstr_password_cb(char *buf, int size, int rwflag, void* userdata);

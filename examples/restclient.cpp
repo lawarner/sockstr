@@ -76,69 +76,11 @@ int main(int argc, const char *argv[])
     string contentbuf;
     int crlfpos = -1;
 
-    int inlen = http.get(restApi, buf, sizeof(buf));
-    while (inlen > 0)
-    {
-        bool isContentEnd = false;
-        // cout << "+=+=+=+=+ Read from socket " << inlen << " characters:" << endl
-        //           << string(buf).substr(0, inlen) << endl;
-        if (isContentEnd)
-        {
-            strbuf.erase();
-            isContentEnd = false;
-        }
-        strbuf += string(buf, inlen);
-
-        unsigned int ipos = strbuf.find("Content-Length: ");
-        if (ipos != string::npos)
-        {
-            ipos += 16;         // skip past "Content-Length: "
-            crlfpos = strbuf.substr(ipos).find("\n");
-            int content_len = strtol(strbuf.substr(ipos, crlfpos).c_str(), NULL, 10);
-            //cout << " Content length is: " << content_len
-            //          << ".  snippet: " << strbuf.substr(ipos + crlfpos + 2, 10) << endl;
-            contentbuf = strbuf.substr(ipos + crlfpos + 2);
-            headerbuf = strbuf.substr(0, ipos + crlfpos + 2);
-
-            size_t bufsize = sizeof(buf);
-            for (int idx = contentbuf.length(); idx < content_len; )
-            {
-                size_t seglen = content_len - idx + 1;
-                int ilen = min(bufsize, seglen);
-//                int ilen = min(sizeof(buf), (unsigned int)(content_len - idx + 1));
-                inlen = http.read(buf, ilen);
-                if (inlen <= 0)
-                    break;
-                contentbuf += string(buf, inlen);
-                //cout << " +++buf: " << string(buf).substr(0,60) << "..." << endl;
-                idx += inlen;
-            }
-            strbuf = headerbuf + contentbuf;
-            isContentEnd = true;
-            break;
-        }
-
-        // End of JSON detected?
-        if (strbuf.rfind("\"}") == (strbuf.length() - 2))
-        {
-            cout << "End of JSON found." << endl;
-            isContentEnd = true;
-        }
-        else if (strbuf.rfind("</html>") != strbuf.npos
-                 || strbuf.rfind("</HTML>") != strbuf.npos)
-        {
-            cout << "End of HTML found." << endl;
-            isContentEnd = true;
-        }
-
-		cout << "%%%%%%%% WHOLE BUFFER %%%%%%%%%%%%%" << endl
-             << strbuf << endl
-             << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
-
-        inlen = http.read(buf, sizeof(buf));
-    }
-    cout << "====== Read " << strbuf.length() << " bytes from socket:"
-         << endl << strbuf << endl;
+    int inlen = http.get(restApi, contentbuf, headerbuf);
+    cout << "====== Read header " << headerbuf.length() << " bytes from socket:"
+         << endl << headerbuf << endl;
+    cout << "====== Read content " << contentbuf.length() << " bytes from socket:"
+         << endl << contentbuf << endl;
 
     http.close();
 

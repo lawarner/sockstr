@@ -71,6 +71,8 @@ public:
 
     virtual ~HttpStream();
 
+    UINT get(const std::string& uri, std::string& content, std::string& headers);
+
     UINT get(const std::string& uri, char* buffer, UINT uCount);
     UINT head(const std::string& uri);
     UINT post(const std::string& uri, char* message, char* buffer, UINT uCount);
