@@ -115,7 +115,7 @@ void* server_process(void* args)
     Params* params = (Params*) args;
     cout << "Server connecting to port " << params->port << endl;
 
-    SocketAddr saddr(0, params->port);
+    SocketAddr saddr(params->port);
     if (!serverSock.open(saddr, Socket::modeReadWrite))
     {
         cout << "Error opening server socket: " << errno << endl;

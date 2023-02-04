@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012 - 2021
+   Copyright (C) 2012 - 2022
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -18,32 +18,14 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-//
-// File       : IPAddress.cpp
-//
-// Class      : IPAddress
-//
-// Description: This base class provides mapping between IP addresses
-//              and names.  The various names and TCP/IP 'dot addresses'
-//              are resolved to a 4 byte network address in internal
-//              format.
-//
-// Usage      : This class is consistently used by the rest of the IPC
-//              library whenever a TCP/IP address is needed.  It is doubtful
-//              if an application would ever need to directly use this
-//              class.
-//
+#include "sockstr/IPAddress.h"
 
-//
-// INCLUDE FILES
-//
 #include "config.h"
 #ifdef TARGET_WINDOWS
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #else
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #endif
@@ -51,33 +33,15 @@
 #include <cassert>
 #include <cstdio>
 #include <cstring>
+#include <unistd.h>
 
-#include "sockstr/IPAddress.h"
+namespace sockstr {
 
-using namespace sockstr;
-
-//
-// MACRO DEFINITIONS
-//
-
-//
-// TYPE DEFINITIONS
-//
-
-//
-// FORWARD FUNCTION DECLARATIONS
-//
-
-//
-// DATA DEFINITIONS
 //
 // Initialize static member variables
 #ifdef WIN32
-unsigned int IPAddress::m_uInstances = 0;
+unsigned int IPAddress::numInstances_ = 0;
 #endif
-//
-// CLASS MEMBER FUNCTION DEFINITIONS
-//
 
 // Abstract : Constructs a IPAddress object
 //
@@ -104,17 +68,126 @@ unsigned int IPAddress::m_uInstances = 0;
 //               case is a 4 byte internal representation of the peer's TCP/IP
 //               address.
 IPAddress::IPAddress()
-    : m_dwAddress(INADDR_ANY) {
+    : address_(AddrAny) {
     initialize();
 }
 
-IPAddress::IPAddress(const char* lpszName)
-    : m_dwAddress(INADDR_ANY) {
+IPAddress::IPAddress(const std::string& host)
+    : address_(AddrNone) {
     initialize();
-    if (lpszName == nullptr) {
-        return;		// must be a server socket
+    if (host.empty()) {	   // must be a server socket
+        address_ = AddrAny;
+    } else {
+        resolve(host);
     }
+}
 
+
+IPAddress::IPAddress(const IPAddress& other) {
+    initialize();
+
+    address_ = other.address_;
+    hostName_ = other.hostName_;
+}
+
+
+// Pre      : The Windows sockets library has already been initialized.
+// Post     : When the last instance of IPAddress is destroyed, then
+//
+IPAddress::~IPAddress() {
+#ifdef WIN32
+    VERIFY(numInstances_ > 0);
+    // Close the winsock.dll, if no more sockets exist
+    if (--numInstances_ == 0) {
+        WSACleanup();
+    }
+#endif
+}
+
+void IPAddress::initialize() {
+#ifdef WIN32
+    // Must initialize Windows Sockets library once before using it.
+    if (numInstances_++ == 0) {
+        WSADATA wsaData;
+        // Initialize winsock.dll
+        VERIFY(WSAStartup(MAKEWORD(2,2), &wsaData) == 0);
+
+        // Confirm that the Windows Sockets DLL supports 2.2
+        if (LOBYTE(wsaData.wVersion) != 2 ||
+            HIBYTE(wsaData.wVersion) != 2) {
+            // Wrong version of winsock -- cannot be used
+            WSACleanup();
+            VERIFY(0);
+        }
+    }
+#endif
+}
+
+IPAddress::AddrType IPAddress::netAddress() const {
+    return address_;
+}
+
+bool IPAddress::resolve(const std::string& host) {
+    constexpr const char* validIpv4 = "0123456789.";
+    constexpr const char* validIpv6 = "0123456789abcdefABCDEF:";
+    bool is_valid = false;
+
+    if (host.find_first_not_of(validIpv4) == std::string::npos) {
+        // Looks like dot notation, so try IPv4 address
+        struct sockaddr_in sa;
+        memset(&sa, 0, sizeof(struct sockaddr_in));
+        sa.sin_family = AF_INET;
+        auto ret = inet_pton(AF_INET, host.c_str(), &sa.sin_addr);
+        if (ret > 0) {
+            address_ = sa;
+            is_valid = true;
+        } else {
+            address_ = AddrNone;
+        }
+    } else if (host.find_first_not_of(validIpv6)) {
+        // Try IPv6 address
+        sockaddr_in6 sa6;
+        sa6.sin6_family = AF_INET6;
+        auto ret = inet_pton(AF_INET6, host.c_str(), &sa6.sin6_addr);
+        if (ret > 0) {
+            address_ = sa6;
+            is_valid = true;
+        } else {
+            address_ = AddrNone;
+        }
+    } else {     // Try to resolve host name
+        struct addrinfo* addr;
+        struct addrinfo hints = {
+            .ai_flags = 0,
+            .ai_family = AF_UNSPEC,
+            .ai_socktype = SOCK_STREAM,
+            .ai_protocol = IPPROTO_TCP
+        };
+        int ret = getaddrinfo(host.c_str(), nullptr, &hints, &addr);
+        if (!ret) {
+            struct addrinfo* next;
+            for (next = addr; next != nullptr; next = next->ai_next) {
+                int s = socket(next->ai_family, next->ai_socktype, next->ai_protocol);
+                if (s >= 0) {
+                    close(s);
+                    is_valid = true;
+                    break;
+                }
+            }
+            if (next == nullptr) {
+                address_ = AddrNone;
+            } else {
+                if (next->ai_family == AF_INET) {
+                    address_ = *(sockaddr_in *)(next->ai_addr);
+                } else {
+                    address_ = *(sockaddr_in6 *)(next->ai_addr);
+                }
+            }
+            freeaddrinfo(addr);
+        }            
+    }
+    return is_valid;
+#if 0
     // First check to see if the name is in valid dot notation
     if ((m_dwAddress = ::inet_addr(lpszName)) != INADDR_NONE) {
         return;			// Dot address OK -- use it.
@@ -124,11 +197,10 @@ IPAddress::IPAddress(const char* lpszName)
 //	if (pHostEntry == 0)
 
     struct addrinfo aiHints = {
-        AI_CANONNAME,	// ai_flags
-        AF_UNSPEC,	// ai_family
-        SOCK_STREAM,	// ai_socktype
-        0,				
-        // ai_protocol
+        .ai_flags = AI_CANONNAME,
+        .ai_family = AF_UNSPEC,
+        .ai_socktype = SOCK_STREAM,
+        .ai_protocol = IPPROTO_TCP
         // ai_addrlen
         // ai_canonname (char*)
         // ai_next
@@ -171,117 +243,32 @@ IPAddress::IPAddress(const char* lpszName)
 #endif
     }
     ::freeaddrinfo(pAddrInfo);
-}
-
-
-IPAddress::IPAddress(const IPAddress& rInAddr) {
-    initialize();
-
-    m_dwAddress = rInAddr.m_dwAddress;
-    strcpy(m_szHostName, rInAddr.m_szHostName);
-}
-
-
-// Abstract : Destructor of IPAddress object
-//
-// Returns  : -
-// Params   :
-//   -
-//
-// Pre      : The Windows sockets library has already been initialized.
-// Post     : When the last instance of IPAddress is destroyed, then
-//            the Windows sockets library will be shutdown.
-//
-// Remarks  :
-//
-IPAddress::~IPAddress() {
-#ifdef WIN32
-    VERIFY(m_uInstances > 0);
-    // Close the winsock.dll, if no more sockets exist
-    if (--m_uInstances == 0) {
-        WSACleanup();
-    }
+    return true;
 #endif
 }
 
-
-// Abstract : Perform common initialization for IPAddress object.
-//
-// Returns  : -
-// Params   :
-//   -
-//
-// Pre      : The system where this routine is run must have a Winsock
-//            library installed which conforms to the version 1.1 protocol.
-// Post     : This routine maintains an instance count of IPAddress
-//            objects.  If this is the first instance, then the Windows
-//            sockets library is initialized.  This routine also checks
-//            that the version of Windows sockets library is compatible
-//            with the IPC library.
-//
-// Remarks  : This routine is only used internally by the IPAddress
-//            class.  It does common initializations for all of
-//            the constructors.
-//
-void
-IPAddress::initialize() {
-#ifdef WIN32
-    // Must initialize Windows Sockets library once before using it.
-    if (m_uInstances++ == 0) {
-        WSADATA wsaData;
-        // Initialize winsock.dll
-        VERIFY(WSAStartup(MAKEWORD(2,2), &wsaData) == 0);
-
-        // Confirm that the Windows Sockets DLL supports 2.2
-        if (LOBYTE(wsaData.wVersion) != 2 ||
-            HIBYTE(wsaData.wVersion) != 2) {
-            // Wrong version of winsock -- cannot be used
-            WSACleanup();
-            VERIFY(0);
+IPAddress::operator const std::string& () {
+    if (hostName_.empty()) {
+        char hbuf[NI_MAXHOST];
+        if (std::holds_alternative<sockaddr_in>(address_)) {
+            auto sa = (sockaddr *) &std::get<sockaddr_in>(address_);
+            if (!getnameinfo(sa, sizeof(sockaddr_in), hbuf, sizeof(hbuf),
+                             nullptr, 0, NI_NAMEREQD)) {
+                hostName_ = hbuf;
+            }
+        } else if (std::holds_alternative<sockaddr_in6>(address_)) {
+            auto sa6 = (sockaddr *) &std::get<sockaddr_in6>(address_);
+            if (!getnameinfo(sa6, sizeof(sockaddr_in), hbuf, sizeof(hbuf),
+                             nullptr, 0, NI_NAMEREQD)) {
+                hostName_ = hbuf;
+            }
         }
     }
-#endif
-}
-
-
-// Abstract : Returns the internal representation of the IP address.
-//
-// Returns  : UINT
-// Params   :
-//   -
-//
-// Pre      :
-// Post     : The IP address is returned in internal, network byte-order format.
-//
-UINT
-IPAddress::netAddress() const {
-    return m_dwAddress;
-}
-
-
-// Abstract : Return a textual representation of IP address
-//
-// Returns  : char*
-// Params   :
-//   -
-//
-// Pre      :
-// Post     : A textual representation of the address is returned as either
-//            a TCP/IP host name (for example "host.acme.com") or as a
-//            dot notation (for example "129.133.133.1").
-//
-// Remarks  : This routine first attempts to resolve the IP address as a
-//            host name.  If this fails, then a string containing the dot
-//            notation of the address is returned.  In any case, the result
-//            is 'cached' in the m_szHostName member variable (which is the
-//            reason this operator is not const).
-//
-IPAddress::operator char* () {
+#if 0
     struct hostent* pHostEntry;
-	
     pHostEntry = ::gethostbyaddr((char *)&m_dwAddress, sizeof(m_dwAddress),
                                  AF_INET);
-    if (pHostEntry != 0) {
+    if (pHostEntry != nullptr) {
         strcpy(m_szHostName, pHostEntry->h_name);
         return m_szHostName;
     }
@@ -290,5 +277,12 @@ IPAddress::operator char* () {
     sprintf(m_szHostName,"%0d.%0d.%0d.%0d",
             m_dwAddress & 0xff, (m_dwAddress >> 8) & 0xff,
             (m_dwAddress >> 16) & 0xff, (m_dwAddress >> 24) & 0xff);
-    return m_szHostName;
+#endif
+    return hostName_;
 }
+
+const std::string& IPAddress::operator()() {
+    return operator const std::string&();
+}
+
+}  // namespace sockstr

@@ -1,47 +1,42 @@
-asyncsock.o: asyncsock.cpp ../include/sockstr/IPAddress.h \
- ../include/sockstr/sstypes.h ../include/sockstr/Socket.h \
- ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \
- ../include/sockstr/StreamBuf.h
+asyncsock.o: asyncsock.cpp ../include/sockstr/Socket.h \
+ ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
+ ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
 echoserver.o: echoserver.cpp ../include/sockstr/Socket.h \
  ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
- ../include/sockstr/IPAddress.h ../include/sockstr/Stream.h \
- ../include/sockstr/StreamBuf.h ../include/sockstr/ThreadHandler.h
-fbread.o: fbread.cpp ../include/sockstr/IPAddress.h \
- ../include/sockstr/sstypes.h ../include/sockstr/Socket.h \
- ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \
- ../include/sockstr/StreamBuf.h
-fb2read.o: fb2read.cpp ../include/sockstr/IPAddress.h \
- ../include/sockstr/sstypes.h ../include/sockstr/Socket.h \
- ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \
- ../include/sockstr/StreamBuf.h
+ ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h \
+ ../include/sockstr/ThreadHandler.h
+fbread.o: fbread.cpp ../include/sockstr/Socket.h \
+ ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
+ ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
+fb2read.o: fb2read.cpp ../include/sockstr/Socket.h \
+ ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
+ ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
 filecopy.o: filecopy.cpp ../include/sockstr/Socket.h \
  ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
- ../include/sockstr/IPAddress.h ../include/sockstr/Stream.h \
- ../include/sockstr/StreamBuf.h ../include/sockstr/ThreadHandler.h
+ ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h \
+ ../include/sockstr/ThreadHandler.h
 httptest.o: httptest.cpp ../include/sockstr/HttpStream.h \
  ../include/sockstr/Socket.h ../include/sockstr/sstypes.h \
- ../include/sockstr/SocketAddr.h ../include/sockstr/IPAddress.h \
- ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h \
- ../include/sockstr/OAuth.h ../include/sockstr/HttpHelpers.h
+ ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \
+ ../include/sockstr/StreamBuf.h ../include/sockstr/OAuth.h \
+ ../include/sockstr/HttpHelpers.h
 readsdp.o: readsdp.cpp ../include/sockstr/Socket.h \
  ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
- ../include/sockstr/IPAddress.h ../include/sockstr/Stream.h \
- ../include/sockstr/StreamBuf.h
+ ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
 restclient.o: restclient.cpp ../include/sockstr/HttpStream.h \
  ../include/sockstr/Socket.h ../include/sockstr/sstypes.h \
- ../include/sockstr/SocketAddr.h ../include/sockstr/IPAddress.h \
- ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h \
- ../include/sockstr/OAuth.h ../include/sockstr/HttpHelpers.h
+ ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \
+ ../include/sockstr/StreamBuf.h ../include/sockstr/OAuth.h \
+ ../include/sockstr/HttpHelpers.h
 restserver.o: restserver.cpp ../include/sockstr/HttpHelpers.h \
  ../include/sockstr/HttpStream.h ../include/sockstr/Socket.h \
  ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
- ../include/sockstr/IPAddress.h ../include/sockstr/Stream.h \
- ../include/sockstr/StreamBuf.h ../include/sockstr/ThreadHandler.h
+ ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h \
+ ../include/sockstr/ThreadHandler.h
 simplest.o: simplest.cpp ../include/sockstr/Socket.h \
  ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
- ../include/sockstr/IPAddress.h ../include/sockstr/Stream.h \
- ../include/sockstr/StreamBuf.h ../include/sockstr/ThreadHandler.h
-testsockstr.o: testsockstr.cpp ../include/sockstr/IPAddress.h \
- ../include/sockstr/sstypes.h ../include/sockstr/Socket.h \
- ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \
- ../include/sockstr/StreamBuf.h
+ ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h \
+ ../include/sockstr/ThreadHandler.h
+testsockstr.o: testsockstr.cpp ../include/sockstr/Socket.h \
+ ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
+ ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h

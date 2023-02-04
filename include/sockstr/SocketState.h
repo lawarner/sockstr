@@ -55,74 +55,67 @@ namespace sockstr {
 // FORWARD CLASS DECLARATIONS
 //
 struct IOPARAMS;
-class IPAddress;
 class Socket;
 class SocketAddr;
-
-
-//
-// CLASS DECLARATION
-
 
 //! Base class for a Socket's state tree.
 class SocketState {
 public:
-	//! Constructs a SocketState object
-	SocketState() = default;
-	//! Destructs a SocketState object
-	~SocketState() = default;
+    //! Constructs a SocketState object
+    SocketState() = default;
+    //! Destructs a SocketState object
+    ~SocketState() = default;
 
-	// State-dependent functions
-	//! Cancel any pending I/O operations on stream
-	virtual void   abort       (Socket* pSocket);
-	//! Close the socket connection, if open
-	virtual void   close       (Socket* pSocket);
+    // Disable copy constructor and assignment operator
+    SocketState(const SocketState&) = delete;
+    SocketState& operator=(const SocketState&) = delete;
+
+    // State-dependent functions
+    //! Cancel any pending I/O operations on stream
+    virtual void   abort       (Socket* pSocket);
+    //! Close the socket connection, if open
+    virtual void   close       (Socket* pSocket);
     /** Create a new server socket connection (ready
-     *  to do a Listen()) from an already open connection. */
-	virtual Socket&
-		           createServer(Socket* pSocket,
-								const WORD  wPort,
-								const IPAddress* pHost);
-	//! Get the socket options currently in effect
-	virtual bool   getSockOpt  (Socket* pSocket,
-								int  nOptionName, void* pOptionValue,
-								socklen_t* nOptionLen,  int   nLevel);
-	//! Listen on a server socket for incoming connections
-	virtual SOCKET listen      (Socket* pSocket, const int nBacklog);
-	//! Open the socket connection
-	virtual bool   open        (Socket* pSocket,
-								SocketAddr& rSockAddr,
-								UINT uOpenFlags);
-	//! Read raw data from socket stream
-	virtual UINT   read        (Socket* pSocket, void* pBuf, UINT uCount);
-	//! Reader worker thread processing routine.
-	virtual DWORD  readerThread(IOPARAMS* pIOP);
-	//! Set a socket option to a new value
-	virtual bool   setSockOpt  (Socket* pSocket,
-								int nOptionName, const void* pOptionValue,
-								int nOptionLen, int nLevel);
-	//! Write raw data to socket stream
-	virtual void   write       (Socket* pSocket, const void* pBuf, UINT uCount);
-	//! Writer worker thread processing routine
-	virtual DWORD  writerThread(IOPARAMS* pIOP);
+     *  to do a Listen()) from an already open connection.
+     *
+     *  NOT YET IMPLEMENTED */
+    //virtual Socket& createServer(Socket* pSocket, const WORD  wPort, const IPAddress* pHost);
+
+    //! Get the socket options currently in effect
+    virtual bool   getSockOpt  (Socket* pSocket,
+                                int  nOptionName, void* pOptionValue,
+                                socklen_t* nOptionLen,  int   nLevel);
+    //! Listen on a server socket for incoming connections
+    virtual SOCKET listen      (Socket* pSocket, const int nBacklog);
+    //! Open the socket connection
+    virtual bool   open        (Socket* pSocket,
+                                SocketAddr& rSockAddr,
+                                UINT uOpenFlags);
+    //! Read raw data from socket stream
+    virtual UINT   read        (Socket* pSocket, void* pBuf, UINT uCount);
+    //! Reader worker thread processing routine.
+    virtual DWORD  readerThread(IOPARAMS* pIOP);
+    //! Set a socket option to a new value
+    virtual bool   setSockOpt  (Socket* pSocket,
+                                int nOptionName, const void* pOptionValue,
+                                int nOptionLen, int nLevel);
+    //! Write raw data to socket stream
+    virtual void   write       (Socket* pSocket, const void* pBuf, UINT uCount);
+    //! Writer worker thread processing routine
+    virtual DWORD  writerThread(IOPARAMS* pIOP);
 
 protected:
-	//! Goes to the next specified state
-	void    changeState   (Socket* pSocket, SocketState* pState);
-	/** Sets the socket object pointer, buffer, and buffer
+    //! Goes to the next specified state
+    void    changeState   (Socket* pSocket, SocketState* pState);
+    /** Sets the socket object pointer, buffer, and buffer
      *  size for the worker thread.  This protected routine
      *  is only used internally by this class. */
-	IOPARAMS*
-		    createIOParams(Socket* pSocket, void* pBuf, UINT uCount,
-								Callback pCallback);
-	IOPARAMS*
-		    createIOParams(Socket* pSocket, const void* pBuf, UINT uCount,
-								Callback pCallback);
-
-private:
-	// Disable copy constructor and assignment operator
-	SocketState(const SocketState&);
-	SocketState& operator=(const SocketState&);
+    IOPARAMS*
+    createIOParams(Socket* pSocket, void* pBuf, UINT uCount,
+                   Callback pCallback);
+    IOPARAMS*
+    createIOParams(Socket* pSocket, const void* pBuf, UINT uCount,
+                   Callback pCallback);
 };
 
 
@@ -147,10 +140,10 @@ public:
 
 class SSClosed : public SocketState {
 public:
-	static SocketState* instance(void);
+    static SocketState* instance(void);
 
 private:
-	static SocketState* m_pInstance;
+    static SocketState* m_pInstance;
 };
 
 
@@ -218,21 +211,21 @@ private:
     SSOpenedClientTLS();
 
 public:
-	static SocketState* instance(void);
+    static SocketState* instance(void);
 
-	//! Open the socket connection
-	virtual bool   open        (Socket* pSocket,
-					            SocketAddr& rSockAddr,
-					            UINT uOpenFlags);
+    //! Open the socket connection
+    virtual bool   open        (Socket* pSocket,
+                                SocketAddr& rSockAddr,
+                                UINT uOpenFlags);
 
-	//! Get the socket options currently in effect
-	virtual bool   getSockOpt  (Socket* pSocket,
-								int  nOptionName, void* pOptionValue,
-								socklen_t* nOptionLen,  int   nLevel);
-	//! Set a socket option to a new value
-	virtual bool   setSockOpt  (Socket* pSocket,
-								int nOptionName, const void* pOptionValue,
-								int nOptionLen, int nLevel);
+    //! Get the socket options currently in effect
+    virtual bool   getSockOpt  (Socket* pSocket,
+                                int  nOptionName, void* pOptionValue,
+                                socklen_t* nOptionLen,  int   nLevel);
+    //! Set a socket option to a new value
+    virtual bool   setSockOpt  (Socket* pSocket,
+                                int nOptionName, const void* pOptionValue,
+                                int nOptionLen, int nLevel);
 
 private:
     std::string m_key;

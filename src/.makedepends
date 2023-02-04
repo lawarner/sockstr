@@ -1,36 +1,32 @@
-IPAddress.o: IPAddress.cpp ../config.h ../include/sockstr/sstypes.h \
- ../include/sockstr/IPAddress.h
 Socket.o: Socket.cpp ../config.h ../include/sockstr/sstypes.h \
  ../include/sockstr/IPC.h ../include/sockstr/Socket.h \
- ../include/sockstr/SocketAddr.h ../include/sockstr/IPAddress.h \
- ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h \
- ../include/sockstr/SocketState.h ../include/sockstr/ThreadHandler.h
+ ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \
+ ../include/sockstr/StreamBuf.h ../include/sockstr/SocketState.h \
+ ../include/sockstr/ThreadHandler.h
 SocketAddr.o: SocketAddr.cpp ../config.h ../include/sockstr/sstypes.h \
- ../include/sockstr/SocketAddr.h ../include/sockstr/IPAddress.h
+ ../include/sockstr/SocketAddr.h
 StreamBuf.o: StreamBuf.cpp ../config.h ../include/sockstr/sstypes.h \
  ../include/sockstr/StreamBuf.h ../include/sockstr/Stream.h
 SocketState.o: SocketState.cpp ../config.h ../include/sockstr/sstypes.h \
  ../include/sockstr/Socket.h ../include/sockstr/SocketAddr.h \
- ../include/sockstr/IPAddress.h ../include/sockstr/Stream.h \
- ../include/sockstr/StreamBuf.h ../include/sockstr/SocketState.h \
- ../include/sockstr/ThreadHandler.h
-SocketStateTLS.o: SocketStateTLS.cpp ../config.h \
- ../include/sockstr/sstypes.h ../include/sockstr/Socket.h \
- ../include/sockstr/SocketAddr.h ../include/sockstr/IPAddress.h \
  ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h \
  ../include/sockstr/SocketState.h ../include/sockstr/ThreadHandler.h
+SocketStateTLS.o: SocketStateTLS.cpp ../config.h \
+ ../include/sockstr/sstypes.h ../include/sockstr/Socket.h \
+ ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \
+ ../include/sockstr/StreamBuf.h ../include/sockstr/SocketState.h \
+ ../include/sockstr/ThreadHandler.h
 Stream.o: Stream.cpp ../config.h ../include/sockstr/sstypes.h \
  ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
 ThreadHandler.o: ThreadHandler.cpp ../config.h \
  ../include/sockstr/sstypes.h ../include/sockstr/ThreadHandler.h
 HttpHelpers.o: HttpHelpers.cpp ../include/sockstr/HttpHelpers.h \
  ../include/sockstr/Socket.h ../include/sockstr/sstypes.h \
- ../include/sockstr/SocketAddr.h ../include/sockstr/IPAddress.h \
- ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
+ ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \
+ ../include/sockstr/StreamBuf.h
 HttpStream.o: HttpStream.cpp ../include/sockstr/HttpHelpers.h \
  ../include/sockstr/HttpStream.h ../include/sockstr/Socket.h \
  ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
- ../include/sockstr/IPAddress.h ../include/sockstr/Stream.h \
- ../include/sockstr/StreamBuf.h
+ ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
 OAuth.o: OAuth.cpp ../include/sockstr/OAuth.h \
  ../include/sockstr/HttpHelpers.h

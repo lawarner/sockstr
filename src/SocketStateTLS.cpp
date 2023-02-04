@@ -122,20 +122,14 @@ SSOpenedClientTLS::instance(void)
 //            will be opened and the object's state will be changed to
 //            SSConnected.
 //
-// Remarks  :
-//
-bool
-SSOpenedClientTLS::open(Socket* pSocket,
-                        SocketAddr& rSockAddr,
-                        UINT  uOpenFlags)
-{
-	// Assume failure
-	changeState(pSocket, SSClosed::instance());
+bool SSOpenedClientTLS::open(Socket* pSocket, SocketAddr& rSockAddr, UINT uOpenFlags) {
+    // Assume failure
+    changeState(pSocket, SSClosed::instance());
 
-	// Save the "file" open modes in object.  Save the non-standard
-	// modeAsyncSocket separately.
-	pSocket->m_uOpenFlags = uOpenFlags & ~Socket::modeAsyncSocket;
-	pSocket->m_bAsyncMode = (uOpenFlags & Socket::modeAsyncSocket) ? true : false;
+    // Save the "file" open modes in object.  Save the non-standard
+    // modeAsyncSocket separately.
+    pSocket->m_uOpenFlags = uOpenFlags & ~Socket::modeAsyncSocket;
+    pSocket->m_bAsyncMode = (uOpenFlags & Socket::modeAsyncSocket) ? true : false;
 
     SSL_library_init();
     SSL_load_error_strings();
@@ -143,8 +137,7 @@ SSOpenedClientTLS::open(Socket* pSocket,
 
     const SSL_METHOD* meth = SSLv23_method();
     SSL_CTX* ctx = SSL_CTX_new(meth);
-    if (!SSL_CTX_use_certificate_chain_file(ctx, m_key.c_str()))
-    {
+    if (!SSL_CTX_use_certificate_chain_file(ctx, m_key.c_str())) {
         SSL_CTX_free(ctx);
         return false;
     }
@@ -154,8 +147,7 @@ SSOpenedClientTLS::open(Socket* pSocket,
     if (!SSL_CTX_use_PrivateKey_file(ctx, m_key.c_str(), SSL_FILETYPE_PEM) ||
         !(SSL_CTX_load_verify_locations(ctx,
                                         m_cafile.empty() ? 0 : m_cafile.c_str(),
-                                        m_capath.empty() ? 0 : m_capath.c_str())))
-    {
+                                        m_capath.empty() ? 0 : m_capath.c_str()))) {
         SSL_CTX_free(ctx);
         return false;
     }
@@ -167,40 +159,37 @@ SSOpenedClientTLS::open(Socket* pSocket,
 //      SSL_CTX_set_cipher_list(ctx, ciphers);
 //    }
 
-	// If broadcast (connectionless) then m_nProtocol is SOCK_DGRAM,
-	//  else it is SOCK_STREAM. DGRAM is not supported for TLS.
-	pSocket->m_hFile = ::socket(AF_INET, pSocket->m_nProtocol, 0);
-	if (pSocket->m_hFile == INVALID_SOCKET)
-    {
+    // If broadcast (connectionless) then m_nProtocol is SOCK_DGRAM,
+    //  else it is SOCK_STREAM. DGRAM is not supported for TLS.
+    pSocket->m_hFile = ::socket(AF_INET, pSocket->m_nProtocol, 0);
+    if (pSocket->m_hFile == INVALID_SOCKET) {
         SSL_CTX_free(ctx);
-		return false;
+        return false;
     }
 
-	if (pSocket->m_nProtocol == SOCK_STREAM)
-	{
-		if (::connect(pSocket->m_hFile, (sockaddr *)rSockAddr, sizeof(sockaddr))
-			== SOCKET_ERROR)
-        {
+    if (pSocket->m_nProtocol == SOCK_STREAM) {
+        sockaddr_storage sa;
+        socklen_t len;
+        if (!rSockAddr.getSockAddr(sa, len) ||
+            ::connect(pSocket->m_hFile, (const sockaddr*)&sa, len) == SOCKET_ERROR) {
             SSL_CTX_free(ctx);
             close(pSocket);
-			return false;
+            return false;
         }
 
 #ifdef TARGET_WINDOWS
-		bool bSockOpt = true;
+        bool bSockOpt = true;
 #else
-		int bSockOpt = 1;
+        int bSockOpt = 1;
 #endif
-		::setsockopt(pSocket->m_hFile, SOL_SOCKET, SO_KEEPALIVE,
-					 (char *)&bSockOpt, sizeof(bSockOpt));
-	}
-	else
-	{
-		// Cannot do UDP on a secure socket
+        ::setsockopt(pSocket->m_hFile, SOL_SOCKET, SO_KEEPALIVE,
+                     (char *)&bSockOpt, sizeof(bSockOpt));
+    } else {
+        // Cannot do UDP on a secure socket
         SSL_CTX_free(ctx);
         close(pSocket);
         return false;
-	}
+    }
 
     // SSL context has been initialized, socket is opened and connected.
     // Now, connect and SSL socket
@@ -208,21 +197,20 @@ SSOpenedClientTLS::open(Socket* pSocket,
     BIO* sbio = BIO_new_socket(pSocket->m_hFile, BIO_NOCLOSE);
     SSL_set_bio(ssl, sbio, sbio);
 
-    if (SSL_connect(ssl) <= 0)
-	{
+    if (SSL_connect(ssl) <= 0) {
         SSL_CTX_free(ctx);
         close(pSocket);
         return false;
-	}
+    }
 
     //TODO check cert here
 
-	// Open was successful -- next state
+    // Open was successful -- next state
     pSocket->m_pSslCtx = ctx;
     pSocket->m_pSsl    = ssl;
 
-	changeState(pSocket, SSConnectedTLS::instance());
-	return true;
+    changeState(pSocket, SSConnectedTLS::instance());
+    return true;
 }
 
 
@@ -234,11 +222,9 @@ static int sockstr_password_cb(char *buf, int size, int rwflag, void* userdata)
 }
 
 
-bool
-SSOpenedClientTLS::getSockOpt(Socket* pSocket,
-                              int  nOptionName, void* pOptionValue,
-                              socklen_t* nOptionLen,  int   nLevel)
-{
+bool SSOpenedClientTLS::getSockOpt(Socket* pSocket,
+                                   int  nOptionName, void* pOptionValue,
+                                   socklen_t* nOptionLen,  int nLevel) {
     //TODO decide if I want to implement returning key, keyfile or password
     //     due to certain security issues.
 
@@ -246,58 +232,48 @@ SSOpenedClientTLS::getSockOpt(Socket* pSocket,
                                    nOptionLen,nLevel);
 }
 
-bool
-SSOpenedClientTLS::setSockOpt(Socket* pSocket,
-                              int nOptionName, const void* pOptionValue,
-                              int nOptionLen, int nLevel)
-{
-    if (nLevel == SOL_SOCKSTR)
-    {
+bool SSOpenedClientTLS::setSockOpt(Socket* pSocket,
+                                   int nOptionName, const void* pOptionValue,
+                                   int nOptionLen, int nLevel) {
+    if (nLevel == SOL_SOCKSTR) {
         bool ret = true;
-        switch (nOptionName)
-        {
-        case SO_SOCKSTR_SSL_KEY:
-            m_key.assign(static_cast<const char*>(pOptionValue), nOptionLen);
-            break;
-        case SO_SOCKSTR_SSL_KEYFILE:
-            m_key.assign(static_cast<const char*>(pOptionValue), nOptionLen);
-            break;
-        case SO_SOCKSTR_SSL_PASSWORD:
-            m_password.assign(static_cast<const char*>(pOptionValue), nOptionLen);
-            break;
-        case SO_SOCKSTR_SSL_CAFILE:
-            m_cafile.assign(static_cast<const char*>(pOptionValue), nOptionLen);
-            break;
-        case SO_SOCKSTR_SSL_CAPATH:
-            m_capath.assign(static_cast<const char*>(pOptionValue), nOptionLen);
-            break;
-        default:
-            // Error
-            ret = false;
+        switch (nOptionName) {
+            case SO_SOCKSTR_SSL_KEY:
+                m_key.assign(static_cast<const char*>(pOptionValue), nOptionLen);
+                break;
+            case SO_SOCKSTR_SSL_KEYFILE:
+                m_key.assign(static_cast<const char*>(pOptionValue), nOptionLen);
+                break;
+            case SO_SOCKSTR_SSL_PASSWORD:
+                m_password.assign(static_cast<const char*>(pOptionValue), nOptionLen);
+                break;
+            case SO_SOCKSTR_SSL_CAFILE:
+                m_cafile.assign(static_cast<const char*>(pOptionValue), nOptionLen);
+                break;
+            case SO_SOCKSTR_SSL_CAPATH:
+                m_capath.assign(static_cast<const char*>(pOptionValue), nOptionLen);
+                break;
+            default:
+                // Error
+                ret = false;
         }
         return ret;
     }
-
     return SocketState::setSockOpt(pSocket, nOptionName, pOptionValue,
                                    nOptionLen, nLevel);
 }
 
 
 //  Returns the one (and only) instance of this object
-SocketState*
-SSConnectedTLS::instance(void)
-{
-	if (m_pInstance == 0)
-	{
-		m_pInstance = new SSConnectedTLS;
-	}
-	return m_pInstance;
+SocketState* SSConnectedTLS::instance() {
+    if (m_pInstance == nullptr) {
+        m_pInstance = new SSConnectedTLS;
+    }
+    return m_pInstance;
 }
 
 //  Closes the socket connection
-void
-SSConnectedTLS::close(Socket* pSocket)
-{
+void SSConnectedTLS::close(Socket* pSocket) {
     // close down the SSL
     SSL_CTX_free(pSocket->m_pSslCtx);
 
@@ -330,82 +306,70 @@ SSConnectedTLS::close(Socket* pSocket)
 //            Socket object while it has active worker threads.  It is
 //            best to always call Close() on the socket before deleting it.
 //
-UINT
-SSConnectedTLS::read(Socket* pSocket, void* pBuf, UINT uCount)
-{
-	int iResult = 0;
+UINT SSConnectedTLS::read(Socket* pSocket, void* pBuf, UINT uCount) {
+    int iResult = 0;
 
-	// Error: this socket is write-only
-	VERIFY(!(pSocket->m_uOpenFlags & Socket::modeWrite));
-	// Error: trying to read 0 bytes
-	VERIFY(uCount != 0);
+    // Error: this socket is write-only
+    VERIFY(!(pSocket->m_uOpenFlags & Socket::modeWrite));
+    // Error: trying to read 0 bytes
+    VERIFY(uCount != 0);
 
-	if (! pSocket->m_bAsyncMode)
-	{
-		// Synchronous mode -- do a blocking read on socket
-		iResult = readSocket(pSocket, pBuf, uCount);
-		if (iResult == 0 || iResult == SOCKET_ERROR)
-        {
+    if (! pSocket->m_bAsyncMode) {
+        // Synchronous mode -- do a blocking read on socket
+        iResult = readSocket(pSocket, pBuf, uCount);
+        if (iResult == 0 || iResult == SOCKET_ERROR) {
             pSocket->m_Status = SC_NODATA;
             pSocket->setstate(std::ios::eofbit);
-			return 0;
-        }
-        else
-            pSocket->clear(pSocket->rdstate() & ~std::ios::eofbit);	}
-	else
-	{
-		// Asynchronous mode -- if data is available on socket then read
-		// it.  Otherwise, set up a reader thread to wait for data.
-		DWORD dwBytes;
-	    if (IOCTLSOCK(pSocket->m_hFile, FIONREAD, &dwBytes) == SOCKET_ERROR)
-        {
+            return 0;
+        } else {
+            pSocket->clear(pSocket->rdstate() & ~std::ios::eofbit);
+	}
+    } else {
+        // Asynchronous mode -- if data is available on socket then read
+        // it.  Otherwise, set up a reader thread to wait for data.
+        DWORD dwBytes;
+        if (IOCTLSOCK(pSocket->m_hFile, FIONREAD, &dwBytes) == SOCKET_ERROR) {
 #ifdef TARGET_WINDOWS
-                WSAGetLastError();
+            WSAGetLastError();
 #endif
-                // WSAEINPROGRESS means a blocking call is still active.  Maybe
-                // in the future take action on this status?
+            // WSAEINPROGRESS means a blocking call is still active.  Maybe
+            // in the future take action on this status?
+            pSocket->m_Status = SC_NODATA;
+            pSocket->setstate(std::ios::eofbit);
+            return 0;
+        }
+
+        // avoid blocking the main thread
+        if (dwBytes /*&& ! WSAIsBlocking()*/) {
+            // This much (dwBytes) can be read without blocking
+            iResult = readSocket(pSocket, pBuf, std::min((UINT)dwBytes, uCount));
+            if (iResult == 0 || iResult == SOCKET_ERROR) {
+                pSocket->m_Status = SC_NODATA;
+                pSocket->setstate(iResult == SOCKET_ERROR 
+                                  ? std::ios::badbit : std::ios::eofbit);
+                return 0;
+            }
+        } else {
+            if (pSocket->m_pDefCallback == nullptr) {
                 pSocket->m_Status = SC_NODATA;
                 pSocket->setstate(std::ios::eofbit);
                 return 0;
-        }
-
-		// avoid blocking the main thread
-		if (dwBytes /*&& ! WSAIsBlocking()*/)	// This much (dwBytes) can be
-		{										// read without blocking
-			iResult = readSocket(pSocket, pBuf, std::min((UINT)dwBytes, uCount));
-			if (iResult == 0 || iResult == SOCKET_ERROR)
-            {
-                pSocket->m_Status = SC_NODATA;
-                pSocket->setstate(iResult == SOCKET_ERROR 
-                                   ? std::ios::badbit : std::ios::eofbit);
-				return 0;
             }
-		}
-		else
-		{
-			if (pSocket->m_pDefCallback == 0)
-			{
-                pSocket->m_Status = SC_NODATA;
-                pSocket->setstate(std::ios::eofbit);
-				return 0;
-			}
 
-            ReadThreadHandler* readThreadHandler
-                = new ReadThreadHandler(createIOParams(pSocket, pBuf, uCount,
-                                                       pSocket->m_pDefCallback));
+            auto readThreadHandler
+                    = new ReadThreadHandler(createIOParams(pSocket, pBuf, uCount,
+                                                           pSocket->m_pDefCallback));
 
             bool th = ThreadManager::create<IOPARAMS*>(readThreadHandler);
             VERIFY(th);
-		}
-	}
+        }
+    }
 
-    if (iResult >= 0)
-    {
+    if (iResult >= 0) {
         pSocket->m_Status = SC_OK;
         pSocket->clear();
     }
-
-	return iResult;
+    return iResult;
 }
 
 
@@ -427,14 +391,12 @@ SSConnectedTLS::read(Socket* pSocket, void* pBuf, UINT uCount)
 //
 // Remarks  : This function uses the Winsock function ::recv to read data from
 //            a TCP/IP socket.  It does not support UDP.
-int
-SSConnectedTLS::readSocket(Socket* pSocket, void* pBuf, UINT uCount)
-{
-	int iResult = 0;
+int SSConnectedTLS::readSocket(Socket* pSocket, void* pBuf, UINT uCount) {
+    int iResult = 0;
 
     iResult = SSL_read(pSocket->m_pSsl, pBuf, uCount);
 
-	return iResult;
+    return iResult;
 }
 
 
@@ -458,18 +420,16 @@ SSConnectedTLS::readSocket(Socket* pSocket, void* pBuf, UINT uCount)
 //            before quitting.  That is why the decision was made to NOT call
 //            the callback in these situations.
 //
-DWORD
-SSConnectedTLS::readerThread(IOPARAMS* pIOP)
-{
-	int iResult;
+DWORD SSConnectedTLS::readerThread(IOPARAMS* pIOP) {
+    int iResult;
 
-	iResult = readSocket(pIOP->m_pSocket, pIOP->m_pBuf, pIOP->m_uCount);
-	if (iResult == 0 || iResult == SOCKET_ERROR)
-		return 1;			// Thread exit code 1 == failure
+    iResult = readSocket(pIOP->m_pSocket, pIOP->m_pBuf, pIOP->m_uCount);
+    if (iResult == 0 || iResult == SOCKET_ERROR)
+        return 1;			// Thread exit code 1 == failure
 
-	pIOP->m_pCallback(iResult, pIOP->m_pBuf);
+    pIOP->m_pCallback(iResult, pIOP->m_pBuf);
 
-	return 0;		// Return success
+    return 0;		// Return success
 }
 
 
@@ -501,35 +461,29 @@ SSConnectedTLS::readerThread(IOPARAMS* pIOP)
 //            Socket object while it has active worker threads.  It is
 //            best to always call Close() on the socket before deleting it.
 //
-void
-SSConnectedTLS::write(Socket* pSocket, const void* pBuf, UINT uCount)
-{
-	// Error: this socket is read-only
-	VERIFY(pSocket->m_uOpenFlags & (Socket::modeReadWrite | Socket::modeWrite));
+void SSConnectedTLS::write(Socket* pSocket, const void* pBuf, UINT uCount) {
+    // Error: this socket is read-only
+    VERIFY(pSocket->m_uOpenFlags & (Socket::modeReadWrite | Socket::modeWrite));
 
-	if (! (pSocket->m_bAsyncMode && pSocket->m_pDefCallback != 0))
-	{
-		int iResult;
-		// Synchronous mode -- do a blocking write on socket
+    if (! (pSocket->m_bAsyncMode && pSocket->m_pDefCallback != nullptr)) {
+        int iResult;
+        // Synchronous mode -- do a blocking write on socket
         iResult = SSL_write(pSocket->m_pSsl, (const char *)pBuf, uCount);
 
-		if (iResult == SOCKET_ERROR)
-        {
-			pSocket->m_Status = SC_FAILED;
+        if (iResult == SOCKET_ERROR) {
+            pSocket->m_Status = SC_FAILED;
             pSocket->setstate(std::ios::failbit);
-        }
-        else
+        } else {
             pSocket->clear(pSocket->rdstate() & ~std::ios::failbit);
-	}
-	else
-	{
-        WriteThreadHandler* writeThreadHandler
-            = new WriteThreadHandler(createIOParams(pSocket, pBuf, uCount,
-                                                    pSocket->m_pDefCallback));
+        }
+    } else {
+        auto writeThreadHandler
+                = new WriteThreadHandler(createIOParams(pSocket, pBuf, uCount,
+                                                        pSocket->m_pDefCallback));
 
         bool th = ThreadManager::create<IOPARAMS*>(writeThreadHandler);
         VERIFY(th);
-	}
+    }
 }
 
 
@@ -553,22 +507,17 @@ SSConnectedTLS::write(Socket* pSocket, const void* pBuf, UINT uCount)
 //            before quitting.  That is why the decision was made to NOT call
 //            the callback in these situations.
 //
-DWORD
-SSConnectedTLS::writerThread(IOPARAMS* pIOP)
-{
-	int iResult;
+DWORD SSConnectedTLS::writerThread(IOPARAMS* pIOP) {
+    int iResult;
     iResult = SSL_write(pIOP->m_pSocket->m_pSsl, (const char *)pIOP->m_pBuf,
                         pIOP->m_uCount);
 
-	if (iResult <= 0)
-		return 1;			// Thread exit code 1 == failure
+    if (iResult <= 0) {
+        return 1;			// Thread exit code 1 == failure
+    }
+    pIOP->m_pCallback(iResult, pIOP->m_pBuf);
 
-	pIOP->m_pCallback(iResult, pIOP->m_pBuf);
-
-	return 0;
+    return 0;
 }
 
 #endif // USE_OPENSSL
-//
-// END OF FILE
-//

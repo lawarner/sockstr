@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012 - 2021
+   Copyright (C) 2012 - 2022
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -22,70 +22,102 @@
 
 #include <sockstr/sstypes.h>
 
+#include <netinet/in.h>
+#include <string>
+#include <variant>
+
 namespace sockstr {
 /**
  * @class IPAddress
+ *
+ * The IPAddress class provides mapping between IP addresses and names. The
+ * various names, TCP/IP 'dot addresses' or IPv6 addresses are resolved to a
+ * sockaddr.
+ *
+ * This class is consistently used by the rest of the IPC library whenever a
+ * TCP/IP address is needed.  It is doubtful if an application would ever
+ * need to directly use this class.
  */
 
-//
-// MACRO DEFINITIONS
-//
 #ifndef DllExport
 #define DllExport
 #endif
 
-/**
- *  The IPAddress class provides mapping between IP addresses and names.
- *  The constructors for this class enable a variety of IP
- *	address types to be created.
- *  The various names and TCP/IP 'dot addresses' are resolved to
- *  a 4 byte network address in internal format.
- */
-class DllExport IPAddress {
+class IPAddress {
 public:
-    //! Constructs an IPAddress object
+    //! Type of special addresses
+    enum SpecialIP {
+        AddrNone, AddrAny
+    };
+    //! Type for holding any IP address
+    using AddrType = std::variant<std::monostate, sockaddr_in, sockaddr_in6, SpecialIP>;
+
+    //! Constructs an IPAddress object with no address
     IPAddress();
     /**
      * Constructs an IPAddress object.
      *
      * @param  lpszName Host name or dot address
      */
-    IPAddress(const char* lpszName);
+    IPAddress(const std::string& host);
     /**
      * Copy constructor for IPAddress object.
      *
-     * @param  rInAddr Reference to existing IP address to copy
+     * @param  other Reference to existing IP address to copy
      */
-    IPAddress(const IPAddress& rInAddr);
+    IPAddress(const IPAddress& other);
 
     /** Destructs an IPAddress object. */
     ~IPAddress();
 
     /**
-     * Returns the internal format of network address
+     * Returns the resolved network address (if resolved) or one of the special
+     * IP statuses AddrNone or AddrAny.
      */
-    UINT netAddress() const;
+    AddrType netAddress() const;
 
     /**
-     * Returns a static text representation of address
+     * Resolve a given hostname or IP address.
      */
-    operator char *();
+    bool resolve(const std::string& host);
+
+    /**
+     * Returns a static text representation of the resolved host's address.
+     * This can be either a TCP/IP host name (for example "host.acme.com")
+     * or as a IPv4 dot notation (for example "129.133.133.1") or a IPv6
+     * address such as ::1.
+     *
+     * Note this routine first attempts to resolve the IP address as a host
+     * name.  If this fails, then a string containing the dot notation or
+     * colonized IPv6 of the address is returned.  In any case, the result
+     * is 'cached' inside this class.
+     */
+    operator const std::string&();
+    const std::string& operator()();
 
 private:
+    /** Perform common initialization for IPAddress object.
+     *
+     *  On Windows platform, a count of instances is maintained. If
+     *  this is the first instance, then the Windows sockets library is
+     *  initialized.  This routine also checks that the version of 
+     *  Windows sockets library is compatible with the IPC library.
+     */
     void initialize();
 
     // Disable assignment operator
-    IPAddress& operator=(const IPAddress&);
+    IPAddress& operator=(const IPAddress&) = delete;
 
 private:
-    // Network address in internal format (network byte order).
-    UINT m_dwAddress;
-    //struct in_addr m_inAddress;
+    //! Storage for resolved address or special (none, any)
+    AddrType address_;
         
-    // Peer host name cache
-    char m_szHostName[108];
+    //! Peer host name cache
+    std::string hostName_;
+
 #ifdef WIN32
-    static unsigned int m_uInstances;
+    //! Used to initialize winsock on (old) Windows
+    static unsigned int numInstances_;
 #endif
 };
 

@@ -49,7 +49,7 @@ void* ServerThreadHandler::handle(Params* params) {
     cout << "Server connecting to port " << params->port << endl;
 
     Socket sock;
-    SocketAddr saddr(0, params->port);
+    SocketAddr saddr(params->port);
     if (!sock.open(saddr, Socket::modeReadWrite))
     {
         cout << "Error opening server socket: " << errno << endl;

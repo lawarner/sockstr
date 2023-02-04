@@ -19,10 +19,9 @@
    02111-1307 USA.  */
 
 #pragma once
-//
-// INCLUDE FILES
-//
+
 #include <sockstr/sstypes.h>
+
 #ifdef TARGET_WINDOWS
 #include <WinSock2.h>
 #endif
@@ -53,8 +52,6 @@ namespace sockstr {
 //     m_PeerName    Saved socket address of our peer (other end of connection)
 //     m_uOpenFlags  I/O modes of how the socket is opened
 //     m_bAsyncMode  Indicator if I/O is asynchronously performed
-//
-//   ----------------------------------------------------------------
 //
 
 //
@@ -91,8 +88,7 @@ class WriteThreadHandler;
 /**
  *  A Stream using TCP/IP or UDP sockets as transport.
  */
-class DllExport Socket : public Stream
-{
+class DllExport Socket : public Stream {
 public:
     //!  Constructs a Socket object.
     Socket();
@@ -127,10 +123,6 @@ public:
     //!  Close the socket (state-dependent).
     virtual void close();
 
-    //!  Create a new server socket from current connection
-    //!  @param wPort Port number
-    //!  @param pHost IPAddress of host
-    Socket& createServer(const WORD wPort, const IPAddress* pHost = nullptr);
     //!   Query socket options
     bool getSockOpt(int nOptionName, void* pOptionValue,
                     socklen_t* pnOptionLen, int nLevel = SOL_SOCKET);
@@ -181,19 +173,19 @@ public:
     static constexpr int modeReadWrite    = 16; //!< Socket can be read from and written to
 
 protected:
-    IPAddress   m_IpAddr;
-    sockaddr_in m_PeerAddr;
-    UINT		m_uOpenFlags;
-    bool        m_bAsyncMode;
-    UINT		m_nProtocol;
+    SocketAddr::AddrType m_PeerAddr;
+    UINT m_uOpenFlags;
+    bool m_bAsyncMode;
+    UINT m_nProtocol;
+    unsigned short int m_nFamily;
 #if USE_OPENSSL
-    SSL*        m_pSsl;
-    SSL_CTX*    m_pSslCtx;
+    SSL*     m_pSsl;
+    SSL_CTX* m_pSslCtx;
 #endif
 
 private:
     // Counter for IPC messages (generates magic cookies)
-    static DWORD  m_dwSequence;
+    static DWORD m_dwSequence;
 
 private:
     /// Do initializations that are common to all constructors.

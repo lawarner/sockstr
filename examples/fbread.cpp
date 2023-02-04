@@ -30,7 +30,6 @@
 #include <cstdlib>
 #include <cstring>
 
-#include <sockstr/IPAddress.h>
 #include <sockstr/Socket.h>
 
 using namespace sockstr;

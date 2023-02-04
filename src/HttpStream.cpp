@@ -300,8 +300,7 @@ UINT HttpServerStream::response(const char* buffer, UINT uCount, const char* con
 
 UINT
 HttpServerStream::request(char* buffer, UINT uCount,
-                          HttpServerStream::HttpFunction& funct, std::string& url)
-{
+                          HttpServerStream::HttpFunction& funct, std::string& url) {
     UINT ret = 0;
     funct = INVALID;
     if (buffer == 0 || uCount < 17) return ret;
@@ -310,9 +309,10 @@ HttpServerStream::request(char* buffer, UINT uCount,
 
     /* Find first line and parse for GET /url HTTP/1.1 */
     const char* nl = buffer;
-    while ((nl - buffer) < uCount && *nl)
-    {
-        if (*nl == '\n' || *nl == '\r') break;
+    while (static_cast<UINT>(nl - buffer) < uCount && *nl) {
+        if (*nl == '\n' || *nl == '\r') {
+            break;
+        }
         nl++;
     }
     int sz1 = nl - buffer;

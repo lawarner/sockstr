@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012
+   Copyright (C) 2012 - 2022
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -20,25 +20,6 @@
 
 #pragma once
 //
-// File       : SocketAddr.h
-//
-// Class      : SocketAddr
-//
-// Hierarchy  : sockaddr_in
-//               |
-//               +-- SocketAddr
-//
-// Description: This class is used to form a network address that can
-//              be used for sockets.
-//
-// Members    :
-//   Data
-//
-//   ----------------------------------------------------------------
-//   Construction
-//
-//     SocketAddr Constructs a SocketAddr object
-//
 //   ----------------------------------------------------------------
 //   Operations
 //
@@ -54,9 +35,6 @@
 // History    : A. Warner, 1996-05-01, Creation
 //
 
-//
-// INCLUDE FILES
-//
 #ifdef WINDOWS
 #include <WinSock2.h>
 #include <WS2tcpip.h>
@@ -64,8 +42,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #endif
-
-#include <sockstr/IPAddress.h>
+#include <string>
+#include <variant>
 
 namespace sockstr {
 
@@ -77,41 +55,71 @@ namespace sockstr {
 #endif
 
 //
-// TYPE DEFINITIONS
-//
-
-//
 // FORWARD CLASS DECLARATIONS
 //
 class Socket;
 
-//
-// CLASS DECLARATION
-class DllExport SocketAddr : public sockaddr_in {
+/**
+ *  This class is used to form a network address that can
+ *  be used for sockets.
+ */
+class DllExport SocketAddr {
 public:
-	SocketAddr(const IPAddress Host, WORD wPort, const char * pProtocol = 0);
-	SocketAddr(const char * lpszHost, WORD wPort, const char * pProtocol = 0);
-	SocketAddr(const char * lpszHost, const char * lpszService, const char * pProtocol = 0);
+    //! Type of special addresses
+    enum SpecialIP {
+        AddrNone, AddrAny
+    };
 
-	~SocketAddr(void);
+    //! Type for holding any IP address
+    using AddrType = std::variant<std::monostate, sockaddr_in, sockaddr_in6, SpecialIP>;
 
-	UINT netAddress(void) const;
-	WORD portNumber(void) const;
+    /** Construct a SocketAddr object */
+    SocketAddr(WORD port, const std::string& protocol = "tcp");
+    SocketAddr(const std::string& host, WORD port, const std::string& protocol = "tcp");
+    SocketAddr(const std::string& host, const std::string& service, const std::string& protocol = "tcp");
 
-	operator sockaddr* (void) const;
-	operator char*     (void) const;
+    ~SocketAddr();
+
+    /** Get the sockaddr that is represented by this instance. */
+    bool getSockAddr(sockaddr_storage& sa, socklen_t& len);
+    /** Return the network address in internal format */
+    AddrType netAddress() const;
+    /** Return the 16-bit port number for the socket address */
+    WORD portNumber() const;
+    /**
+     * Resolve a given hostname or IP address.
+     */
+    bool resolve(const std::string& host);
+    void setPortNumber(WORD port);
+
+    operator const AddrType () const;
+    operator const std::string&();
+    const std::string& operator()();
 
 private:
-	// Disable copy constructor and assignment operator
-	SocketAddr(const SocketAddr&);
-	SocketAddr& operator=(const SocketAddr&);
+    // Disable copy constructor and assignment operator
+    SocketAddr(const SocketAddr&) = delete;
+    SocketAddr& operator=(const SocketAddr&) = delete;
 
-	friend class Socket;
-	SocketAddr(void);			// Only called by friend Socket
+    friend class Socket;
+    SocketAddr();			// Only called by friend Socket
 
 private:
-	IPAddress* m_pPeerAddr;		// Peer host name cache
-	const char*    m_pProtocol;		// IP protocol (default is TCP)
+    //! IP protocol (default is TCP)
+    const std::string protocol_;
+
+    //! Storage for resolved address or special (none, any)
+    AddrType address_;
+        
+    //! Peer host name cache
+    std::string hostName_;
+
+    WORD portNumber_;
+
+#ifdef WIN32
+    //! Used to initialize winsock on (old) Windows
+    static unsigned int numInstances_;
+#endif
 };
 
 }  // namespace sockstr

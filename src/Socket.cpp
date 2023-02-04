@@ -403,26 +403,6 @@ Socket::close()
 }
 
 
-// Abstract : Executes the state-dependent create server
-//
-// Returns  : Socket&
-// Params   :
-//   wPort                     TCP/IP port number of new server socket
-//   pHost                     Optional IP address of new server socket
-//
-// Pre      :
-// Post     : If this function completes successfully, it will return
-//            a reference to a newly created server socket object.
-//
-// Remarks  :
-//
-Socket&
-Socket::createServer(const WORD wPort, const IPAddress* pHost)
-{
-	return m_pState->createServer(this, wPort, pHost);
-}
-
-
 // Abstract : Retrieves a socket option (state-dependent)
 //
 // Returns  : bool (true on success)
@@ -612,62 +592,77 @@ Socket::open(const char* lpszFileName, UINT uOpenFlags)
 }
 
 
-bool
-Socket::open(SocketAddr& rSockAddr, UINT uOpenFlags)
-{
-	if (rSockAddr.m_pProtocol != 0 && strcasecmp(rSockAddr.m_pProtocol, "udp") == 0)
-		m_nProtocol = SOCK_DGRAM;
-	else
-		m_nProtocol = SOCK_STREAM;
-
-	if (rSockAddr.netAddress() == INADDR_NONE && m_nProtocol == SOCK_STREAM)
-	{
-		m_Status = SC_FAILED;
-		return false;
-	}
-	if (rSockAddr.netAddress() == INADDR_ANY || (uOpenFlags & modeCreate))
-		m_pState = SSOpenedServer::instance();
-#if USE_OPENSSL
-    else if (rSockAddr.portNumber() == 443)
-    {
-        std::cout << "SSL connection" << std::endl;
-        m_pState = SSOpenedClientTLS::instance();
+bool Socket::open(SocketAddr& rSockAddr, UINT uOpenFlags) {
+    if (!rSockAddr.protocol_.empty() && strcasecmp(rSockAddr.protocol_.c_str(), "udp") == 0) {
+        m_nProtocol = SOCK_DGRAM;
+    } else {
+        m_nProtocol = SOCK_STREAM;
     }
+    auto na = rSockAddr.netAddress();
+    if (std::holds_alternative<SocketAddr::SpecialIP>(na)) {
+        auto sip = std::get<SocketAddr::SpecialIP>(na);
+        if (m_nProtocol == SOCK_STREAM && sip == SocketAddr::AddrNone) {
+            m_Status = SC_FAILED;
+            return false;
+        }
+        if ((uOpenFlags & modeCreate) || sip == SocketAddr::AddrAny) {
+            m_pState = SSOpenedServer::instance();
+        }
+#if USE_OPENSSL
+    } else if (rSockAddr.portNumber() == 443) {
+        m_pState = SSOpenedClientTLS::instance();
 #endif
-	else
-		m_pState = SSOpenedClient::instance();
+    } else {
+        m_pState = SSOpenedClient::instance();
+    }
+    if (std::holds_alternative<sockaddr_in>(na)) {
+        m_nFamily = AF_INET;
+    } else {
+        m_nFamily = AF_INET6;
+    }
+    if (! m_pState->open(this, rSockAddr, uOpenFlags)) {
+        m_Status = SC_FAILED;
+        return false;
+    }
 
-	if (! m_pState->open(this, rSockAddr, uOpenFlags))
-	{
-		m_Status = SC_FAILED;
-		return false;
-	}
+    // Initialize member in case getsockname fails
+    m_PeerAddr = na;
 
-	// Initialize member in case getsockname fails
-	m_PeerAddr.sin_family = rSockAddr.sin_family;
-	m_PeerAddr.sin_port = rSockAddr.sin_port;
-	m_PeerAddr.sin_addr.s_addr = rSockAddr.sin_addr.s_addr;
+    // Get the name of our peer.  For a server socket this will
+    // probably be a broadcast address and not really a peer.  But
+    // go ahead and get it in case the LPCSTR operator is called.
+    if (std::holds_alternative<sockaddr_in>(na)) {
+        socklen_t iSizeAddr = sizeof(sockaddr_in);
+        if (::getsockname(m_hFile, (sockaddr *) &std::get<sockaddr_in>(m_PeerAddr), &iSizeAddr) == 0) {
+            rSockAddr.setPortNumber(std::get<sockaddr_in>(m_PeerAddr).sin_port);
+        }
+    } else if (std::holds_alternative<sockaddr_in6>(na)) {
+        socklen_t iSizeAddr = sizeof(sockaddr_in6);
+        m_nFamily = AF_INET6;
+        if (::getsockname(m_hFile, (sockaddr *) &std::get<sockaddr_in6>(m_PeerAddr), &iSizeAddr) == 0) {
+            rSockAddr.setPortNumber(std::get<sockaddr_in6>(m_PeerAddr).sin6_port);
+        }
+    }
 
-	// Get the name of our peer.  For a server socket this will
-	// probably be a broadcast address and not really a peer.  But
-	// go ahead and get it in case the LPCSTR operator is called.
-	socklen_t iSizeAddr = sizeof(sockaddr);
-	::getsockname(m_hFile, (sockaddr *) &m_PeerAddr, &iSizeAddr);
+    if (m_nProtocol == SOCK_DGRAM) {
+        assert(false);  // TODO implement multicast for IPv4 and IPv6
+#if 0
+        if (std::holds_alternative<sockaddr_in>(na) || std::holds_alternative<sockaddr_in6>(na)) {
+            m_PeerAddr = na;
+            if (std::holds_alternative<sockaddr_in>(na)) {
+                std::get<sockaddr_in>(m_PeerAddr).sin_addr.s_addr = INADDR_BROADCAST;
+            } else {
+                std::get<sockaddr_in6>(m_PeerAddr).sin_addr.s_addr = INADDR_BROADCAST;
+        m_PeerAddr.sin_port = rSockAddr.sin_port;
+        m_PeerAddr.sin_addr.s_addr = INADDR_BROADCAST;
+    } else {
+        rSockAddr.setPortNumber(m_PeerAddr.sin_port);
+#endif
+    }
 
-	if (m_nProtocol == SOCK_DGRAM)
-	{
-		m_PeerAddr.sin_port = rSockAddr.sin_port;
-		m_PeerAddr.sin_addr.s_addr = INADDR_BROADCAST;
-	}
-	else
-	{
-		rSockAddr.sin_port = m_PeerAddr.sin_port;
-	}
-
-	m_Status = SC_OK;
-	return true;
+    m_Status = SC_OK;
+    return true;
 }
-
 
 // Abstract : Executes the state-dependent read
 //
@@ -686,10 +681,10 @@ Socket::open(SocketAddr& rSockAddr, UINT uOpenFlags)
 //
 UINT
 Socket::read(void* pBuf, UINT uCount) {
-	if (uCount == 0) {
-		return 0;		// In that case, we are done quickly.
+    if (uCount == 0) {
+        return 0;		// In that case, we are done quickly.
     }
-	return m_pState->read(this, pBuf, uCount);
+    return m_pState->read(this, pBuf, uCount);
 }
 
 UINT
@@ -702,6 +697,9 @@ Socket::read(std::string& str, int delimiter) {
     while ((sz = read(buf, 1)) == 1) {
         ++ret;
         str.push_back(buf[0]);
+        if (buf[0] == delimiter) {
+            break;
+        }
     }
     return ret;
 }
@@ -802,22 +800,40 @@ Socket::write(const std::string& str) {
 //
 Socket::operator const char* () const {
     static char szHostName[NI_MAXHOST + 12];
-    UINT dwAddress = m_PeerAddr.sin_addr.s_addr;
+    //UINT dwAddress = m_PeerAddr.sin_addr.s_addr;
     char tmpName[NI_MAXHOST + 1];
 //	struct hostent* pHostEntry;
 //	pHostEntry = ::gethostbyaddr((char *)&dwAddress, sizeof(dwAddress), AF_INET);
 //	if (pHostEntry != 0)
-    struct addrinfo* pAddrInfo = 0;
-    if (::getnameinfo((const sockaddr *) &m_PeerAddr, sizeof(m_PeerAddr),
-                      tmpName, sizeof(tmpName), 0, 0, 0) == 0) {
-        sprintf(szHostName, "%s:%hu", tmpName, ntohs(m_PeerAddr.sin_port));
+    struct addrinfo* pAddrInfo = nullptr;
+    const sockaddr* sa = nullptr;
+    socklen_t slen;
+    WORD portNum = 0;
+    if (std::holds_alternative<sockaddr_in>(m_PeerAddr)) {
+        auto sa4 = &std::get<sockaddr_in>(m_PeerAddr);
+        slen = sizeof(sockaddr_in);
+        portNum = sa4->sin_port;
+        sa = (const sockaddr*)sa4;
+    } else if (std::holds_alternative<sockaddr_in6>(m_PeerAddr)) {
+        auto sa6 = &std::get<sockaddr_in6>(m_PeerAddr);
+        slen = sizeof(sockaddr_in6);
+        portNum = sa6->sin6_port;
+        sa = (const sockaddr*)sa6;
+    }
+    if (sa != nullptr && ::getnameinfo(sa, slen,
+                                       tmpName, sizeof(tmpName), 0, 0, 0) == 0) {
+        sprintf(szHostName, "%s:%hu", tmpName, ntohs(portNum));
         ::freeaddrinfo(pAddrInfo);
     } else {
         // Reverse DNS failed, use TCP/IP dot notation
+#if 1
+        sprintf(szHostName, "xx,xx.xx.xx:%hu", ntohs(portNum));
+#else
         sprintf(szHostName,"%0d.%0d.%0d.%0d:%hu",
                 dwAddress & 0xff, (dwAddress >> 8) & 0xff,
                 (dwAddress >> 16) & 0xff, (dwAddress >> 24) & 0xff,
-                ntohs(m_PeerAddr.sin_port));
+                ntohs(portNum));
+#endif
     }
     return szHostName;
 }

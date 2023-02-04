@@ -33,7 +33,6 @@
 #include <cstring>
 #include <unistd.h>
 
-#include <sockstr/IPAddress.h>
 #include <sockstr/Socket.h>
 using namespace sockstr;
 

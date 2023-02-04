@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012
+   Copyright (C) 2012 - 2023
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -19,73 +19,39 @@
    02111-1307 USA.  */
 
 
-//
-// File       : SocketAddr.cpp
-//
-// Class      : SocketAddr
-//
-// Description: This class is used as a wrapper around the standard Windows
+// Description: This class is used as a wrapper around the
 //              sockets structure, sockaddr_in.  It provides an easy and
 //              consist manner of constructing IP addresses and port number
-//              pairs that are needed in subsequent Windows sockets calls.
+//              pairs that are needed in subsequent socket calls.
 //              Various forms of construction provide a large degree of
 //              flexibility (see constructors below).
 //
-// Decisions  : This class is closely related to the IPAddress class.
-//              The primary difference being that this class combines the
-//              TCP/IP name with a port number or service name.
+// Decisions  : This class holds a TCP/IP name  and an optional port number or service name.
 //              This class is sometimes useful for an application program
 //              to use, for example when a Socket is constructed:
 //                      Socket(SocketAddr("host", 1701), ...);
 //
-//
 // History    : A. Warner, 1996-05-01, Creation
 //
 
-//
-// INCLUDE FILES
-//
 #include "config.h"
+#include <sockstr/SocketAddr.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <unistd.h>
 
 #ifdef TARGET_LINUX
 #include <netdb.h>
 #endif
 
-#include <sockstr/SocketAddr.h>
-
 using namespace sockstr;
 
-//
-// MACRO DEFINITIONS
-//
-
-//
-// TYPE DEFINITIONS
-//
-
-//
-// FORWARD FUNCTION DECLARATIONS
-//
-
-//
-// DATA DEFINITIONS
-//
-
-//
-// CLASS MEMBER FUNCTION DEFINITIONS
-//
-
-// Abstract : Constructs a SocketAddr object
-//
-// Returns  : -
 // Params   :
 //   Host                      An IP address object
 //   wPort                     TCP/IP port number
 //   lpszHost                  Host name of peer system (for client sockets)
-//   lpszService               Service name for TCP/IP port
+//   service               Service name for TCP/IP port
 //
 // Pre      :
 // Post     : A SocketAddr object is made and depending on which
@@ -110,143 +76,158 @@ using namespace sockstr;
 // Remarks  : The default constructor is private and is used only by friend
 //            class Socket.
 //
-SocketAddr::SocketAddr(void)
-:	m_pProtocol (0)
-{
-	m_pPeerAddr     = new IPAddress;
-	sin_family      = AF_INET;
-	sin_port        = 0;
-	sin_addr.s_addr = m_pPeerAddr->netAddress();
+SocketAddr::SocketAddr()
+    : protocol_()
+    , address_(AddrAny)
+    , portNumber_(0) {}
+
+SocketAddr::SocketAddr(WORD port, const std::string& protocol)
+    : protocol_(protocol)
+    , address_(AddrNone)
+    , portNumber_(port) {
+    resolve(std::string());
 }
 
-
-SocketAddr::SocketAddr(const IPAddress Host, WORD wPort,
-                       const char * pProtocol /*= NULL*/)
-:	m_pProtocol (pProtocol)
-{
-	// Call the copy constructor
-	m_pPeerAddr     = new IPAddress(Host);
-	sin_family      = AF_INET;
-	sin_port        = htons(wPort);
-	sin_addr.s_addr = m_pPeerAddr->netAddress();
+SocketAddr::SocketAddr(const std::string& host, WORD port, const std::string& protocol)
+    : protocol_(protocol)
+    , address_(AddrNone)
+    , portNumber_(port) {
+    resolve(host);
 }
 
+SocketAddr::SocketAddr(const std::string& host, const std::string& service, const std::string& protocol)
+    : protocol_(protocol)
+    , address_(AddrNone)
+    , portNumber_(0) {
 
-SocketAddr::SocketAddr(const char * lpszHost, WORD wPort,
-                       const char * pProtocol /*= 0*/)
-:	m_pProtocol (pProtocol)
-{
-	m_pPeerAddr     = new IPAddress(lpszHost);
-	sin_family      = AF_INET;
-	sin_port        = htons(wPort);
-	sin_addr.s_addr = m_pPeerAddr->netAddress();
-}
-
-
-SocketAddr::SocketAddr(const char * lpszHost, const char * lpszService,
-                       const char * pProtocol /*= 0*/)
-:	m_pProtocol (pProtocol)
-{
-	// WARNING:  The following statement MUST precede the call to
-	//           getservbyname.  IPAddress inits Windows sockets.
-	m_pPeerAddr = new IPAddress(lpszHost);
-
-	struct servent* pService = ::getservbyname(lpszService, pProtocol);
-	sin_family      = AF_INET;
-	sin_addr.s_addr = m_pPeerAddr->netAddress();
-
-	if (pService &&
+    struct servent* pService = ::getservbyname(service.c_str(), protocol.c_str());
+    if (pService &&
 #ifdef TARGET_WINDOWS
-		_stricmp(pService->s_proto, pProtocol == 0 ? "tcp" : pProtocol) == 0)
+        _stricmp(pService->s_proto, protocol.empty() ? "tcp" : protocol.c_str()) == 0)
 #else
-		strcasecmp(pService->s_proto, pProtocol == 0 ? "tcp" : pProtocol) == 0)
+        strcasecmp(pService->s_proto, protocol.empty() ? "tcp" : protocol.c_str()) == 0)
 #endif
-	{
-		sin_port = pService->s_port;
-	}
-	else
-	{
-		sin_port = 0;
-	}
+    {
+        portNumber_ = pService->s_port;
+    }
+    resolve(host);
 }
 
+SocketAddr::~SocketAddr() {}
 
-// Abstract : Destructor of SocketAddr object
-//
-// Returns  : -
-// Params   :
-//   -
-//
-// Pre      :
-// Post     : The SocketAddr object is destructed
-//
-// Remarks  :
-//
-SocketAddr::~SocketAddr(void)
-{
-    delete m_pPeerAddr;
+bool SocketAddr::getSockAddr(sockaddr_storage& sa, socklen_t& len) {
+    // TODO use std::apply
+    if (std::holds_alternative<sockaddr_in>(address_)) {
+        len = sizeof(sockaddr_in);
+        memcpy(&sa, &std::get<sockaddr_in>(address_), len);
+    } else if (std::holds_alternative<sockaddr_in6>(address_)) {
+        len = sizeof(sockaddr_in6);
+        memcpy(&sa, &std::get<sockaddr_in6>(address_), len);
+    } else if (std::holds_alternative<SpecialIP>(address_)) {
+        // TODO does not express INADDR_NONE (is it still needed?)
+        //auto spec = std::get<SpecialIP>(address_);
+        sockaddr_in6 si = {
+            .sin6_family = AF_INET6,
+            .sin6_port = htons(portNumber_),
+            .sin6_addr = in6addr_any
+        };
+        memcpy(&sa, &si, sizeof(si));
+        len = sizeof(si);
+    } else {
+        return false;
+    }
+    return true;
 }
 
-
-// Abstract : Returns the network address in internal format
-//
-// Returns  : UINT
-// Params   :
-//   -
-//
-// Pre      :
-// Post     : The internal network address is returned
-//
-// Remarks  :
-//
-UINT
-SocketAddr::netAddress(void) const
-{
-    return m_pPeerAddr->netAddress();
+SocketAddr::AddrType SocketAddr::netAddress() const {
+    return address_;
 }
 
-
-// Abstract : Returns the port number for the socket address
-//
-// Returns  : WORD
-// Params   :
-//   -
-//
-// Pre      :
-// Post     : The 16-bit port number for the current object is returned
-//
-// Remarks  :
-//
-WORD
-SocketAddr::portNumber(void) const
-{
-    return ntohs(sin_port);
+WORD SocketAddr::portNumber() const {
+    return portNumber_;
 }
 
+bool SocketAddr::resolve(const std::string& host) {
+    constexpr const char* validIpv4 = "0123456789.";
+    constexpr const char* validIpv6 = "0123456789abcdefABCDEF:";
+    bool is_valid = false;
 
-// Abstract : Returns a pointer to the sockaddr structure which is
-//            needed for calling some of the Winsock routines directly
-//
-// Returns  : sockaddr*
-// Params   :
-//   -
-//
-// Pre      :
-// Post     : A pointer to the sockaddr structure is returned.
-//
-// Remarks  :
-//
-SocketAddr::operator sockaddr* (void) const
-{
-    return (sockaddr *)this;
+    // TODO use portNumber_
+    if (host.empty()) {
+        address_ = AddrAny;
+    } else if (host.find_first_not_of(validIpv4) == std::string::npos) {
+        // Looks like dot notation, so try IPv4 address
+        struct sockaddr_in sa;
+        memset(&sa, 0, sizeof(struct sockaddr_in));
+        sa.sin_family = AF_INET;
+        auto ret = inet_pton(AF_INET, host.c_str(), &sa.sin_addr);
+        if (ret > 0) {
+            address_ = sa;
+            is_valid = true;
+        } else {
+            address_ = AddrNone;
+        }
+    } else if (host.find_first_not_of(validIpv6)) {
+        // Try IPv6 address
+        sockaddr_in6 sa6;
+        sa6.sin6_family = AF_INET6;
+        auto ret = inet_pton(AF_INET6, host.c_str(), &sa6.sin6_addr);
+        if (ret > 0) {
+            address_ = sa6;
+            is_valid = true;
+        } else {
+            address_ = AddrNone;
+        }
+    } else {     // Try to resolve host name
+        struct addrinfo* addr;
+        struct addrinfo hints = {
+            .ai_flags = 0,
+            .ai_family = AF_UNSPEC,
+            .ai_socktype = SOCK_STREAM,
+            .ai_protocol = IPPROTO_TCP
+        };
+        std::string portNum = portNumber_ == 0 ? "" : std::to_string(portNumber_);
+        int ret = getaddrinfo(host.c_str(), portNum.c_str(), &hints, &addr);
+        if (!ret) {
+            struct addrinfo* next;
+            for (next = addr; next != nullptr; next = next->ai_next) {
+                int s = socket(next->ai_family, next->ai_socktype, next->ai_protocol);
+                if (s >= 0) {
+                    close(s);
+                    is_valid = true;
+                    break;
+                }
+            }
+            if (next == nullptr) {
+                address_ = AddrNone;
+            } else {
+                if (next->ai_family == AF_INET) {
+                    auto sa = (sockaddr_in *)(next->ai_addr);
+                    sa->sin_port = htons(portNumber_);
+                    address_ = *sa;
+                } else {
+                    auto sa6 = (sockaddr_in6 *)(next->ai_addr);
+                    sa6->sin6_port = htons(portNumber_);
+                    address_ = *sa6;
+                }
+            }
+            freeaddrinfo(addr);
+        }            
+    }
+    return is_valid;
 }
 
+void SocketAddr::setPortNumber(WORD port) {
+    portNumber_ = port;
+}
+    
+// Abstract : Returns a pointer to the network address in internal format.
+
+SocketAddr::operator const AddrType () const {
+    return address_;
+}
 
 // Abstract : Returns a static, textual representation of an address
-//
-// Returns  : LPCSTR
-// Params   :
-//   -
 //
 // Pre      :
 // Post     : Returns a text string representing the socket address.  Note
@@ -257,15 +238,29 @@ SocketAddr::operator sockaddr* (void) const
 //            (host name or dot notation) and the port number.  For example,
 //            "hostb.omroep.nl:7".
 //
-// Remarks  :
-//
-SocketAddr::operator char * (void) const
-{
-	static char szFullName[100];
-	sprintf(szFullName, "%s:%d", (char *) *m_pPeerAddr, portNumber());
-	return  szFullName;
+SocketAddr::operator const std::string& () {
+    if (hostName_.empty()) {
+        char hbuf[NI_MAXHOST];
+        if (std::holds_alternative<sockaddr_in>(address_)) {
+            auto sa = (sockaddr *) &std::get<sockaddr_in>(address_);
+            if (!getnameinfo(sa, sizeof(sockaddr_in), hbuf, sizeof(hbuf),
+                             nullptr, 0, NI_NAMEREQD)) {
+                hostName_ = hbuf;
+            }
+        } else if (std::holds_alternative<sockaddr_in6>(address_)) {
+            auto sa6 = (sockaddr *) &std::get<sockaddr_in6>(address_);
+            if (!getnameinfo(sa6, sizeof(sockaddr_in), hbuf, sizeof(hbuf),
+                             nullptr, 0, NI_NAMEREQD)) {
+                hostName_ = hbuf;
+            }
+        }
+        if (portNumber()) {
+            hostName_.append(":" + std::to_string(portNumber()));
+        }
+    }
+    return hostName_;
 }
 
-//
-// END OF FILE
-//
+const std::string& SocketAddr::operator()() {
+    return operator const std::string&();
+}

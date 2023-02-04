@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
     cout << "UrlQuery: " << upe.toString() << endl;
 
     HttpServerStream sock;
-    SocketAddr saddr(0, port);
+    SocketAddr saddr(port);
     if (!sock.open(saddr, Socket::modeReadWrite))
     {
         cout << "Error opening socket: "

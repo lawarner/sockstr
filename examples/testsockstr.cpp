@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012, 2013
+   Copyright (C) 2012 - 2022
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -31,77 +31,67 @@
 #include <cstdio>
 #include <cstring>
 
-#include <sockstr/IPAddress.h>
+//#include <sockstr/IPAddress.h>
 #include <sockstr/Socket.h>
 
 using namespace sockstr;
+using std::cout;
+using std::endl;
 
-
-int main(int argc, char *argv[])
-{
-#if 0	// for debugging in vs2010
-    std::string hostname = "stackoverflow.com";
-    std::string filename = "/index.html";
-    bool isSummary = false;
-#else
-    if (argc < 3)
-    {
-        std::cerr << "Error: Usage:  testsocklib hostname filename [summary]" << std::endl;
+int main(int argc, char *argv[]) {
+    if (argc < 3) {
+        std::cerr << "Error: Usage:  testsocklib hostname filename [summary]" << endl;
         return(1);
     }
-    std::cout << "testsocklib: program started.\n";
+    cout << "testsocklib: program started." << endl;
 
     bool isSummary = (argc > 3);
-
     std::string hostname = argv[1];
     std::string filename = argv[2];
-    if (filename[0] != '/')
+    if (filename[0] != '/') {
         filename.insert(0, 1, '/');
-#endif
-	std::string hostport = hostname;
-    if (hostport.find(':') == hostport.npos)
+    }
+    std::string hostport = hostname;
+    if (hostport.find(':') == hostport.npos) {
         hostport += ":80";
-    std::cout << "Get address of host " << hostport << std::endl;
+    }
+    cout << "Get address of host " << hostport << endl;
 
-
-    IPAddress ipaddr(hostname.c_str());
-    printf("Netaddress is %x, string value is %s\n",
-           ipaddr.netAddress(), (const char*) ipaddr);
+    // IPAddress ipaddr(hostname.c_str());
+    // printf("Netaddress is %x, string value is %s\n",
+    //        ipaddr.netAddress(), (const char*) ipaddr);
 
     Socket sock;
-    if (!sock.open(hostport.c_str(), Socket::modeReadWrite))
-    {
-        std::cout << "Error opening socket: " << errno << std::endl;
+    if (!sock.open(hostport.c_str(), Socket::modeReadWrite)) {
+        cout << "Error opening socket: " << errno << endl;
         return(2);
     }
-    std::cout << "Socket open at " << (const char *) sock << std::endl;
+    cout << "Socket open at " << (const char *) sock << endl;
 
     std::string http_get = "GET " + filename;
     // Add HTTP headers
     http_get += " HTTP/1.1\r\nHost: " + hostname + "\r\n";
     http_get += "Accept: */*\r\n";
 
-//	sock.write(http_get);
-	sock << http_get << std::endl;
+    sock << http_get << endl;
 
     char buf[1024] = "";
     int inLen;
     int totalLen = 0;
-    while ((inLen = sock.read(buf, sizeof(buf))) > 0)
-    {
+    while ((inLen = sock.read(buf, sizeof(buf))) > 0) {
         if (isSummary)
-            std::cout << "+=+=+=+=+ Read from socket " << inLen << " characters" << std::endl;
+            cout << "+=+=+=+=+ Read from socket " << inLen << " characters" << endl;
         else
-            std::cout << std::string(buf, inLen);
+            cout << std::string(buf, inLen);
         totalLen += inLen;
     }
-    if (isSummary)
-        std::cout << "+=+=+=+=+ Total read from socket is " 
-                  << totalLen << " characters" << std::endl;
-    std::cout << std::endl;
+    if (isSummary) {
+        cout << "+=+=+=+=+ Total read from socket is " 
+                  << totalLen << " characters" << endl;
+    }
+    cout << endl;
 
     sock.close();
-
     return(0);
 }
 
