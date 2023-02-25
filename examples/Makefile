@@ -27,7 +27,7 @@ CC = g++
 CCFLAGS = -std=c++17 -Wall -g -O0 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
 #CCFLAGS = -Wall -g -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
 DEPCPPFLAGS = -std=c++17 -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
-LDFLAGS = -pthread
+LDFLAGS = -pthread $(LIBOPENSSL)
 LDLIBS = 
 
 OBJS :=  asyncsock.o echoserver.o fbread.o fb2read.o filecopy.o httptest.o \

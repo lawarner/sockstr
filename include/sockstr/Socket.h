@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012 - 2021
+   Copyright (C) 2012 - 2023
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -82,8 +82,6 @@ struct IOPARAMS {
 
 // Forward references
 class SocketState;
-class ReadThreadHandler;
-class WriteThreadHandler;
 
 /**
  *  A Stream using TCP/IP or UDP sockets as transport.
@@ -137,7 +135,28 @@ public:
     virtual UINT read(std::string& str, int delimiter='\n');
     //!  Read a string from the socket (state-dependent).
     virtual UINT read(std::string& str, const std::string& delimiter="\r\n");
-    //! Send an IPC message over the socket (state-dependent)
+    /** Send an IPC message over the socket (state-dependent)
+     *  The IpcStruct data packet will be sent across the socket
+     *  connection, either synchronously or asynchronously depending
+     *  on the I/O mode (see the SetAsyncMode function).  If the
+     *  mode is synchronous, then the packet will be first sent
+     *  over the socket before this routine returns.  In the
+     *  asynchronous mode, a worker thread will be made to do the
+     *  write and this routine returns immediately.  When the worker
+     *  thread completes, the application's callback routine is called.
+     *  If the pCallback parameter is 0, then the routine that
+     *  was given as parameter to registerCallback() will be called.
+     *  Otherwise, if pCallback is specified, then it will be
+     *  called instead.
+     *
+     *  Note that the IpcStruct data packet will be sent to the peer of
+     *  the socket connection.  The static packet sequence number is
+     *  increased by 1.
+     *
+     *  @param pData      Pointer to IPC structure (or sub-class)
+     *  @param pCallback  Optional pointer to application's one-time-only callback.
+     *  @return 0 on success
+     */
     virtual int remoteProcedure(IpcStruct* pData, Callback pCallback = 0);
     //! Read an IPC message or reply from socket (state-dependent)
     virtual int remoteReadData(IpcStruct* pData, UINT uMaxLength = 0);
@@ -207,8 +226,6 @@ private:
     friend class SSOpenedClientTLS;
     friend class SSConnectedTLS;
 #endif
-    friend class ReadThreadHandler;
-    friend class WriteThreadHandler;
 
     // Goes to the next specified state.
     void changeState(SocketState* pState);

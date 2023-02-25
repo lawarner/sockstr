@@ -65,11 +65,10 @@
 
 #include <algorithm>
 #include <iostream>
+#include <thread>
 
 #include <sockstr/Socket.h>
 #include <sockstr/SocketState.h>
-
-using namespace sockstr;
 
 //
 // FORWARD FUNCTION DECLARATIONS
@@ -79,6 +78,7 @@ using namespace sockstr;
 // DATA DEFINITIONS
 //
 
+namespace sockstr {
 // Initialize static members
 SocketState* SSClosed::m_pInstance = nullptr;
 SocketState* SSOpenedServer::m_pInstance = nullptr;
@@ -88,6 +88,31 @@ SocketState* SSConnected::m_pInstance = nullptr;
 #ifdef _DEBUG
 void* SocketState::m_pLastBuffer = 0;
 #endif
+
+namespace {
+
+DWORD status_ = 0;   // TODO use a member of Socket
+
+}  // namespace
+
+void SocketState::read_thread_handler(IOPARAMS* pIOP) {
+    SocketState* pState = pIOP->m_pSocket->m_pState;
+    DWORD  dwReturn;
+    dwReturn = pState->readerThread(pIOP);
+
+    delete pIOP;
+    status_ = dwReturn;
+}
+
+
+void SocketState::write_thread_handler(IOPARAMS* pIOP) {
+    SocketState* pState = pIOP->m_pSocket->m_pState;
+    DWORD  dwReturn;
+    dwReturn = pState->writerThread(pIOP);
+
+    delete pIOP;
+    status_ = dwReturn;
+}
 
 //
 // CLASS MEMBER FUNCTION DEFINITIONS
@@ -104,18 +129,13 @@ void* SocketState::m_pLastBuffer = 0;
 // Pre      :
 // Post     : Pending I/O on the socket is cancelled.
 //
-// Remarks  : <only when required, not obligatory>
-//
-void
-SocketState::abort(Socket* pSocket)
-{
-	// Not interested in return value, just always try to abort blocking I/O
-	if (pSocket->m_hFile)
-	{
+void SocketState::abort(Socket* pSocket) {
+    // Not interested in return value, just always try to abort blocking I/O
+    if (pSocket->m_hFile) {
 #ifdef TARGET_WINDOWS
-		::WSACancelBlockingCall();
+        ::WSACancelBlockingCall();
 #endif
-	}
+    }
 }
 
 
@@ -307,11 +327,9 @@ SocketState::read(Socket* /*pSocket*/,
 //            is to abort the program, signifying that an illegal action
 //            was attempted.
 //
-DWORD
-SocketState::readerThread(IOPARAMS* /*pIOP*/)
-{
-	VERIFY(0);	// We should never execute this base class virtual function
-	return 0;
+DWORD SocketState::readerThread(IOPARAMS* /*pIOP*/) {
+    VERIFY(0);	// We should never execute this base class virtual function
+    return 0;
 }
 
 
@@ -338,8 +356,7 @@ SocketState::readerThread(IOPARAMS* /*pIOP*/)
 //            is to abort the program, signifying that an illegal action
 //            was attempted.
 //
-bool
-SocketState::setSockOpt(Socket* pSocket,
+bool SocketState::setSockOpt(Socket* pSocket,
                          int nOptionName, const void* pOptionValue,
                          int nOptionLen, int nLevel) {
     if (pSocket->getHandle() == INVALID_SOCKET) {
@@ -374,9 +391,8 @@ SocketState::setSockOpt(Socket* pSocket,
 //            is to abort the program, signifying that an illegal action
 //            was attempted.
 //
-void
-SocketState::write(Socket* /*pSocket*/,
-					   const void* /*pBuf*/, UINT /*uCount*/) {
+void SocketState::write(Socket* /*pSocket*/,
+                        const void* /*pBuf*/, UINT /*uCount*/) {
     VERIFY(0);	// We should never execute this base class virtual function
 }
 
@@ -400,11 +416,9 @@ SocketState::write(Socket* /*pSocket*/,
 //            is to abort the program, signifying that an illegal action
 //            was attempted.
 //
-DWORD
-SocketState::writerThread(IOPARAMS* /*pIOP*/)
-{
-	VERIFY(0);	// We should never execute this base class virtual function
-	return 0;
+DWORD SocketState::writerThread(IOPARAMS* /*pIOP*/) {
+    VERIFY(0);	// We should never execute this base class virtual function
+    return 0;
 }
 
 
@@ -444,113 +458,24 @@ void SocketState::changeState(Socket* pSocket, SocketState* pState) {
 //            The reason this routine is needed is to pass several parameters
 //            to the worker threads.
 //
-IOPARAMS*
-SocketState::createIOParams(Socket* pSocket, void* pBuf, UINT uCount,
-								Callback pCallback)
-{
-	IOPARAMS* pIO = new IOPARAMS;
-	pIO->m_pSocket   = pSocket;
-	pIO->m_pBuf      = pBuf;
-	pIO->m_uCount    = uCount;
-	pIO->m_pCallback = pCallback;
-	return pIO;
+IOPARAMS* SocketState::createIOParams(Socket* pSocket, void* pBuf, UINT uCount,
+                                      Callback pCallback) {
+    IOPARAMS* pIO = new IOPARAMS;
+    pIO->m_pSocket   = pSocket;
+    pIO->m_pBuf      = pBuf;
+    pIO->m_uCount    = uCount;
+    pIO->m_pCallback = pCallback;
+    return pIO;
 }
 
-IOPARAMS*
-SocketState::createIOParams(Socket* pSocket, const void* pBuf, UINT uCount,
-								Callback pCallback)
-{
-	IOPARAMS* pIO = new IOPARAMS;
-	pIO->m_pSocket   = pSocket;
-	pIO->m_pBuf      = (void *) pBuf;
-	pIO->m_uCount    = uCount;
-	pIO->m_pCallback = pCallback;
-	return pIO;
-}
-
-
-// Abstract : Executes the state-dependent reader thread
-//
-// Returns  : THRTYPE
-// Params   :
-//   pThis                     Pointer to the socket object
-//
-// Pre      : The buffer pointed to by pIOP->m_pBuf must not be re-used or
-//            freed by the application until the user's callback routine
-//            has been called, indicating that the overlapped I/O is
-//            complete.
-// Post     :
-//
-// Remarks  : This (protected) routine is not called by user applications.
-//            It is only called by the SocketState friend class, or 
-//            one of its sub-classes.
-//
-void ReadThreadHandler::handle(IOPARAMS* pIOP)
-{
-#ifdef _DEBUG
-	if (m_pLastBuffer == pIOP->m_pBuf)
-	{
-//		TRACE("Buffer in use for overlapped I/O\n");
-		VERIFY(0);
-	}
-	m_pLastBuffer = pIOP->m_pBuf;
-#endif
-
-    SocketState* pState = pIOP->m_pSocket->m_pState;
-	DWORD  dwReturn;
-	dwReturn = pState->readerThread(pIOP);
-
-#ifdef _DEBUG
-	m_pLastBuffer = 0;
-#endif
-	delete pIOP;
-
-#ifdef THRTYPE_NOCAST
-	status_ = dwReturn;
-#else
-	status_ = reinterpret_cast<THRTYPE>(dwReturn);
-#endif
-}
-
-
-// Abstract : Executes the state-dependent writer thread
-//
-// Returns  : THRTYPE
-// Params   :
-//   pThis                     Pointer to the socket object
-//
-// Pre      :
-// Post     :
-//
-// Remarks  : This (protected) routine is not called by user applications.
-//            It is only called by the SocketState friend class, or 
-//            one of its sub-classes.
-//
-void WriteThreadHandler::handle(IOPARAMS* pIOP)
-{
-#ifdef _DEBUG
-	if (m_pLastBuffer == pIOP->m_pBuf)
-	{
-//		TRACE("Buffer in use for overlapped I/O\n");
-		VERIFY(0);
-	}
-	m_pLastBuffer = pIOP->m_pBuf;
-#endif
-
-    SocketState* pState = pIOP->m_pSocket->m_pState;
-	DWORD  dwReturn;
-	dwReturn = pState->writerThread(pIOP);
-#ifdef _DEBUG
-	m_pLastBuffer = nullptr;
-#endif
-
-	delete pIOP;
-
-#ifdef THRTYPE_NOCAST
-	status_ = dwReturn;
-#else
-	status_ = reinterpret_cast<THRTYPE>(dwReturn);
-#endif
+IOPARAMS* SocketState::createIOParams(Socket* pSocket, const void* pBuf, UINT uCount,
+                                      Callback pCallback) {
+    IOPARAMS* pIO = new IOPARAMS;
+    pIO->m_pSocket   = pSocket;
+    pIO->m_pBuf      = (void *) pBuf;
+    pIO->m_uCount    = uCount;
+    pIO->m_pCallback = pCallback;
+    return pIO;
 }
 
 
@@ -560,52 +485,19 @@ void WriteThreadHandler::handle(IOPARAMS* pIOP)
 //            this is not desirable since it splits up the functionality
 //            too much.
 
-// Abstract : Returns the one (and only) instance of this object
-//
-// Returns  : Pointer to the SSClosed singleton object
-// Params   :
-//   -
-//
-// Pre      :
-// Post     : If the singleton instance of this class did not already exist,
-//            then it is allocated.
-//
-// Remarks  :
-//
-SocketState*
-SSClosed::instance(void)
-{
-	if (m_pInstance == nullptr)
-	{
-		m_pInstance = new SSClosed;
-	}
-	return m_pInstance;
+SocketState* SSClosed::instance() {
+    if (m_pInstance == nullptr) {
+        m_pInstance = new SSClosed;
+    }
+    return m_pInstance;
 }
 
-
-// Abstract : Returns the one (and only) instance of this object
-//
-// Returns  : Pointer to the SSOpenedServer singleton object
-// Params   :
-//   -
-//
-// Pre      :
-// Post     : If the singleton instance of this class did not already exist,
-//            then it is allocated.
-//
-// Remarks  :
-//
-SocketState*
-SSOpenedServer::instance()
-{
-	if (m_pInstance == nullptr)
-	{
-		m_pInstance = new SSOpenedServer;
-	}
-	return m_pInstance;
+SocketState* SSOpenedServer::instance() {
+    if (m_pInstance == nullptr) {
+        m_pInstance = new SSOpenedServer;
+    }
+    return m_pInstance;
 }
-
-
 
 // Abstract : Open a server socket as specified by a SocketAddr address
 //
@@ -691,15 +583,6 @@ bool SSOpenedServer::open(Socket* pSocket, SocketAddr& rSockAddr, UINT uOpenFlag
     return true;
 }
 
-// Abstract : Returns the one (and only) instance of this object
-//
-// Returns  : Pointer to the SSOpenedClient singleton object
-// Params   :
-//   -
-//
-// Pre      :
-// Post     : If the singleton instance of this class did not already exist,
-//            then it is allocated.
 SocketState* SSOpenedClient::instance() {
     if (m_pInstance == nullptr) {
         m_pInstance = new SSOpenedClient;
@@ -779,23 +662,12 @@ bool SSOpenedClient::open(Socket* pSocket, SocketAddr& rSockAddr, UINT uOpenFlag
 }
 
 
-// Abstract : Returns the one (and only) instance of this object
-//
-// Returns  : Pointer to the SSListening singleton object
-// Params   :
-//   -
-//
-// Pre      :
-// Post     : If the singleton instance of this class did not already exist,
-//            then it is allocated.
-//
 SocketState* SSListening::instance() {
     if (m_pInstance == nullptr) {
         m_pInstance = new SSListening;
     }
     return m_pInstance;
 }
-
 
 // Abstract : Listen on a server-side socket for incoming connection requests
 //
@@ -818,17 +690,6 @@ SOCKET SSListening::listen(Socket* pSocket, const int /*nBacklog*/) {
     return hSock;
 }
 
-
-// Abstract : Returns the one (and only) instance of this object
-//
-// Returns  : Pointer to the SSConnected singleton object
-// Params   :
-//   -
-//
-// Pre      :
-// Post     : If the singleton instance of this class did not already exist,
-//            then it is allocated.
-//
 SocketState* SSConnected::instance() {
     if (m_pInstance == nullptr) {
         m_pInstance = new SSConnected;
@@ -870,25 +731,21 @@ UINT SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount) {
     // Error: trying to read 0 bytes
     VERIFY(uCount != 0);
 
-    if (! pSocket->m_bAsyncMode)
-    {
+    if (! pSocket->m_bAsyncMode) {
         // Synchronous mode -- do a blocking read on socket
         iResult = readSocket(pSocket, pBuf, uCount);
-        if (iResult == 0 || iResult == SOCKET_ERROR)
-        {
+        if (iResult == 0 || iResult == SOCKET_ERROR) {
             pSocket->m_Status = SC_NODATA;
             pSocket->setstate(std::ios::eofbit);
             return 0;
+        } else {
+            pSocket->clear(pSocket->rdstate() & ~std::ios::eofbit);
         }
-        else
-            pSocket->clear(pSocket->rdstate() & ~std::ios::eofbit);	}
-    else
-    {
+    } else {
         // Asynchronous mode -- if data is available on socket then read
         // it.  Otherwise, set up a reader thread to wait for data.
         DWORD dwBytes;
-        if (IOCTLSOCK(pSocket->m_hFile, FIONREAD, &dwBytes) == SOCKET_ERROR)
-        {
+        if (IOCTLSOCK(pSocket->m_hFile, FIONREAD, &dwBytes) == SOCKET_ERROR) {
 #ifdef TARGET_WINDOWS
             WSAGetLastError();
 #endif
@@ -916,12 +773,10 @@ UINT SSConnected::read(Socket* pSocket, void* pBuf, UINT uCount) {
                 return 0;
             }
 
-            auto readThreadHandler
-                    = new ReadThreadHandler(createIOParams(pSocket, pBuf, uCount,
-                                                           pSocket->m_pDefCallback));
-
-            bool th = ThreadManager::create<IOPARAMS*>(readThreadHandler);
-            VERIFY(th);
+            auto readThreadHandler = std::thread(&SocketState::read_thread_handler, this,
+                                                 createIOParams(pSocket, pBuf, uCount,
+                                                                pSocket->m_pDefCallback));
+            readThreadHandler.detach();
         }
     }
 
@@ -1049,15 +904,12 @@ void SSConnected::write(Socket* pSocket, const void* pBuf, UINT uCount) {
             pSocket->clear(pSocket->rdstate() & ~std::ios::failbit);
         }
     } else {
-        auto writeThreadHandler
-                = new WriteThreadHandler(createIOParams(pSocket, pBuf, uCount,
-                                                        pSocket->m_pDefCallback));
-
-        bool th = ThreadManager::create<IOPARAMS*>(writeThreadHandler);
-        VERIFY(th);
+        auto writeThreadHandler = std::thread(&SocketState::write_thread_handler, this,
+                                              createIOParams(pSocket, pBuf, uCount,
+                                                             pSocket->m_pDefCallback));
+        writeThreadHandler.detach();
     }
 }
-
 
 // Abstract : Process for the write worker thread
 //
@@ -1099,3 +951,5 @@ DWORD SSConnected::writerThread(IOPARAMS* pIOP) {
 
     return 0;
 }
+
+}  // namespace sockstr

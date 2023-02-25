@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012, 2013
+   Copyright (C) 2012, 2013, 2023
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -21,7 +21,6 @@
 #pragma once
 
 #include <sockstr/sstypes.h>
-#include <sockstr/ThreadHandler.h>
 
 namespace sockstr {
 /**
@@ -104,11 +103,15 @@ public:
     //! Writer worker thread processing routine
     virtual DWORD  writerThread(IOPARAMS* pIOP);
 
+
+    void read_thread_handler(IOPARAMS* pIOP);
+    void write_thread_handler(IOPARAMS* pIOP);
+
 protected:
     //! Goes to the next specified state
-    void    changeState   (Socket* pSocket, SocketState* pState);
-    /** Sets the socket object pointer, buffer, and buffer
-     *  size for the worker thread.  This protected routine
+    void changeState(Socket* pSocket, SocketState* pState);
+    /** Sets the socket object pointer, buffer, buffer size and
+     *  callback for the worker thread.  This protected routine
      *  is only used internally by this class. */
     IOPARAMS*
     createIOParams(Socket* pSocket, void* pBuf, UINT uCount,
@@ -119,28 +122,12 @@ protected:
 };
 
 
-/////////////
-class ReadThreadHandler : public ThreadHandler<IOPARAMS*> {
-public:
-    ReadThreadHandler(IOPARAMS* pIOP) { setData(pIOP); }
-
-    virtual void handle(IOPARAMS* pIOP);
-};
-
-class WriteThreadHandler : public ThreadHandler<IOPARAMS*>
-{
-public:
-    WriteThreadHandler(IOPARAMS* pIOP) { setData(pIOP); }
-
-    virtual void handle(IOPARAMS* pIOP);
-};
-
 //////////////////////////////////////////////////////////
 //   All subclasses of SocketState are defined here.
 
 class SSClosed : public SocketState {
 public:
-    static SocketState* instance(void);
+    static SocketState* instance();
 
 private:
     static SocketState* m_pInstance;
@@ -149,58 +136,58 @@ private:
 
 class SSOpenedServer : public SocketState {
 public:
-	static SocketState* instance(void);
+    static SocketState* instance();
 
-	virtual bool   open        (Socket* pSocket,
-					            SocketAddr& rSockAddr,
-					            UINT uOpenFlags);
+    virtual bool open(Socket* pSocket,
+                      SocketAddr& rSockAddr,
+                      UINT uOpenFlags);
 
 private:
-	static SocketState* m_pInstance;
+    static SocketState* m_pInstance;
 };
 
 
 class SSOpenedClient : public SocketState {
 public:
-	static SocketState* instance(void);
+    static SocketState* instance();
 
-	virtual bool   open        (Socket* pSocket,
-					            SocketAddr& rSockAddr,
-					            UINT uOpenFlags);
+    virtual bool open(Socket* pSocket,
+                      SocketAddr& rSockAddr,
+                      UINT uOpenFlags);
 
 private:
-	static SocketState* m_pInstance;
+    static SocketState* m_pInstance;
 };
 
 
 class SSListening : public SocketState {
 public:
-	static SocketState* instance(void);
+    static SocketState* instance();
 
-	virtual SOCKET listen      (Socket* pSocket, const int nBacklog);
+    virtual SOCKET listen(Socket* pSocket, const int nBacklog);
 
 private:
-	static SocketState* m_pInstance;
+    static SocketState* m_pInstance;
 };
 
 
 class SSConnected : public SocketState {
 public:
-	static  SocketState* instance(void);
+    static  SocketState* instance(void);
 
-	virtual UINT   read        (Socket* pSocket, void* pBuf, UINT uCount);
-	virtual DWORD  readerThread(IOPARAMS* pIOP);
-	virtual void   write       (Socket* pSocket, const void* pBuf, 
-							    UINT uCount);
-	virtual DWORD  writerThread(IOPARAMS* pIOP);
+    virtual UINT read(Socket* pSocket, void* pBuf, UINT uCount);
+    virtual DWORD readerThread(IOPARAMS* pIOP);
+    virtual void write(Socket* pSocket, const void* pBuf, 
+                       UINT uCount);
+    virtual DWORD writerThread(IOPARAMS* pIOP);
 
 private:
-	int    readSocket          (Socket* pSocket, void* pBuf, UINT uCount);
+    int readSocket(Socket* pSocket, void* pBuf, UINT uCount);
 
 #ifdef _DEBUG
-	static void* m_pLastBuffer;	// Last buffer used for overlapped I/O
+    static void* m_pLastBuffer;	// Last buffer used for overlapped I/O
 #endif
-	static SocketState* m_pInstance;
+    static SocketState* m_pInstance;
 };
 
 
@@ -240,19 +227,19 @@ private:
 
 class SSConnectedTLS : public SocketState {
 public:
-	static  SocketState* instance(void);
+    static  SocketState* instance();
 
-	virtual void   close       (Socket* pSocket);
-	virtual UINT   read        (Socket* pSocket, void* pBuf, UINT uCount);
-	virtual DWORD  readerThread(IOPARAMS* pIOP);
-	virtual void   write       (Socket* pSocket, const void* pBuf, 
-							    UINT uCount);
-	virtual DWORD  writerThread(IOPARAMS* pIOP);
+    virtual void close(Socket* pSocket);
+    virtual UINT read(Socket* pSocket, void* pBuf, UINT uCount);
+    virtual DWORD readerThread(IOPARAMS* pIOP);
+    virtual void write(Socket* pSocket, const void* pBuf, 
+                       UINT uCount);
+    virtual DWORD writerThread(IOPARAMS* pIOP);
 
 private:
-	int    readSocket          (Socket* pSocket, void* pBuf, UINT uCount);
+    int readSocket(Socket* pSocket, void* pBuf, UINT uCount);
 
-	static SocketState* m_pInstance;
+    static SocketState* m_pInstance;
 };
 
 #endif // USE_OPENSSL

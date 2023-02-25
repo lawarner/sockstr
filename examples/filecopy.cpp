@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012
+   Copyright (C) 2012, 2023
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -24,71 +24,55 @@
 // The first thread reads a file and sends it on the socket.
 // The second thread reads the socket and writes the contents to a file.
 
+#include <sockstr/Socket.h>
+
 #include <cerrno>
 #include <fstream>
 #include <iostream>
+#include <thread>
 #include <unistd.h>
 
-#include <sockstr/Socket.h>
-#include <sockstr/ThreadHandler.h>
 using namespace sockstr;
-using namespace std;
+using std::cout;
+using std::endl;
 
-struct Params
-{
+struct Params {
     int port;
     bool binary;
-    string fileName;
+    std::string fileName;
 };
 
 
-class ServerThreadHandler : public ThreadHandler<Params*, void*>
-{
-public:
-    ServerThreadHandler(Params* params) { setData(params); }
-
-    virtual void* handle(Params* params);
-};
-
-void* ServerThreadHandler::handle(Params* params)
-{
-    void* ret = (void*) 2;
+void server_handler(const Params* params) {
     cout << "Server connecting to port " << params->port << endl;
-    string fileName = params->fileName + ".bak";
+    std::string fileName = params->fileName + ".bak";
     cout << "Writing to file " << fileName << endl;
 
     Socket sock;
     SocketAddr saddr(params->port);
-    if (!sock.open(saddr, Socket::modeReadWrite))
-    {
+    if (!sock.open(saddr, Socket::modeReadWrite)) {
         cout << "Error opening server socket: " << errno << endl;
-        return ret;
+        return;
     }
 
     Stream* clientSock = sock.listen();
-    if (clientSock)
-    {
-        ifstream ifile(fileName.c_str());
-        if (ifile.is_open())
-        {
+    if (clientSock) {
+        std::ifstream ifile(fileName.c_str());
+        if (ifile.is_open()) {
             cout << "Output file already exists.  Not overwriting." << endl;
-            return ret;
+            return;
         }
-        ofstream ofile(fileName.c_str());
+        std::ofstream ofile(fileName.c_str());
 
-        if (params->binary)
-        {
+        if (params->binary) {
             char buf[256];
             int sz = clientSock->read(buf, sizeof(buf));
-            while (clientSock->queryStatus() == SC_OK)
-            {
+            while (clientSock->queryStatus() == SC_OK) {
                 ofile.write(buf, sz);
                 sz = clientSock->read(buf, sizeof(buf));
             }
-        }
-        else
-        {
-            string strbuf;
+        } else {
+            std::string strbuf;
             clientSock->read(strbuf, EOF);
             ofile << strbuf;
         }
@@ -98,14 +82,10 @@ void* ServerThreadHandler::handle(Params* params)
     }
 
     sock.close();
-    return 0;
 }
 
 
-void* client_process(void* args)
-{
-    void* ret = (void*) 2;
-    Params* params = (Params*) args;
+bool client_process(const Params* params) {
     cout << "Client process started, port " <<  params->port << endl;
     cout << "Reading from file " << params->fileName << endl;
 
@@ -114,19 +94,18 @@ void* client_process(void* args)
     if (!sock.open(saddr, Socket::modeReadWrite))
     {
         cout << "Error opening client socket: " << errno << endl;
-        return ret;
+        return false;
     }
 
 
-    ifstream ifile(params->fileName.c_str());
-    if (!ifile.is_open())
-    {
+    std::ifstream ifile(params->fileName.c_str());
+    if (!ifile.is_open()) {
         cout << "Could not open file " << params->fileName << endl;
-        return ret;
+        return false;
     }
 
-    string contents((istreambuf_iterator<char>(ifile)),
-                    istreambuf_iterator<char>());
+    std::string contents((std::istreambuf_iterator<char>(ifile)),
+                         std::istreambuf_iterator<char>());
     ifile.close();
 
 //    cout << "File contents:\n" << contents << endl;
@@ -135,12 +114,11 @@ void* client_process(void* args)
 
     sock.close();
 
-    return 0;
+    return true;
 }
 
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     Params params = {
         4321,
         false,
@@ -148,10 +126,8 @@ int main(int argc, char* argv[])
     };
 
     int opt;
-    while ((opt = getopt(argc, argv, "b")) != -1)
-    {
-        switch (opt)
-        {
+    while ((opt = getopt(argc, argv, "b")) != -1) {
+        switch (opt) {
         case 'b':
             cout << "Using block copy" << endl;
             params.binary = true;
@@ -162,20 +138,21 @@ int main(int argc, char* argv[])
         }
     }
 
-    if (optind < argc)
+    if (optind < argc) {
         params.fileName = argv[optind];
-    else
-    {
+    } else {
         cout << "Usage:  filecopy [ -b ] <filename>" << endl;
         return 1;
     }
 
-    ServerThreadHandler server(&params);
-    ThreadManager::create<Params*, void*>(&server);
+    auto server = std::thread(server_handler, &params);
 
-    client_process(&params);
+    bool ret = client_process(&params);
+    cout << "Client finished " << (ret ? "ok" : "with error") << endl;
 
-    server.wait();	// wait for server thread to end
-
+    // wait for server thread to end
+    if (server.joinable()) {
+        server.join();
+    }
     return 0;
 }

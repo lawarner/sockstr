@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2014
+   Copyright (C) 2014, 2023
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -22,43 +22,34 @@
 //
 // An example of a multi-threaded REST server.
 
+#include <sockstr/HttpHelpers.h>
+#include <sockstr/HttpStream.h>
+#include <sockstr/Socket.h>
+
 #include <cerrno>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <stdlib.h>
-#include <cstring>
+#include <thread>
+#include <vector>
 #include <unistd.h>
-
-#include <sockstr/HttpHelpers.h>
-#include <sockstr/HttpStream.h>
-#include <sockstr/Socket.h>
-#include <sockstr/ThreadHandler.h>
 using namespace sockstr;
-using namespace std;
+using std::cout;
+using std::endl;
 
 
 static bool debugOut = false;
 
-struct Params
-{
+struct Params {
     Params(int lPort, HttpServerStream* lClient) : port(lPort), client(lClient) { }
     int port;
     HttpServerStream* client;
 };
 
 
-class RequestThreadHandler : public ThreadHandler<Params*, void*>
-{
-public:
-    RequestThreadHandler(Params* params) { setData(params); }
-    ~RequestThreadHandler() { delete data_; }
-
-    virtual void* handle(Params* params);
-};
-
-void* RequestThreadHandler::handle(Params* params)
-{
+void request_handler(Params* params) {
     HttpServerStream* sock = params->client;
     const char* hostport = *sock;
     cout << "Server thread connected to " << hostport << endl;
@@ -67,20 +58,20 @@ void* RequestThreadHandler::handle(Params* params)
     char buf[1024];
     static const char* errorJson = "{ error: { text: \"Malformed request\" } }\r\n";
 
-    if (sock->queryStatus() == SC_OK)
-    {
+    if (sock->queryStatus() == SC_OK) {
         HttpServerStream::HttpFunction funct;
-        string url;
+        std::string url;
         unsigned int sz = sock->request(buf, sizeof(buf), funct, url);
-        if (sz == 0)
-        {
+        if (sz == 0) {
             cout << "ERROR on http request" << endl;
             sock->response(errorJson, strlen(errorJson), "application/json", 404);
         } else {
             const char* funcName = sock->functionName(funct);
             cout << "HttpReq: " << funcName << " " << url << "." << endl;
-            if (debugOut) cout << string(buf, sz) << endl;
-            ostringstream someJson;
+            if (debugOut) {
+                cout << std::string(buf, sz) << endl;
+            }
+            std::ostringstream someJson;
             someJson << "{ http: \"" << funcName << "\", url: \"" << url << "\" }\r\n";
             sock->response(someJson.str().c_str(), someJson.str().size(), "application/json");
         }
@@ -88,30 +79,27 @@ void* RequestThreadHandler::handle(Params* params)
 
     sock->close();
     delete sock;
-
-    return 0;
+    delete params;
 }
 
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     int port = 4321;
-
     int opt;
-    while ((opt = getopt(argc, argv, "D")) != -1)
-    {
-        switch (opt)
-        {
-        case 'D':
-            debugOut = true;
-            break;
-        default:
-            cout << "Usage:  restserver [ -D ] [ port ]" << endl;
-            return 1;
+    while ((opt = getopt(argc, argv, "D")) != -1) {
+        switch (opt) {
+            case 'D':
+                debugOut = true;
+                break;
+            default:
+                cout << "Usage:  restserver [ -D ] [ port ]" << endl;
+                return 1;
         }
     }
 
-    if (optind < argc) port = atoi(argv[optind]);
+    if (optind < argc) {
+        port = atoi(argv[optind]);
+    }
 
     cout << "Server connecting to port " << port << endl;
 
@@ -120,25 +108,27 @@ int main(int argc, char* argv[])
 
     HttpServerStream sock;
     SocketAddr saddr(port);
-    if (!sock.open(saddr, Socket::modeReadWrite))
-    {
+    if (!sock.open(saddr, Socket::modeReadWrite)) {
         cout << "Error opening socket: "
              << errno << ": " << strerror(errno) << endl;
         return 2;
     }
 
+    std::vector<std::thread> threads;
     do {
         HttpServerStream* clientSock = (HttpServerStream*) sock.listen();
-        if (clientSock)
-        {
+        if (clientSock) {
             Params* params = new Params(port, clientSock);
-            RequestThreadHandler* server = new RequestThreadHandler(params);
-            //Note that ThreadManager currently leaks handlers
-            ThreadManager::create<Params*, void*>(server);
+            threads.emplace_back(request_handler, params);
         }
     } while (true);
 
-    //server.wait();	// wait for server thread to end
+    for (auto& thr : threads) {
+        if (thr.joinable()) {
+            thr.join();
+        }
+    }
+    threads.clear();
 
     return 0;
 }

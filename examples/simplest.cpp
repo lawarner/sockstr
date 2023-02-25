@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012, 2013
+   Copyright (C) 2012, 2013, 2023
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -23,43 +23,32 @@
 // This is the simplest standalone example of using sockstr for both client 
 // and server sockets.
 
+#include <sockstr/Socket.h>
 #include <cerrno>
 #include <iostream>
-
-#include <sockstr/Socket.h>
-#include <sockstr/ThreadHandler.h>
+#include <thread>
 using namespace sockstr;
-using namespace std;
+using std::cout;
+using std::endl;
 
-struct Params
-{
+struct Params {
     int port;
 };
 
 
-class ServerThreadHandler : public ThreadHandler<Params*, void*> {
-public:
-    ServerThreadHandler(Params* params) { setData(params); }
-
-    virtual void* handle(Params* params);
-};
-
-void* ServerThreadHandler::handle(Params* params) {
-    void* ret = (void*) 2;
+void server_handler(const Params* params) {
     cout << "Server connecting to port " << params->port << endl;
 
     Socket sock;
     SocketAddr saddr(params->port);
-    if (!sock.open(saddr, Socket::modeReadWrite))
-    {
+    if (!sock.open(saddr, Socket::modeReadWrite)) {
         cout << "Error opening server socket: " << errno << endl;
-        return ret;
+        return;
     }
 
     cout << "Listen for client connection" << endl;
     Stream* clientSock = sock.listen();
-    if (clientSock)
-    {
+    if (clientSock) {
         std::string strbuf;
 
         while (clientSock->queryStatus() == SC_OK) {
@@ -76,20 +65,17 @@ void* ServerThreadHandler::handle(Params* params) {
     }
 
     sock.close();
-    return 0;
 }
 
 
-void* client_process(void* args) {
-    void* ret = (void*) 2;
-    Params* params = (Params*) args;
+bool client_process(const Params* params) {
     cout << "Client process started." << endl;
 
     Socket sock;
     SocketAddr saddr("localhost", params->port);
     if (!sock.open(saddr, Socket::modeReadWrite)) {
         cout << "Error opening client socket: " << errno << endl;
-        return ret;
+        return false;
     }
 
     std::string str("Sending a test string.\n<EOM>");
@@ -103,20 +89,21 @@ void* client_process(void* args) {
       }
     }
     sock.close();
-
-    return 0;
+    return true;
 }
 
 
 int main(int argc, const char* argv[]) {
     Params params = { 4321 };
 
-    ServerThreadHandler server(&params);
-    ThreadManager::create<Params*, void*>(&server);
+    auto server = std::thread(server_handler, &params);
 
-    client_process(&params);
+    bool ret = client_process(&params);
+    cout << "Client finished " << (ret ? "ok" : "with error") << endl;
 
-    server.wait();
-
+    // wait for server thread to end
+    if (server.joinable()) {
+        server.join();
+    }
     return 0;
 }

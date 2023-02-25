@@ -30,7 +30,7 @@ CC = g++
 CCFLAGS = -std=c++17 -Wall -g -O0 -I$(TOP) -I$(INCDIR)
 
 OBJS := Socket.o SocketAddr.o StreamBuf.o SocketState.o SocketStateTLS.o \
-        Stream.o ThreadHandler.o HttpHelpers.o HttpStream.o OAuth.o
+        Stream.o HttpHelpers.o HttpStream.o OAuth.o
 
 SRCS := $(OBJS:.o=.cpp)
 

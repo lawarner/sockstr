@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012 - 2021
+   Copyright (C) 2012 - 2023
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -59,7 +59,7 @@ using namespace sockstr;
 //
 
 // Initialize static members
-DWORD  Socket::m_dwSequence  = 0;
+DWORD Socket::m_dwSequence  = 0;
 
 // Params   :
 //   lpszFileName              Fully qualified host name and port
@@ -97,36 +97,21 @@ Socket::Socket(SocketAddr& rSockAddr, UINT uOpenFlags) {
 }
 
 Socket::~Socket() {
-  close();	// Just in case connection is still open
+    close();	// Just in case connection is still open
 }
 
-// Abstract : Assignment operator
-//
-// Returns  : Reference to Socket object that was assigned
-// Params   :
-//   rSource                   Reference to a Socket object from which the
-//                             variables are copied.
-//
-// Pre      :
-// Post     : The internal member variables of the assignee (Socket that
-//            is to the left of the equal sign are set equal to the value 
-//            contained in rSource.
-//
-// Remarks  :
-//
-Socket&
-Socket::operator=(const Socket& rSource)
-{
+Socket& Socket::operator=(const Socket& rSource) {
 //    Stream::operator=(rSource);
+    if (&rSource != this) {
+        m_hFile = rSource.m_hFile;
+        m_uOpenFlags = rSource.m_uOpenFlags;
+        m_bAsyncMode = rSource.m_bAsyncMode;
 
-	m_hFile = rSource.m_hFile;
-	m_uOpenFlags = rSource.m_uOpenFlags;
-	m_bAsyncMode = rSource.m_bAsyncMode;
-
-	m_pState = rSource.m_pState;
-	m_Status = rSource.m_Status;
-	m_PeerAddr = rSource.m_PeerAddr;
-	return *this;
+        m_pState = rSource.m_pState;
+        m_Status = rSource.m_Status;
+        m_PeerAddr = rSource.m_PeerAddr;
+    }
+    return *this;
 }
 
 
@@ -145,11 +130,10 @@ Socket::operator=(const Socket& rSource)
 //            class.  It does common initializations for all of
 //            the constructors.
 //
-void
-Socket::initialize() {
-	m_bAsyncMode = false;
-	// Set initial state to Closed
-	m_pState = SSClosed::instance();
+void Socket::initialize() {
+    m_bAsyncMode = false;
+    // Set initial state to Closed
+    m_pState = SSClosed::instance();
 }
 
 
@@ -166,8 +150,7 @@ Socket::initialize() {
 //
 // Remarks  :
 //
-void
-Socket::setAsyncMode(const bool bMode) {
+void Socket::setAsyncMode(const bool bMode) {
     m_bAsyncMode = bMode;
 }
 
@@ -179,55 +162,24 @@ int Socket::getHandle (void) const {
     return m_hFile;
 }
 
-// Abstract : Send an IPC message over the socket
-//
-// Returns  : int (0 on success)
-// Params   :
-//   pData                     Pointer to IPC structure (or sub-class)
-//   pCallback                 Optional pointer to application's one-time-
-//                             only callback.
-//
-// Pre      : The user-defined part of pData is already filled-in before
-//            the application calls this routine.
-// Post     : The IpcStruct data packet will be sent to the peer of
-//            the socket connection.  The static packet sequence number
-//            is increased by 1.
-//
-// Remarks  : The IpcStruct data packet will be sent across the socket
-//            connection, either synchronously or asynchronously depending
-//            on the I/O mode (see the SetAsyncMode function).  If the
-//            mode is synchronous, then the packet will be first sent
-//            over the socket before this routine returns.  In the
-//            asynchronous mode, a worker thread will be made to do the
-//            write and this routine returns immediately.  When the worker
-//            thread completes, the application's callback routine is called.
-//            If the pCallback parameter is 0, then the routine that
-//            was given as parameter to registerCallback() will be called.
-//            Otherwise, if pCallback is specified, then it will be
-//            called instead.
-//
-int
-Socket::remoteProcedure(IpcStruct* pData, Callback pCallback)
-{
-	// Note that the precondition states that the caller is responsible for
-	// filling in the user-defined data of the pData buffer.  This actually
-	// a precondition for the application that will be receiving this message.
+int Socket::remoteProcedure(IpcStruct* pData, Callback pCallback) {
+    // Note that the precondition states that the caller is responsible for
+    // filling in the user-defined data of the pData buffer.  This actually
+    // a precondition for the application that will be receiving this message.
 
-	Callback pOldCallback;
+    Callback pOldCallback;
 
-	pData->dwSequence_ = ++m_dwSequence;
-	if (pCallback)
-	{
-		pOldCallback = (Callback) registerCallback(pCallback);
-	}
+    pData->dwSequence_ = ++m_dwSequence;
+    if (pCallback) {
+        pOldCallback = (Callback) registerCallback(pCallback);
+    }
 
-	write(pData, pData->wPacketSize_);
+    write(pData, pData->wPacketSize_);
 
-	if (pCallback)
-	{
-		registerCallback(pOldCallback);
-	}
-	return 0;
+    if (pCallback) {
+        registerCallback(pOldCallback);
+    }
+    return 0;
 }
 
 
@@ -262,72 +214,63 @@ Socket::remoteProcedure(IpcStruct* pData, Callback pCallback)
 //            header which contains the packet length.  Then the rest of the
 //            packet is appended with a second read.
 //
-int
-Socket::remoteReadData(IpcStruct* pData, UINT uMaxLength)
-{
-	// Warning: This routine does not work in overlapped I/O mode.  The
-	//          next statement (temporarily) goes to polling mode.
-	Callback pOldCallback = (Callback) registerCallback();
-	UINT uLength = pData->wPacketSize_;
-	if (uMaxLength != 0 && uMaxLength < uLength)
-	{
-		uLength = uMaxLength;
-	}
-	VERIFY(uLength >= sizeof(IpcStruct));
+int Socket::remoteReadData(IpcStruct* pData, UINT uMaxLength) {
+    // Warning: This routine does not work in overlapped I/O mode.  The
+    //          next statement (temporarily) goes to polling mode.
+    Callback pOldCallback = registerCallback();
+    UINT uLength = pData->wPacketSize_;
+    if (uMaxLength != 0 && uMaxLength < uLength) {
+        uLength = uMaxLength;
+    }
+    VERIFY(uLength >= sizeof(IpcStruct));
 
-	bool bValidIPC = false;
-	UINT uActual;
-	while (! bValidIPC)
-	{
-		// Read in just the header
-		uActual = read(pData, sizeof(IpcStruct));
-		if (uActual == 0)		// No data, so just return.
-		{
-			registerCallback(pOldCallback);
-			return 0;
-		}
+    bool bValidIPC = false;
+    UINT uActual;
+    while (! bValidIPC) {
+        // Read in just the header
+        uActual = read(pData, sizeof(IpcStruct));
+        if (uActual == 0) {		// No data, so just return.
+            registerCallback(pOldCallback);
+            return 0;
+        }
 #ifdef _DEBUG 
-		VERIFY(uActual == sizeof(IpcStruct));
-		// OK, got the header.  Now read the rest of the packet.
-		VERIFY(uLength >= pData->m_wPacketSize);
+        VERIFY(uActual == sizeof(IpcStruct));
+        // OK, got the header.  Now read the rest of the packet.
+        VERIFY(uLength >= pData->m_wPacketSize);
 #else
-		if (uActual != sizeof(IpcStruct))
-		{
-			continue;
-		}
-		if (uLength < pData->wPacketSize_)
-		{
-			// flush buffer
-			DWORD dwBytes;
-			if (IOCTLSOCK(m_hFile, FIONREAD, &dwBytes) == SOCKET_ERROR)
-			{
-				registerCallback(pOldCallback);
-				return 0;
-			}
-			if (dwBytes)
-			{
-				char * pDiscardBuf = new char[dwBytes];
-				read(pDiscardBuf, dwBytes);
-				delete [] pDiscardBuf;
-			}
-			continue;
-		}
+        if (uActual != sizeof(IpcStruct)) {
+            continue;
+        }
+        if (uLength < pData->wPacketSize_) {
+            // flush buffer
+            DWORD dwBytes;
+            if (IOCTLSOCK(m_hFile, FIONREAD, &dwBytes) == SOCKET_ERROR) {
+                registerCallback(pOldCallback);
+                return 0;
+            }
+            if (dwBytes) {
+                char * pDiscardBuf = new char[dwBytes];
+                read(pDiscardBuf, dwBytes);
+                delete [] pDiscardBuf;
+            }
+            continue;
+        }
 #endif
-		uLength = pData->wPacketSize_ - uActual;
-		uActual = read((char *)pData + uActual, uLength);
+        uLength = pData->wPacketSize_ - uActual;
+        uActual = read((char *)pData + uActual, uLength);
 #ifdef _DEBUG
-		VERIFY(uActual == uLength);
+        VERIFY(uActual == uLength);
 #else
-		if (uActual == uLength)
+        if (uActual == uLength)
 #endif
-		{
-			bValidIPC = true;	// Finally, declare packet as valid
-		}
-	}
+        {
+            bValidIPC = true;	// Finally, declare packet as valid
+        }
+    }
 
-	// Reset the user's callback to what it was
-	registerCallback(pOldCallback);
-	return uActual + sizeof(IpcStruct);
+    // Reset the user's callback to what it was
+    registerCallback(pOldCallback);
+    return uActual + sizeof(IpcStruct);
 }
 
 

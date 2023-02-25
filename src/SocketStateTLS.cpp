@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2013
+   Copyright (C) 2013, 2023
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -51,6 +51,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <thread>
 
 #include <sockstr/Socket.h>
 #include <sockstr/SocketState.h>
@@ -356,12 +357,10 @@ UINT SSConnectedTLS::read(Socket* pSocket, void* pBuf, UINT uCount) {
                 return 0;
             }
 
-            auto readThreadHandler
-                    = new ReadThreadHandler(createIOParams(pSocket, pBuf, uCount,
-                                                           pSocket->m_pDefCallback));
-
-            bool th = ThreadManager::create<IOPARAMS*>(readThreadHandler);
-            VERIFY(th);
+            auto readThreadHandler = std::thread(&SocketState::read_thread_handler, this,
+                                                 createIOParams(pSocket, pBuf, uCount,
+                                                                pSocket->m_pDefCallback));
+            readThreadHandler.detach();
         }
     }
 
@@ -477,12 +476,10 @@ void SSConnectedTLS::write(Socket* pSocket, const void* pBuf, UINT uCount) {
             pSocket->clear(pSocket->rdstate() & ~std::ios::failbit);
         }
     } else {
-        auto writeThreadHandler
-                = new WriteThreadHandler(createIOParams(pSocket, pBuf, uCount,
-                                                        pSocket->m_pDefCallback));
-
-        bool th = ThreadManager::create<IOPARAMS*>(writeThreadHandler);
-        VERIFY(th);
+        auto writeThreadHandler = std::thread(&SocketState::write_thread_handler, this,
+                                              createIOParams(pSocket, pBuf, uCount,
+                                                             pSocket->m_pDefCallback));
+        writeThreadHandler.detach();
     }
 }
 

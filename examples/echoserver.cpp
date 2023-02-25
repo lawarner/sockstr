@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012, 2013
+   Copyright (C) 2012, 2013, 2023
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -26,27 +26,28 @@
 // This program relies on posix threads and is only known to work on 
 // linux for now.
 
+#include <sockstr/Socket.h>
+
 #include <cerrno>
 #include <fstream>
 #include <iostream>
 #include <signal.h>
 #include <stdlib.h>
+#include <thread>
+#include <vector>
 #include <unistd.h>
-
-#include <sockstr/Socket.h>
-#include <sockstr/ThreadHandler.h>
 using namespace sockstr;
-using namespace std;
+using std::cout;
+using std::endl;
 
 
 bool exit_server = false;
 Socket serverSock;
 
 // Params is the structure passed between threads
-struct Params
-{
+struct Params {
     Params(int _port, bool _binary, bool _echo, Stream* _sock = 0)
-        : port(_port), binary(_binary), echo(_echo), clientSock(_sock) { }
+        : port(_port), binary(_binary), echo(_echo), clientSock(_sock) {}
     Params(Params* p) : port(p->port), binary(p->binary), echo(p->echo), 
                         clientSock(p->clientSock) { }
 
@@ -57,92 +58,76 @@ struct Params
 };
 
 
-class ClientThreadHandler : public ThreadHandler<Params*, void*>
-{
-public:
-    ClientThreadHandler(Params* params) { setData(params); }
-
-    virtual void* handle(Params* params);
-};
-
-
-void* ClientThreadHandler::handle(Params* params)
-{
+void client_handler(Params* params) {
     cout << "Client process started." << endl;
     Stream* clientSock = params->clientSock;
     int totalRead = 0;
 
-    while (!exit_server && clientSock->good())
-    {
-        if (params->binary)
-        {
+    while (!exit_server && clientSock->good()) {
+        if (params->binary) {
             char buf[512];
             int sz = clientSock->read(buf, sizeof(buf));
-            if (sz > 0)
-            {
-                if (params->echo)
-                    cout << string(buf, sz) << endl;
-                else
+            if (sz > 0) {
+                if (params->echo) {
+                    cout << std::string(buf, sz) << endl;
+                } else {
                     cout << "Echoing " << sz << " bytes." << endl;
-
+                }
                 clientSock->write(buf, sz);
                 totalRead += sz;
             }
-        }
-        else
-        {
-            string strbuf;
+        } else {
+            std::string strbuf;
             clientSock->read(strbuf, EOF);
             *clientSock << strbuf;
         }
     }
 
-    if (clientSock->good())
+    if (clientSock->good()) {
         clientSock->close();
+    }
     delete clientSock;
     delete params;
 
     cout << "Client exiting... total bytes read=" << totalRead << endl;
-    return 0;
 }
 
 
 // The echo server runs in the main process thread.  It spawns a thread for
 // each client connection
-void* server_process(void* args)
-{
-    void* ret = (void*) 2;
-    Params* params = (Params*) args;
+void server_process(Params* params) {
     cout << "Server connecting to port " << params->port << endl;
 
     SocketAddr saddr(params->port);
-    if (!serverSock.open(saddr, Socket::modeReadWrite))
-    {
+    if (!serverSock.open(saddr, Socket::modeReadWrite)) {
         cout << "Error opening server socket: " << errno << endl;
-        return ret;
+        return;
     }
 
-    while (!exit_server && serverSock.good())
-    {
+    std::vector<std::thread> threads;
+    while (!exit_server && serverSock.good()) {
         Stream* clientSock = serverSock.listen();
-        if (clientSock && clientSock->good())
-        {
+        if (clientSock && clientSock->good()) {
             Params *clientParams = new Params(params);
             clientParams->clientSock = clientSock;
             
-            ClientThreadHandler* client = new ClientThreadHandler(clientParams);
-            ThreadManager::create<Params*, void*>(client);
+            threads.emplace_back(client_handler, clientParams);
         }
     }
 
-    if (serverSock.good())
+    if (serverSock.good()) {
         serverSock.close();
-    return 0;
+    }
+    for (auto& thr : threads) {
+        if (thr.joinable()) {
+            thr.join();
+        }
+    }
+    threads.clear();
 }
 
 // Signal handler
-void quitit(int sig)
-{
+void quitit(int sig) {
     cout << endl << "Exiting...";
     // Exit as cleanly as possible
     exit_server = true;
@@ -151,32 +136,29 @@ void quitit(int sig)
 }
 
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     Params params(4321, true, true);
 
     int opt;
-    while ((opt = getopt(argc, argv, "as")) != -1)
-    {
-        switch (opt)
-        {
-        case 'a':
-            params.binary = false;
-            break;
-        case 's':
-            params.echo = false;
-            break;
-        default:
-            cout << "Usage:  echoserver [ -as ] <port>" << endl
-                 << "          -a for string reads on socket" << endl
-                 << "          -s = only display summary on stdout" << endl;
-            return 1;
+    while ((opt = getopt(argc, argv, "as")) != -1) {
+        switch (opt) {
+            case 'a':
+                params.binary = false;
+                break;
+            case 's':
+                params.echo = false;
+                break;
+            default:
+                cout << "Usage:  echoserver [ -as ] <port>" << endl
+                     << "          -a for string reads on socket" << endl
+                     << "          -s = only display summary on stdout" << endl;
+                return 1;
         }
     }
 
-    if (optind < argc)
+    if (optind < argc) {
         params.port = atoi(argv[optind]);
-
+    }
     
     cout << "Using " << (params.binary ? "block" : "string") << " copy, "
          << (params.echo ? "echoing" : "not echoing") << " contents." << endl;
@@ -185,6 +167,5 @@ int main(int argc, char* argv[])
     signal(SIGQUIT, quitit);
 
     server_process(&params);
-
     return 0;
 }

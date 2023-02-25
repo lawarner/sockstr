@@ -1,8 +1,7 @@
 Socket.o: Socket.cpp ../config.h ../include/sockstr/sstypes.h \
  ../include/sockstr/IPC.h ../include/sockstr/Socket.h \
  ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \
- ../include/sockstr/StreamBuf.h ../include/sockstr/SocketState.h \
- ../include/sockstr/ThreadHandler.h
+ ../include/sockstr/StreamBuf.h ../include/sockstr/SocketState.h
 SocketAddr.o: SocketAddr.cpp ../config.h ../include/sockstr/sstypes.h \
  ../include/sockstr/SocketAddr.h
 StreamBuf.o: StreamBuf.cpp ../config.h ../include/sockstr/sstypes.h \
@@ -10,16 +9,13 @@ StreamBuf.o: StreamBuf.cpp ../config.h ../include/sockstr/sstypes.h \
 SocketState.o: SocketState.cpp ../config.h ../include/sockstr/sstypes.h \
  ../include/sockstr/Socket.h ../include/sockstr/SocketAddr.h \
  ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h \
- ../include/sockstr/SocketState.h ../include/sockstr/ThreadHandler.h
+ ../include/sockstr/SocketState.h
 SocketStateTLS.o: SocketStateTLS.cpp ../config.h \
  ../include/sockstr/sstypes.h ../include/sockstr/Socket.h \
  ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \
- ../include/sockstr/StreamBuf.h ../include/sockstr/SocketState.h \
- ../include/sockstr/ThreadHandler.h
+ ../include/sockstr/StreamBuf.h ../include/sockstr/SocketState.h
 Stream.o: Stream.cpp ../config.h ../include/sockstr/sstypes.h \
  ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
-ThreadHandler.o: ThreadHandler.cpp ../config.h \
- ../include/sockstr/sstypes.h ../include/sockstr/ThreadHandler.h
 HttpHelpers.o: HttpHelpers.cpp ../include/sockstr/HttpHelpers.h \
  ../include/sockstr/Socket.h ../include/sockstr/sstypes.h \
  ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \
