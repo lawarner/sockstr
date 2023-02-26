@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012, 2013
+   Copyright (C) 2012, 2013, 2023
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -59,15 +59,14 @@ class HttpStatus;
 /**
  * Class to handle client-side HTTP protocol over a socket connection.
  */
-class DllExport HttpStream : public Socket
-{
+class DllExport HttpStream : public Socket {
 protected:
     typedef std::map<std::string, HttpParamEncoder*> HeaderMap;
 
 public:
     HttpStream();
-	HttpStream(const char* lpszFileName, UINT uOpenFlags);
-	HttpStream(SocketAddr& rSockAddr, UINT uOpenFlags);
+    HttpStream(const char* lpszFileName, UINT uOpenFlags);
+    HttpStream(SocketAddr& rSockAddr, UINT uOpenFlags);
 
     virtual ~HttpStream();
 
@@ -102,12 +101,11 @@ private:
 /**
  * Class to handle server-side HTTP protocol over a socket connection.
  */
-class DllExport HttpServerStream : public HttpStream
-{
+class DllExport HttpServerStream : public HttpStream {
 public:
     HttpServerStream();
-	HttpServerStream(const char* lpszFileName, UINT uOpenFlags);
-	HttpServerStream(SocketAddr& rSockAddr, UINT uOpenFlags);
+    HttpServerStream(const char* lpszFileName, UINT uOpenFlags);
+    HttpServerStream(SocketAddr& rSockAddr, UINT uOpenFlags);
 
     virtual ~HttpServerStream();
 

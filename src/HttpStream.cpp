@@ -248,10 +248,8 @@ HttpServerStream::listen(const int nBacklog)
     return listenIntern(pClient, nBacklog);
 }
 
-void HttpServerStream::loadDefaultHeaders(void)
-{
-    for (int i = 0; defaultSrvHeaderFields_[i]; i += 2)
-    {
+void HttpServerStream::loadDefaultHeaders() {
+    for (int i = 0; defaultSrvHeaderFields_[i]; i += 2) {
         if (strcmp("Host", defaultSrvHeaderFields_[i]) == 0) {
             addHeader("Host", new HostnameEncoder(*this));
         } else if (strcmp("Date", defaultSrvHeaderFields_[i]) == 0) {
@@ -262,8 +260,7 @@ void HttpServerStream::loadDefaultHeaders(void)
     }
 }
 
-const char* HttpServerStream::functionName(HttpFunction function)
-{
+const char* HttpServerStream::functionName(HttpFunction function) {
     static const char* names[] = { "Invalid", "DELETE", "GET", "HEAD",
                                    "OPTIONS", "PUT", "POST" };
     unsigned int ifunc = function + 1;

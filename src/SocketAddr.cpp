@@ -116,27 +116,39 @@ SocketAddr::SocketAddr(const std::string& host, const std::string& service, cons
 SocketAddr::~SocketAddr() {}
 
 bool SocketAddr::getSockAddr(sockaddr_storage& sa, socklen_t& len) {
-    // TODO use std::apply
-    if (std::holds_alternative<sockaddr_in>(address_)) {
-        len = sizeof(sockaddr_in);
-        memcpy(&sa, &std::get<sockaddr_in>(address_), len);
-    } else if (std::holds_alternative<sockaddr_in6>(address_)) {
-        len = sizeof(sockaddr_in6);
-        memcpy(&sa, &std::get<sockaddr_in6>(address_), len);
-    } else if (std::holds_alternative<SpecialIP>(address_)) {
-        // TODO does not express INADDR_NONE (is it still needed?)
-        //auto spec = std::get<SpecialIP>(address_);
-        sockaddr_in6 si = {
-            .sin6_family = AF_INET6,
-            .sin6_port = htons(portNumber_),
-            .sin6_addr = in6addr_any
-        };
-        memcpy(&sa, &si, sizeof(si));
-        len = sizeof(si);
-    } else {
-        return false;
-    }
-    return true;
+    struct FillSaStorage {
+        FillSaStorage(sockaddr_storage* sas, WORD port)
+            : sa_store_(sas)
+            , port_(port) {}
+        socklen_t operator()(std::monostate& ) {
+            return 0;
+        }
+        socklen_t operator()(sockaddr_in& sin) {
+            memcpy(sa_store_, &sin, sizeof(sockaddr_in));
+            return sizeof(sockaddr_in);
+        }
+        socklen_t operator()(sockaddr_in6& sin6) {
+            memcpy(sa_store_, &sin6, sizeof(sockaddr_in6));
+            return sizeof(sockaddr_in6);
+        }
+        socklen_t operator()(SpecialIP& sip) {
+            // TODO does not express INADDR_NONE (is it still needed?)
+            //auto spec = std::get<SpecialIP>(address_);
+            sockaddr_in6 si = {
+                .sin6_family = AF_INET6,
+                .sin6_port = htons(port_),
+                .sin6_addr = in6addr_any
+            };
+            memcpy(sa_store_, &si, sizeof(si));
+            return sizeof(si);
+        }
+
+        sockaddr_storage* sa_store_;
+        WORD port_;
+    };
+    FillSaStorage filler(&sa, portNumber_);
+    len = std::visit(filler, address_);
+    return len > 0;
 }
 
 SocketAddr::AddrType SocketAddr::netAddress() const {

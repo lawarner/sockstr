@@ -385,39 +385,40 @@ Socket::getSockOpt(int  nOptionName, void* pOptionValue,
 //
 // Remarks  :
 //
-Stream *
-Socket::listen(const int nBacklog)
-{
+Stream * Socket::listen(const int nBacklog) {
 	// Construct a new client socket object
 	Socket * pClient = new Socket;
     return listenIntern(pClient, nBacklog);
 }
 
-Stream *
-Socket::listenIntern(Socket* pClient, const int nBacklog)
-{
-	SOCKET ClientSocket = m_pState->listen(this, nBacklog);
+Stream * Socket::listenIntern(Socket* pClient, const int nBacklog) {
+    SOCKET ClientSocket = m_pState->listen(this, nBacklog);
 
-	pClient->m_hFile = ClientSocket;
-	pClient->m_uOpenFlags = m_uOpenFlags;
-	pClient->m_bAsyncMode = m_bAsyncMode;
+    pClient->m_hFile = ClientSocket;
+    pClient->m_uOpenFlags = m_uOpenFlags;
+    pClient->m_bAsyncMode = m_bAsyncMode;
 
-	if (ClientSocket == INVALID_SOCKET)
-	{
-		//pClient->m_pState = SSClosed::instance();
-		//pClient->m_Status  = SC_FAILED;
+    if (ClientSocket == INVALID_SOCKET) {
+        //pClient->m_pState = SSClosed::instance();
+        //pClient->m_Status  = SC_FAILED;
         delete pClient;
-        pClient = 0;
-	}
-	else
-	{
-		pClient->m_pState = SSConnected::instance();
+        pClient = nullptr;
+    } else {
+        pClient->m_pState = SSConnected::instance();
 
-		// Only AFTER the listen do we know who's calling
-		socklen_t iSizeAddr = sizeof(sockaddr);
-		::getpeername(ClientSocket, (sockaddr *) &pClient->m_PeerAddr, &iSizeAddr);
-	}
-	return pClient;
+        // Only AFTER the listen do we know who's calling
+        socklen_t iSizeAddr = sizeof(sockaddr);
+        sockaddr sa;
+        auto ret = ::getpeername(ClientSocket, &sa, &iSizeAddr);
+        if (!ret) {
+            if (iSizeAddr == sizeof(sockaddr_in)) {
+                pClient->m_PeerAddr = *(sockaddr_in*)&sa;
+            } else {
+                pClient->m_PeerAddr = *(sockaddr_in6*)&sa;
+            }
+        }
+    }
+    return pClient;
 }
 
 
@@ -622,16 +623,14 @@ bool Socket::open(SocketAddr& rSockAddr, UINT uOpenFlags) {
 //
 // Remarks  :
 //
-UINT
-Socket::read(void* pBuf, UINT uCount) {
+UINT Socket::read(void* pBuf, UINT uCount) {
     if (uCount == 0) {
         return 0;		// In that case, we are done quickly.
     }
     return m_pState->read(this, pBuf, uCount);
 }
 
-UINT
-Socket::read(std::string& str, int delimiter) {
+UINT Socket::read(std::string& str, int delimiter) {
     char buf[2];
     int ret = 0;
     int sz;
@@ -648,8 +647,7 @@ Socket::read(std::string& str, int delimiter) {
 }
 
 // Handle multiple character delimiter (i.e., \r\n)
-UINT
-Socket::read(std::string& str, const std::string& delimiter) {
+UINT Socket::read(std::string& str, const std::string& delimiter) {
     int deliLen = delimiter.length();
     if (deliLen == 0) return read(str, EOF);
     if (deliLen == 1) return read(str, delimiter[0]);
@@ -693,8 +691,7 @@ Socket::read(std::string& str, const std::string& delimiter) {
 // Remarks  : This function is just a thin layer on top of the ::setsockopt()
 //            routine of the Windows Sockets library.
 //
-int
-Socket::setSockOpt(int  nOptionName, const void* pOptionValue,
+int Socket::setSockOpt(int  nOptionName, const void* pOptionValue,
                    int  nOptionLen, int nLevel) {
     return m_pState->setSockOpt(this, nOptionName, pOptionValue,
                                 nOptionLen, nLevel);
@@ -714,14 +711,12 @@ Socket::setSockOpt(int  nOptionName, const void* pOptionValue,
 //
 // Remarks  :
 //
-void
-Socket::write(const void* pBuf, UINT uCount) {
+void Socket::write(const void* pBuf, UINT uCount) {
     m_pState->write(this, pBuf, uCount);
 }
 
 
-void
-Socket::write(const std::string& str) {
+void Socket::write(const std::string& str) {
     m_pState->write(this, str.c_str(), str.size());
 }
 
@@ -748,7 +743,6 @@ Socket::operator const char* () const {
 //	struct hostent* pHostEntry;
 //	pHostEntry = ::gethostbyaddr((char *)&dwAddress, sizeof(dwAddress), AF_INET);
 //	if (pHostEntry != 0)
-    struct addrinfo* pAddrInfo = nullptr;
     const sockaddr* sa = nullptr;
     socklen_t slen;
     WORD portNum = 0;
@@ -763,10 +757,9 @@ Socket::operator const char* () const {
         portNum = sa6->sin6_port;
         sa = (const sockaddr*)sa6;
     }
-    if (sa != nullptr && ::getnameinfo(sa, slen,
-                                       tmpName, sizeof(tmpName), 0, 0, 0) == 0) {
+    if (sa != nullptr && ::getnameinfo(sa, slen, tmpName,
+                                       sizeof(tmpName), 0, 0, 0) == 0) {
         sprintf(szHostName, "%s:%hu", tmpName, ntohs(portNum));
-        ::freeaddrinfo(pAddrInfo);
     } else {
         // Reverse DNS failed, use TCP/IP dot notation
 #if 1
