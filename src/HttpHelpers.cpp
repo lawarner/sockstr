@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012 - 2023
+   Copyright (C) 2012 - 2024
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -26,7 +26,6 @@
 #include <sockstr/Socket.h>
 #include <sstream>
 #include <stdio.h>
-#include <time.h>
 using namespace sockstr;
 
 const std::string HttpStatus::HTTP_HEADER = HTTP_VERSION " ";

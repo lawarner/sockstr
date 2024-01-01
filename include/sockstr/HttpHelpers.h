@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012 - 2014
+   Copyright (C) 2012 - 2024
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -27,6 +27,7 @@
 //
 // INCLUDE FILES
 //
+#include <ctime>
 #include <map>
 #include <string>
 #include <vector>

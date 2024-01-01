@@ -32,10 +32,12 @@
 //
 // FORWARD CLASS DECLARATIONS
 //
+#if USE_OPENSSL
 struct ssl_st;
 struct ssl_ctx_st;
 typedef struct ssl_st SSL;
 typedef struct ssl_ctx_st SSL_CTX;
+#endif
 
 
 namespace sockstr {
