@@ -131,6 +131,7 @@ Socket& Socket::operator=(const Socket& rSource) {
 //            the constructors.
 //
 void Socket::initialize() {
+    m_hFile = INVALID_SOCKET;
     m_bAsyncMode = false;
     // Set initial state to Closed
     m_pState = SSClosed::instance();
@@ -341,8 +342,10 @@ Socket::abort()
 void
 Socket::close()
 {
-    if (m_hFile != INVALID_SOCKET)
-        m_pState->close(this);
+  if (m_hFile != INVALID_SOCKET) {
+    m_pState->close(this);
+    m_hFile = INVALID_SOCKET;
+  }
 }
 
 
