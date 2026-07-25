@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012 - 2023
+   Copyright (C) 2012 - 2026
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -45,6 +45,21 @@
 #include <netdb.h>
 #endif
 
+namespace {
+
+std::string lower_string(const std::string& str) {
+    if (str.empty()) {
+        return std::string();
+    }
+    std::string out(str.size(), ' ');
+    std::transform(str.begin(), str.end(), out.begin(), [](unsigned char ch) {
+        return std::tolower(ch);
+    });
+    return out;
+}
+
+}
+
 using namespace sockstr;
 
 // Params   :
@@ -79,26 +94,30 @@ using namespace sockstr;
 SocketAddr::SocketAddr()
     : protocol_()
     , address_(AddrAny)
-    , portNumber_(0) {}
+    , portNumber_(0)
+    , isMulticast_(false) {}
 
 SocketAddr::SocketAddr(WORD port, const std::string& protocol)
-    : protocol_(protocol)
+    : protocol_(lower_string(protocol))
     , address_(AddrNone)
-    , portNumber_(port) {
+    , portNumber_(port)
+    , isMulticast_(false) {
     resolve(std::string());
 }
 
 SocketAddr::SocketAddr(const std::string& host, WORD port, const std::string& protocol)
-    : protocol_(protocol)
+    : protocol_(lower_string(protocol))
     , address_(AddrNone)
-    , portNumber_(port) {
+    , portNumber_(port)
+    , isMulticast_(false) {
     resolve(host);
 }
 
 SocketAddr::SocketAddr(const std::string& host, const std::string& service, const std::string& protocol)
-    : protocol_(protocol)
+    : protocol_(lower_string(protocol))
     , address_(AddrNone)
-    , portNumber_(0) {
+    , portNumber_(0)
+    , isMulticast_(false) {
 
     struct servent* pService = ::getservbyname(service.c_str(), protocol.c_str());
     if (pService &&
@@ -159,12 +178,15 @@ WORD SocketAddr::portNumber() const {
     return portNumber_;
 }
 
+const std::string& SocketAddr::protocol() const {
+  return protocol_;
+}
+
 bool SocketAddr::resolve(const std::string& host) {
     constexpr const char* validIpv4 = "0123456789.";
     constexpr const char* validIpv6 = "0123456789abcdefABCDEF:";
     bool is_valid = false;
 
-    // TODO use portNumber_
     if (host.empty()) {
         address_ = AddrAny;
     } else if (host.find_first_not_of(validIpv4) == std::string::npos) {
@@ -172,6 +194,8 @@ bool SocketAddr::resolve(const std::string& host) {
         struct sockaddr_in sa;
         memset(&sa, 0, sizeof(struct sockaddr_in));
         sa.sin_family = AF_INET;
+        // add port to sa?
+        sa.sin_port = htons(portNumber_);
         auto ret = inet_pton(AF_INET, host.c_str(), &sa.sin_addr);
         if (ret > 0) {
             address_ = sa;
@@ -179,16 +203,32 @@ bool SocketAddr::resolve(const std::string& host) {
         } else {
             address_ = AddrNone;
         }
-    } else if (host.find_first_not_of(validIpv6)) {
+        if (is_valid && protocol_ == "udp") {
+            // Check for multicast address range 224.0.0.0 to 239.255.255.255
+            uint32_t ipaddr = ntohl(sa.sin_addr.s_addr);
+            int hbyte = ipaddr >> 24;
+            if (hbyte >= 224 && hbyte <= 239) {
+                isMulticast_ = true;
+            }
+        }
+    } else if (host.find_first_not_of(validIpv6) == std::string::npos) {
         // Try IPv6 address
         sockaddr_in6 sa6;
+        memset(&sa6, 0, sizeof(struct sockaddr_in6));
         sa6.sin6_family = AF_INET6;
+        sa6.sin6_port = htons(portNumber_);
         auto ret = inet_pton(AF_INET6, host.c_str(), &sa6.sin6_addr);
         if (ret > 0) {
             address_ = sa6;
             is_valid = true;
         } else {
             address_ = AddrNone;
+        }
+        if (is_valid && protocol_ == "udp") {
+            // Check for multicast address begins with FF
+            if (IN6_IS_ADDR_MULTICAST(&sa6.sin6_addr)) {
+                isMulticast_ = true;
+            }
         }
     } else {     // Try to resolve host name
         struct addrinfo* addr;
@@ -239,18 +279,7 @@ SocketAddr::operator const AddrType () const {
     return address_;
 }
 
-// Abstract : Returns a static, textual representation of an address
-//
-// Pre      :
-// Post     : Returns a text string representing the socket address.  Note
-//            that no attempt is made to preserve the contents of this
-//            string between subsequent calls.  The application should not
-//            attempt to modify or free the string returned.
-//            The string returned is a concatenation of the TCP/IP address
-//            (host name or dot notation) and the port number.  For example,
-//            "hostb.omroep.nl:7".
-//
-SocketAddr::operator const std::string& () {
+std::string SocketAddr::hostname() {
     if (hostName_.empty()) {
         char hbuf[NI_MAXHOST];
         if (std::holds_alternative<sockaddr_in>(address_)) {
@@ -264,15 +293,38 @@ SocketAddr::operator const std::string& () {
             if (!getnameinfo(sa6, sizeof(sockaddr_in), hbuf, sizeof(hbuf),
                              nullptr, 0, NI_NAMEREQD)) {
                 hostName_ = hbuf;
+            } else if (!getnameinfo(sa6, sizeof(sockaddr_in), hbuf, sizeof(hbuf),
+                             nullptr, 0, NI_NUMERICHOST)) {
+                hostName_ = hbuf;
             }
-        }
-        if (portNumber()) {
-            hostName_.append(":" + std::to_string(portNumber()));
         }
     }
     return hostName_;
 }
 
-const std::string& SocketAddr::operator()() {
-    return operator const std::string&();
+bool SocketAddr::isMulticast() const {
+    return isMulticast_;
+}
+
+// Abstract : Returns a static, textual representation of an address
+//
+// Pre      :
+// Post     : Returns a text string representing the socket address.  Note
+//            that no attempt is made to preserve the contents of this
+//            string between subsequent calls.  The application should not
+//            attempt to modify or free the string returned.
+//            The string returned is a concatenation of the TCP/IP address
+//            (host name or dot notation) and the port number.  For example,
+//            "hostb.omroep.nl:7".
+//
+SocketAddr::operator std::string () {
+    auto hoststr = hostname();
+    if (portNumber()) {
+        hoststr.append(":" + std::to_string(portNumber()));
+    }
+    return hoststr;
+}
+
+const std::string SocketAddr::operator()() {
+    return operator std::string();
 }

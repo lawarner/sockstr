@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012, 2023
+   Copyright (C) 2012, 2023, 2026
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -58,6 +58,9 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #endif
+#ifdef LOOKUP_ACTIVE_INTERFACE
+#include <ifaddrs.h>
+#endif
 #ifdef TARGET_WINDOWS
 #include <WinSock2.h>
 #include <WS2tcpip.h>
@@ -92,6 +95,48 @@ void* SocketState::m_pLastBuffer = 0;
 namespace {
 
 DWORD status_ = 0;   // TODO use a member of Socket
+
+#ifdef LOOKUP_ACTIVE_INTERFACE
+std::string get_active_interface(int addr_family, std::string* ipaddr_str = nullptr) {
+    std::string interface("en0");  // Default name if lookup fails
+    struct ifaddrs *ifaddr, *ifa;
+
+    // 1. Fetch the linked list of all system interfaces
+    if (getifaddrs(&ifaddr) == -1) {
+        perror("getifaddrs failed");
+        return interface;
+    }
+
+    // 2. Iterate through interfaces to find a suitable candidate
+    for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+        // Skip interfaces without an assigned address structure
+        if (ifa->ifa_addr == NULL) continue;
+
+        if (ifa->ifa_addr->sa_family == addr_family) {
+            // Check flags: Must be UP and RUNNING
+            // Must NOT be a Loopback interface (lo0)
+            if ((ifa->ifa_flags & IFF_UP) && 
+                (ifa->ifa_flags & IFF_RUNNING) && 
+                !(ifa->ifa_flags & IFF_LOOPBACK)) {
+                
+                // Copy the discovered interface name (e.g., "en0")
+                interface = ifa->ifa_name;
+                if (ipaddr_str != nullptr && addr_family == AF_INET) {
+                    char ip_address[INET_ADDRSTRLEN];
+                    auto p_addr = (struct sockaddr_in *)ifa->ifa_addr;
+                    ::inet_ntop(addr_family, &p_addr->sin_addr, ip_address, INET_ADDRSTRLEN);
+                    *ipaddr_str = ip_address;
+                }
+                break; 
+            }
+        }
+    }
+
+    // Free the allocated structure memory
+    freeifaddrs(ifaddr);
+    return interface;
+}
+#endif
 
 }  // namespace
 
@@ -157,15 +202,20 @@ SocketState::close(Socket* pSocket)
     // Flush any characters remaining in the streambuf
     pSocket->strbuf.pubsync();
 
-	// Not interested in return value, just always try to close socket
+    if (IN6_IS_ADDR_MULTICAST(&pSocket->m_multicastGroup.ipv6mr_multiaddr)) {
+        ::setsockopt(pSocket->m_hFile, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &pSocket->m_multicastGroup,
+                     sizeof(pSocket->m_multicastGroup));
+    }
+
+    // Not interested in return value, just always try to close socket
 #ifdef TARGET_WINDOWS
-	::closesocket(pSocket->m_hFile);
+    ::closesocket(pSocket->m_hFile);
 #else
-	::close(pSocket->m_hFile);
+    ::close(pSocket->m_hFile);
 #endif
     pSocket->m_hFile = INVALID_SOCKET;
 
-	changeState(pSocket, SSClosed::instance());
+    changeState(pSocket, SSClosed::instance());
 }
 
 
@@ -530,8 +580,9 @@ bool SSOpenedServer::open(Socket* pSocket, SocketAddr& rSockAddr, UINT uOpenFlag
     pSocket->m_bAsyncMode = (uOpenFlags & Socket::modeAsyncSocket) ? true : false;
 
     // If broadcast (connectionless) then m_nProtocol is SOCK_DGRAM,
-    //  else it is SOCK_STREAM.
-    pSocket->m_hFile = ::socket(AF_INET6, pSocket->m_nProtocol, 0);
+    //  else it is SOCK_STREAM. And m_nFamily is AF_NET for IPv4 address
+    //  and AF_NET6 (default) for IPv6 addresses.
+    pSocket->m_hFile = ::socket(pSocket->m_nFamily, pSocket->m_nProtocol, 0);
     if (pSocket->m_hFile == INVALID_SOCKET) {
         return false;
     }
@@ -555,6 +606,15 @@ bool SSOpenedServer::open(Socket* pSocket, SocketAddr& rSockAddr, UINT uOpenFlag
         close(pSocket);
         return false;
     }
+    if (rSockAddr.isMulticast()) {
+        auto na = rSockAddr.netAddress();
+        if (std::holds_alternative<sockaddr_in6>(na)) {
+            ((sockaddr_in6 *)&sa)->sin6_addr = in6addr_any;
+        } else if (std::holds_alternative<sockaddr_in>(na)) {
+            ((sockaddr_in *)&sa)->sin_addr.s_addr = htonl(INADDR_ANY);
+        }
+    }
+
     if (::bind(pSocket->m_hFile, (const sockaddr*)&sa, len) == SOCKET_ERROR) {
         close(pSocket);
         return false;
@@ -568,15 +628,41 @@ bool SSOpenedServer::open(Socket* pSocket, SocketAddr& rSockAddr, UINT uOpenFlag
         // Open was successful -- next state
         changeState(pSocket, SSListening::instance());
     } else {    // SOCK_DGRAM
-#ifdef TARGET_WINDOWS
-        bSockOpt = true;
-#else
-        bSockOpt = 1;
+        auto na = rSockAddr.netAddress();
+        if (rSockAddr.isMulticast()) {
+            if (std::holds_alternative<sockaddr_in6>(na)) {
+                auto& group_req = pSocket->m_multicastGroup;
+                if (inet_pton(AF_INET6, rSockAddr.hostname().c_str(), &group_req.ipv6mr_multiaddr) <= 0) {
+                    close(pSocket);
+                    return false;
+                }
+                unsigned int if_index = 0;
+#ifdef LOOKUP_ACTIVE_INTERFACE
+                if (pSocket->m_interface.empty()) {
+                    pSocket->m_interface = get_active_interface(AF_INET6);
+                }
+                if_index = if_nametoindex(pSocket->m_interface.c_str());
 #endif
-        ::setsockopt(pSocket->m_hFile, SOL_SOCKET, SO_BROADCAST,
-                     (char *)&bSockOpt, sizeof(bSockOpt));
-
-        //sa.sin_addr.s_addr = INADDR_BROADCAST;
+                group_req.ipv6mr_interface = if_index;
+                ::setsockopt(pSocket->m_hFile, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &group_req, sizeof(group_req));
+            } else {  // ipv4 multicast
+                struct ip_mreq mreq;
+                auto sa4 = std::get<sockaddr_in>(na);
+                mreq.imr_multiaddr.s_addr = sa4.sin_addr.s_addr;
+                mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+                ::setsockopt(pSocket->m_hFile, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq));
+            }
+        } else if (!std::holds_alternative<sockaddr_in6>(na)) {
+            // Not multicast Datagrams so setup for broadcast (but only for IPv4)
+#ifdef TARGET_WINDOWS
+            bSockOpt = true;
+#else
+            bSockOpt = 1;
+#endif
+            ::setsockopt(pSocket->m_hFile, SOL_SOCKET, SO_BROADCAST,
+                         (char *)&bSockOpt, sizeof(bSockOpt));
+            //sa.sin_addr.s_addr = INADDR_BROADCAST;
+        }
 
         changeState(pSocket, SSConnected::instance());
     }
@@ -635,25 +721,54 @@ bool SSOpenedClient::open(Socket* pSocket, SocketAddr& rSockAddr, UINT uOpenFlag
         ::setsockopt(pSocket->m_hFile, SOL_SOCKET, SO_KEEPALIVE,
                      (char *)&bSockOpt, sizeof(bSockOpt));
     } else {
-        // For UDP, client needs to bind with port 0.
-        sockaddr_in BindAddr;
-        BindAddr.sin_family      = AF_INET;
-        BindAddr.sin_addr.s_addr = INADDR_ANY;
-        BindAddr.sin_port        = 0;
-
-        if (::bind(pSocket->m_hFile, (sockaddr *)&BindAddr, sizeof(sockaddr_in))
-            == SOCKET_ERROR)
-            return false;
-
-#ifdef TARGET_WINDOWS
-        bool bSockOpt = true;
+        auto na = rSockAddr.netAddress();
+        if (rSockAddr.isMulticast()) {
+            if (std::holds_alternative<sockaddr_in>(na)) {
+                struct in_addr ifaddr;
+#ifdef LOOKUP_ACTIVE_INTERFACE
+                std::string ipaddr_str;
+                auto intfstr = get_active_interface(AF_INET, &ipaddr_str);
+                ifaddr.s_addr = inet_addr(ipaddr_str.c_str());
 #else
-        int bSockOpt = 1;
+                ifaddr.s_addr = INADDR_ANY;
 #endif
-        ::setsockopt(pSocket->m_hFile, SOL_SOCKET, SO_BROADCAST,
-                     (char *)&bSockOpt, sizeof(bSockOpt));
+                ::setsockopt(pSocket->m_hFile, IPPROTO_IP, IP_MULTICAST_IF, (char *)&ifaddr, sizeof(ifaddr));
+                int hops = 8;
+                ::setsockopt(pSocket->m_hFile, IPPROTO_IP, IP_MULTICAST_TTL, &hops, sizeof(hops));
+            } else if (std::holds_alternative<sockaddr_in6>(na)) {
+                int hops = 8;
+                ::setsockopt(pSocket->m_hFile, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops, sizeof(hops));
+                // For Ipv6 multicast, client need to specify which interface to use
+                unsigned int out_if = 0;
+#ifdef LOOKUP_ACTIVE_INTERFACE
+                if (pSocket->m_interface.empty()) {
+                    pSocket->m_interface = get_active_interface(AF_INET6);
+                }
+                out_if = if_nametoindex(pSocket->m_interface.c_str());
+#endif
+                ::setsockopt(pSocket->m_hFile, IPPROTO_IPV6, IPV6_MULTICAST_IF, &out_if, sizeof(out_if));
+            }
+        } else {  // Broadcast
+            if (std::holds_alternative<sockaddr_in>(na)) {
+                // For Ipv4 UDP, client needs to bind with port 0.
+                sockaddr_in BindAddr;
+                BindAddr.sin_family      = AF_INET;
+                BindAddr.sin_addr.s_addr = INADDR_ANY;
+                BindAddr.sin_port        = 0;
 
-        //rSockAddr.sin_addr.s_addr = INADDR_BROADCAST;
+                if (::bind(pSocket->m_hFile, (sockaddr *)&BindAddr, sizeof(sockaddr_in))
+                    == SOCKET_ERROR)
+                    return false;
+#ifdef TARGET_WINDOWS
+                bool bSockOpt = true;
+#else
+                int bSockOpt = 1;
+#endif
+                ::setsockopt(pSocket->m_hFile, SOL_SOCKET, SO_BROADCAST,
+                             (char *)&bSockOpt, sizeof(bSockOpt));
+                //rSockAddr.sin_addr.s_addr = INADDR_BROADCAST;
+            }
+        }
     }
 
     // Open was successful -- next state
@@ -811,9 +926,18 @@ int SSConnected::readSocket(Socket* pSocket, void* pBuf, UINT uCount) {
     int iResult = 0;
 
     if (pSocket->m_nProtocol == SOCK_DGRAM) {
-        socklen_t iSizeFrom = sizeof(sockaddr_in);
-        iResult = ::recvfrom(pSocket->m_hFile, (char *)pBuf, uCount,
-                             0, (sockaddr *) &pSocket->m_PeerAddr, &iSizeFrom);
+        auto& na = pSocket->m_PeerAddr;
+        if (std::holds_alternative<sockaddr_in6>(na)) {
+            socklen_t iSizeFrom = sizeof(sockaddr_in6);
+            sockaddr_in6* sa6 = &std::get<sockaddr_in6>(na);
+            iResult = ::recvfrom(pSocket->m_hFile, (char *)pBuf, uCount,
+                                 0, (sockaddr *)sa6, &iSizeFrom);
+        } else {
+            socklen_t iSizeFrom = sizeof(sockaddr_in);
+            sockaddr_in* sa = &std::get<sockaddr_in>(na);
+            iResult = ::recvfrom(pSocket->m_hFile, (char *)pBuf, uCount,
+                                 0, (sockaddr *)sa, &iSizeFrom);
+        }
     } else {
         iResult = ::recv(pSocket->m_hFile, (char *)pBuf, uCount, 0);
     }
@@ -887,16 +1011,25 @@ void SSConnected::write(Socket* pSocket, const void* pBuf, UINT uCount) {
     VERIFY(pSocket->m_uOpenFlags & (Socket::modeReadWrite | Socket::modeWrite));
 
     if (! (pSocket->m_bAsyncMode && pSocket->m_pDefCallback != nullptr)) {
-        int iResult;
+        int iResult = -1;
         // Synchronous mode -- do a blocking write on socket
         if (pSocket->m_nProtocol == SOCK_DGRAM) {
             // Note that s_addr could have been overwritten by the call to recvfrom
             // pSocket->m_PeerAddr.sin_addr.s_addr = INADDR_BROADCAST;
-            iResult = ::sendto(pSocket->m_hFile, (const char *)pBuf, uCount, 0,
-                               (sockaddr *)&pSocket->m_PeerAddr, sizeof(pSocket->m_PeerAddr));
+            auto& na = pSocket->m_PeerAddr;
+            if (std::holds_alternative<sockaddr_in6>(na)) {
+                sockaddr_in6* sa6 = &std::get<sockaddr_in6>(na);
+                iResult = ::sendto(pSocket->m_hFile, (const char *)pBuf, uCount, 0,
+                                   (sockaddr *)sa6, sizeof(sockaddr_in6));
+            } else {
+                sockaddr_in* sa = &std::get<sockaddr_in>(na);
+                iResult = ::sendto(pSocket->m_hFile, (const char *)pBuf, uCount, 0,
+                                   (sockaddr *)sa, sizeof(sockaddr_in));
+            }
         } else {
             iResult = ::send(pSocket->m_hFile, (const char *)pBuf, uCount, 0);
         }
+        // TODO check that iResult <= uCount
         if (iResult == SOCKET_ERROR) {
             pSocket->m_Status = SC_FAILED;
             pSocket->setstate(std::ios::failbit);
@@ -948,7 +1081,6 @@ DWORD SSConnected::writerThread(IOPARAMS* pIOP) {
         return 1;			// Thread exit code 1 == failure
     }
     pIOP->m_pCallback(iResult, pIOP->m_pBuf);
-
     return 0;
 }
 

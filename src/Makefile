@@ -23,11 +23,13 @@
 TOP = ..
 INCDIR = $(TOP)/include
 IDIR2 = $(INCDIR)/sockstr
+#INCSTMTS = -I$(TOP) -I$(INCDIR) -I/opt/homebrew/include
+# Use this or similar for MacOS
+INCSTMTS = -I$(TOP) -I$(INCDIR) -I/opt/homebrew/include
 
 #AR = ar
 CC = g++
-#CCFLAGS = -Wall -g -O2 -I$(TOP) -I$(INCDIR)
-CCFLAGS = -std=c++17 -Wall -g -O0 -I$(TOP) -I$(INCDIR)
+CCFLAGS = -std=c++20 -Wall -g -O0 $(INCSTMTS)
 
 OBJS := Socket.o SocketAddr.o StreamBuf.o SocketState.o SocketStateTLS.o \
         Stream.o HttpHelpers.o HttpStream.o OAuth.o
@@ -67,7 +69,7 @@ clean:
 
 .PHONY: depends
 depends: $(SRCS) $(INCS)
-	$(CC) -I$(TOP) -I$(INCDIR) -MM $(SRCS) > .makedepends
+	$(CC) $(INCSTMTS) -MM $(SRCS) > .makedepends
 	touch .mkdep-timestamp
 
 .makedepends:

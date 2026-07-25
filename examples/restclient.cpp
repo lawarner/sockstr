@@ -69,14 +69,12 @@ int main(int argc, const char *argv[])
     http.addHeader("Host", strhost);
     http.addHeader("Date", dateTime.toString());
 
-    char buf[512] = "";
     string strbuf;
     string headerbuf;
     string contentbuf;
-    int crlfpos = -1;
 
     int inlen = http.get(restApi, contentbuf, headerbuf);
-    cout << "====== Read header " << headerbuf.length() << " bytes from socket:"
+    cout << "====== Read header (read=" << inlen << ") " << headerbuf.length() << " bytes from socket:"
          << endl << headerbuf << endl;
     cout << "====== Read content " << contentbuf.length() << " bytes from socket:"
          << endl << contentbuf << endl;

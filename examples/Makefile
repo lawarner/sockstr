@@ -1,5 +1,5 @@
 #
-#   Copyright (C) 2012, 2013
+#   Copyright (C) 2012, 2013, 2026
 #   Andy Warner
 #   This file is part of the sockstr class library.
 #
@@ -24,14 +24,16 @@ TOP = ..
 INCDIR = $(TOP)/include
 
 CC = g++
-CCFLAGS = -std=c++17 -Wall -g -O0 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
+CCFLAGS = -std=c++20 -Wall -g -O0 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
 #CCFLAGS = -Wall -g -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
-DEPCPPFLAGS = -std=c++17 -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
-LDFLAGS = -pthread $(LIBOPENSSL)
+DEPCPPFLAGS = -std=c++20 -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
+#LDFLAGS = -pthread $(LIBOPENSSL)
+# Use this or similar for MacOS
+LDFLAGS = -pthread -L/opt/homebrew/lib $(LIBOPENSSL)
 LDLIBS = 
 
 OBJS :=  asyncsock.o echoserver.o fbread.o fb2read.o filecopy.o httptest.o \
-         readsdp.o restclient.o restserver.o simplest.o testsockstr.o
+         multicast.o readsdp.o restclient.o restserver.o simplest.o testsockstr.o
 SRCS := $(OBJS:.o=.cpp)
 
 INCS = 
@@ -42,7 +44,7 @@ LIBSOCKLIB = $(TOP)/src/libsockstr.a
 LIBOPENSSL = -lssl -lcrypto
 
 PROGRAMS = asyncsock echoserver fbread fb2read  filecopy httptest \
-           readsdp restclient restserver simplest testsockstr
+           multicast readsdp restclient restserver simplest testsockstr
 
 
 .cpp.o: ; $(CC) $(CCFLAGS) -c $<
@@ -50,7 +52,7 @@ PROGRAMS = asyncsock echoserver fbread fb2read  filecopy httptest \
 
 all: $(PROGRAMS)
 
-$(PROGRAMS): $(DEPLIBS)
+$(PROGRAMS): $(LIBSOCKLIB)
 
 .PHONY: clean
 clean:

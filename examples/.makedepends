@@ -1,38 +1,40 @@
 asyncsock.o: asyncsock.cpp ../include/sockstr/Socket.h \
- ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
- ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
+  ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
+  ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
 echoserver.o: echoserver.cpp ../include/sockstr/Socket.h \
- ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
- ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
+  ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
+  ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
 fbread.o: fbread.cpp ../include/sockstr/Socket.h \
- ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
- ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
+  ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
+  ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
 fb2read.o: fb2read.cpp ../include/sockstr/Socket.h \
- ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
- ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
+  ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
+  ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
 filecopy.o: filecopy.cpp ../include/sockstr/Socket.h \
- ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
- ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
+  ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
+  ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
 httptest.o: httptest.cpp ../include/sockstr/HttpStream.h \
- ../include/sockstr/Socket.h ../include/sockstr/sstypes.h \
- ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \
- ../include/sockstr/StreamBuf.h ../include/sockstr/OAuth.h \
- ../include/sockstr/HttpHelpers.h
+  ../include/sockstr/Socket.h ../include/sockstr/sstypes.h \
+  ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \
+  ../include/sockstr/StreamBuf.h ../include/sockstr/OAuth.h \
+  ../include/sockstr/HttpHelpers.h
+multicast.o: multicast.cpp ../include/sockstr/SocketAddr.h \
+  ../include/sockstr/sstypes.h
 readsdp.o: readsdp.cpp ../include/sockstr/Socket.h \
- ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
- ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
+  ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
+  ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
 restclient.o: restclient.cpp ../include/sockstr/HttpStream.h \
- ../include/sockstr/Socket.h ../include/sockstr/sstypes.h \
- ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \
- ../include/sockstr/StreamBuf.h ../include/sockstr/OAuth.h \
- ../include/sockstr/HttpHelpers.h
+  ../include/sockstr/Socket.h ../include/sockstr/sstypes.h \
+  ../include/sockstr/SocketAddr.h ../include/sockstr/Stream.h \
+  ../include/sockstr/StreamBuf.h ../include/sockstr/OAuth.h \
+  ../include/sockstr/HttpHelpers.h
 restserver.o: restserver.cpp ../include/sockstr/HttpHelpers.h \
- ../include/sockstr/HttpStream.h ../include/sockstr/Socket.h \
- ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
- ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
+  ../include/sockstr/HttpStream.h ../include/sockstr/Socket.h \
+  ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
+  ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
 simplest.o: simplest.cpp ../include/sockstr/Socket.h \
- ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
- ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
+  ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
+  ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
 testsockstr.o: testsockstr.cpp ../include/sockstr/Socket.h \
- ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
- ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h
+  ../include/sockstr/sstypes.h ../include/sockstr/SocketAddr.h \
+  ../include/sockstr/Stream.h ../include/sockstr/StreamBuf.h

@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2012 - 2023
+   Copyright (C) 2012 - 2026
    Andy Warner
    This file is part of the sockstr class library.
 
@@ -128,7 +128,20 @@ public:
                     socklen_t* pnOptionLen, int nLevel = SOL_SOCKET);
     //! Listen for incoming connection on server socket (state-dependent)
     virtual Stream * listen(const int nBacklog = 4);
-    //! Open a client or server socket (state-dependent)
+    /** Open a client or server socket connection (state-dependent).
+     *  Upon successful completion of this routine, either a server socket or a client socket
+     *  will be opened.  In the case of a server socket, the application will need to call
+     *  Listen in order to connect the socket to a client.
+     *  @param lpszFileName Name of socket to open (in URL format) The port number that the socket will use
+     *                      should be appended together with a colon. The URL can be specified as a host name,
+     *                      a IPv4 dot address or a IPv6 colon-separated address. If the host portion is
+     *                      omitted then a server socket is created that will listen on the specified port.
+     *  @param uOpenFlags  Flags to indicate how the socket will be opened. Mode flags can be combined by
+     *                     using "|" (OR) from the following: modeCreate, modeAsyncSocket, modeRead,
+     *                     modeWrite and modeReadWrite.
+     *                     If modeCreate is included then a server socket will be created.
+     *  @return  True if the open succeeds, otherwise false.
+     */
     virtual bool open(const char* lpszFileName, UINT uOpenFlags);
     virtual bool open(SocketAddr& rSockAddr, UINT uOpenFlags);
     //! Read from socket (state-dependent)
@@ -203,6 +216,8 @@ protected:
     SSL*     m_pSsl;
     SSL_CTX* m_pSslCtx;
 #endif
+    ipv6_mreq m_multicastGroup;
+    std::string m_interface;
 
 private:
     // Counter for IPC messages (generates magic cookies)

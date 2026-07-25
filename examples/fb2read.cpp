@@ -113,7 +113,7 @@ int main(int argc, const char *argv[])
         }
         strbuf += string(buf, inlen);
 
-        unsigned int ipos = strbuf.find("Content-Length: ");
+        auto ipos = strbuf.find("Content-Length: ");
         if (ipos != string::npos)
         {
             ipos += 16;         // skip past "Content-Length: "
