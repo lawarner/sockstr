@@ -27,10 +27,9 @@ CC = g++
 CCFLAGS = -std=c++20 -Wall -g -O0 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
 #CCFLAGS = -Wall -g -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
 DEPCPPFLAGS = -std=c++20 -Wall -g -O2 -DTARGET_LINUX=1 -I$(TOP) -I$(INCDIR)
-#LDFLAGS = -pthread $(LIBOPENSSL)
+LDLIBS = -pthread $(LIBOPENSSL)
 # Use this or similar for MacOS
-LDFLAGS = -pthread -L/opt/homebrew/lib $(LIBOPENSSL)
-LDLIBS = 
+#LDFLAGS = -L/opt/homebrew/lib
 
 OBJS :=  asyncsock.o echoserver.o fbread.o fb2read.o filecopy.o httptest.o \
          multicast.o readsdp.o restclient.o restserver.o simplest.o testsockstr.o

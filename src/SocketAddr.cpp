@@ -290,12 +290,15 @@ std::string SocketAddr::hostname() {
             }
         } else if (std::holds_alternative<sockaddr_in6>(address_)) {
             auto sa6 = (sockaddr *) &std::get<sockaddr_in6>(address_);
-            if (!getnameinfo(sa6, sizeof(sockaddr_in), hbuf, sizeof(hbuf),
+            if (!getnameinfo(sa6, sizeof(sockaddr_in6), hbuf, sizeof(hbuf),
                              nullptr, 0, NI_NAMEREQD)) {
                 hostName_ = hbuf;
-            } else if (!getnameinfo(sa6, sizeof(sockaddr_in), hbuf, sizeof(hbuf),
-                             nullptr, 0, NI_NUMERICHOST)) {
+            } else {
+              int ret = getnameinfo(sa6, sizeof(sockaddr_in6), hbuf, sizeof(hbuf),
+                                    nullptr, 0, NI_NUMERICHOST);
+              if (ret == 0) {
                 hostName_ = hbuf;
+              }
             }
         }
     }

@@ -1,5 +1,5 @@
 #
-#   Copyright (C) 2012 - 2015
+#   Copyright (C) 2012 - 2026
 #   Andy Warner
 #   This file is part of the sockstr class library.
 #
@@ -23,9 +23,9 @@
 TOP = ..
 INCDIR = $(TOP)/include
 IDIR2 = $(INCDIR)/sockstr
-#INCSTMTS = -I$(TOP) -I$(INCDIR) -I/opt/homebrew/include
+INCSTMTS = -I$(TOP) -I$(INCDIR)
 # Use this or similar for MacOS
-INCSTMTS = -I$(TOP) -I$(INCDIR) -I/opt/homebrew/include
+#INCSTMTS = -I$(TOP) -I$(INCDIR) -I/opt/homebrew/include
 
 #AR = ar
 CC = g++

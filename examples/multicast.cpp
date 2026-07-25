@@ -25,6 +25,8 @@
 // sender.
 #include <sockstr/Socket.h>
 #include <sockstr/SocketAddr.h>
+#include <chrono>
+#include <cstring>
 #include <iostream>
 #include <thread>
 using namespace sockstr;
@@ -82,6 +84,8 @@ int main(int argc, char* argv[]) {
       cout << "Error opening socket" << endl;
       return 2;
   }
+  // Give server a time to start reading, otherwise it will miss the datagrams
+  std::this_thread::sleep_for(std::chrono::milliseconds(250));
   sock.write("This is indeed a datagram sent over multicast from sockstr\n");
   cout << "Wrote first message to socket" << endl;
   sock.write("<EOF> This is the last message.\n");
