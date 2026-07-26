@@ -36,6 +36,7 @@
 
 #include "config.h"
 #include <sockstr/SocketAddr.h>
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
